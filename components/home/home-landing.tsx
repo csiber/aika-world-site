@@ -259,6 +259,41 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
         </div>
       </RevealSection>
 
+      <RevealSection className="space-y-10 rounded-3xl border border-white/10 bg-white/[0.04] p-10">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h2 className="text-3xl font-semibold text-white">{content.loops.title}</h2>
+            <p className="mt-3 max-w-2xl text-base text-white/80">{content.loops.description}</p>
+          </div>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          {content.loops.items.map((loop, index) => (
+            <motion.article
+              key={loop.name}
+              custom={index}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              variants={cardVariants}
+              className="flex h-full flex-col gap-4 rounded-2xl border border-white/10 bg-gradient-to-br from-black/40 via-transparent to-white/5 p-6"
+            >
+              <div>
+                <h3 className="text-xl font-semibold text-white">{loop.name}</h3>
+                <p className="mt-2 text-sm text-white/75">{loop.summary}</p>
+              </div>
+              <ul className="space-y-2 text-sm text-white/70">
+                {loop.beats.map((beat) => (
+                  <li key={beat} className="flex items-start gap-2">
+                    <span className="mt-1 inline-flex h-2 w-2 shrink-0 rounded-full bg-white/60" aria-hidden />
+                    <span>{beat}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.article>
+          ))}
+        </div>
+      </RevealSection>
+
       <RevealSection id="roadmap" className="space-y-10 rounded-3xl border border-white/10 bg-white/[0.05] p-10">
         <div>
           <h2 className="text-3xl font-semibold text-white">{content.roadmap.title}</h2>

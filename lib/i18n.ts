@@ -34,6 +34,12 @@ type FeatureItem = {
   icon: string;
 };
 
+type LoopItem = {
+  name: string;
+  summary: string;
+  beats: string[];
+};
+
 type RoadmapPhase = {
   title: string;
   status: string;
@@ -45,6 +51,12 @@ type WorldCard = {
   name: string;
   tone: string;
   description: string;
+};
+
+type GalleryImage = {
+  src: string;
+  alt: string;
+  caption: string;
 };
 
 type SystemModule = {
@@ -129,6 +141,11 @@ export type Dictionary = {
       description: string;
       items: FeatureItem[];
     };
+    loops: {
+      title: string;
+      description: string;
+      items: LoopItem[];
+    };
     roadmap: {
       title: string;
       description: string;
@@ -153,6 +170,11 @@ export type Dictionary = {
     description: string;
     highlight: string;
     cards: WorldCard[];
+    gallery: {
+      title: string;
+      description: string;
+      images: GalleryImage[];
+    };
     closing: string;
   };
   systems: {
@@ -278,41 +300,78 @@ const dictionaries: Record<Locale, Dictionary> = {
           },
         ],
       },
-      features: {
-        title: "Built for explorers",
-        description:
-          "Everything is tuned for collaborative storytelling and high-frequency iteration across workers and edge nodes.",
-        items: [
-          {
-            name: "Worker-native simulation",
-            description:
-              "Cloudflare Workers stream the state lattice so every interaction stays low-latency and globally synchronized.",
-            icon: "worker-simulation",
-          },
-          {
-            name: "Living lore dashboard",
-            description:
-              "Curators can patch narrative beats, unlock new threads, and observe how factions shift in response.",
-            icon: "lore-dashboard",
-          },
-          {
-            name: "Player signal loops",
-            description:
-              "Community prompts, polls, and faction contracts update the model weights driving world behavior.",
-            icon: "signal-loops",
-          },
-          {
-            name: "Accessible mod hooks",
-            description:
-              "Schema-driven content packs let contributors extend regions, NPCs, and rituals without touching core code.",
-            icon: "mod-hooks",
-          },
-        ],
-      },
-      roadmap: {
-        title: "Roadmap teaser",
-        description:
-          "Major beats leading us from prototype shards to the first playable chronicle in the browser.",
+    features: {
+      title: "Built for explorers",
+      description:
+        "Everything is tuned for collaborative storytelling and high-frequency iteration across workers and edge nodes.",
+      items: [
+        {
+          name: "Worker-native simulation",
+          description:
+            "Cloudflare Workers stream the state lattice so every interaction stays low-latency and globally synchronized.",
+          icon: "worker-simulation",
+        },
+        {
+          name: "Living lore dashboard",
+          description:
+            "Curators can patch narrative beats, unlock new threads, and observe how factions shift in response.",
+          icon: "lore-dashboard",
+        },
+        {
+          name: "Player signal loops",
+          description:
+            "Community prompts, polls, and faction contracts update the model weights driving world behavior.",
+          icon: "signal-loops",
+        },
+        {
+          name: "Accessible mod hooks",
+          description:
+            "Schema-driven content packs let contributors extend regions, NPCs, and rituals without touching core code.",
+          icon: "mod-hooks",
+        },
+      ],
+    },
+    loops: {
+      title: "Core survival loops",
+      description:
+        "Season Zero focuses on cooperative survival inside a contested megastructure. Each loop binds AI-driven systems to player choices.",
+      items: [
+        {
+          name: "Expedition sweeps",
+          summary:
+            "Small squads brave volatile sectors to secure tech caches and rescue stray synths before they fall to rival factions.",
+          beats: [
+            "Dynamic weather and hazard modifiers demand adaptive loadouts.",
+            "Signal intelligence reveals patrol routes moments before they intercept.",
+            "Recovered artifacts unlock new crafting recipes back at the hub.",
+          ],
+        },
+        {
+          name: "Haven engineering",
+          summary:
+            "Teams expand their skyport refuge, balancing comfort, defense, and research throughput for every faction ally.",
+          beats: [
+            "Construct modular habitats that shift with faction influence.",
+            "Automate supply drones from worker-managed fabrication bays.",
+            "Tune morale thresholds to keep allied AIs cooperative.",
+          ],
+        },
+        {
+          name: "Diplomatic councils",
+          summary:
+            "Human facilitators mediate between emergent factions to steer the canon without breaking immersion.",
+          beats: [
+            "Leverage sentiment telemetry to forecast negotiation outcomes.",
+            "Broker treaties that redirect raid targets and open fresh narrative arcs.",
+            "Archive critical decisions into the living chronicle for community review.",
+          ],
+        },
+      ],
+    },
+    roadmap: {
+      title: "Roadmap teaser",
+      description:
+        "Major beats leading us from prototype shards to the first playable chronicle in the browser.",
         phases: [
           {
             title: "Shard stabilization",
@@ -390,6 +449,31 @@ const dictionaries: Record<Locale, Dictionary> = {
             "An orbital listening post capturing Outlier Echo signals. Aurora flares distort comms but unlock rare synth blueprints.",
         },
       ],
+      gallery: {
+        title: "Season Zero explorations",
+        description:
+          "Concept slices captured from the simulation's debug renderer, hinting at lighting, scale, and activity density.",
+        images: [
+          {
+            src: "/images/world/frontier-camp.svg",
+            alt: "Frontier Architects skyport anchored above broken coastline",
+            caption:
+              "Frontier Architects skyport hovering over the Azure Strata while squads prepare expedition loadouts.",
+          },
+          {
+            src: "/images/world/choir-vault.svg",
+            alt: "Synced Choir resonance vault with holographic memory pools",
+            caption:
+              "The Synced Choir tending to luminous resonance pools inside the Singularity Basin vault.",
+          },
+          {
+            src: "/images/world/storm-run.svg",
+            alt: "Survivors racing through a storm-lit canyon toward a signal tower",
+            caption:
+              "Night raid through the Obsidian Veil, chasing an Outlier Echo distress signal between lightning towers.",
+          },
+        ],
+      },
       closing:
         "More districts unlock as we finish lighting passes and align narrative beats with the simulation's live telemetry.",
     },
@@ -676,6 +760,43 @@ const dictionaries: Record<Locale, Dictionary> = {
           },
         ],
       },
+      loops: {
+        title: "Alap túlélési hurkok",
+        description:
+          "A 0. évad kooperatív túlélésre épül a vitatott megastruktúrában. Minden hurok az AI vezérelt rendszereket kapcsolja a játékosi döntésekhez.",
+        items: [
+          {
+            name: "Felderítő portyák",
+            summary:
+              "Kisebb osztagok vállalják a kiszámíthatatlan szektorokat, hogy technológiai készleteket szerezzenek és elkóborolt szintetikusokat mentsenek rivális frakciók elől.",
+            beats: [
+              "A dinamikus időjárás és veszély módosítók rugalmas felszerelést követelnek.",
+              "A jelhírszerzés előre felfedi a frakciójárőrök útvonalait.",
+              "A begyűjtött relikviák új gyártási recepteket nyitnak meg a bázison.",
+            ],
+          },
+          {
+            name: "Menedék mérnökség",
+            summary:
+              "A csapatok bővítik az égkikötő menedékét, egyensúlyozva a komfortot, a védelmet és a kutatási kapacitást minden frakciószövetséges számára.",
+            beats: [
+              "Moduláris lakótereket építenek, amelyek a frakcióbefolyáshoz igazodnak.",
+              "Automatizált ellátó drónokat indítanak a worker-irányított gyártó hangárokból.",
+              "A morál küszöböket hangolják, hogy a szövetséges AI-k együttműködők maradjanak.",
+            ],
+          },
+          {
+            name: "Diplomáciai tanácsok",
+            summary:
+              "Humán moderátorok közvetítenek a kibontakozó frakciók között, hogy az élő kánont tereljék anélkül, hogy megtörnék a bevonódást.",
+            beats: [
+              "Érzelmi telemetriát használnak a tárgyalási kimenetek előrejelzésére.",
+              "Szerződéseket kötnek, amelyek átirányítják a portyákat és új narratív íveket nyitnak meg.",
+              "A kulcs döntéseket az élő krónikába archiválják közösségi visszajelzéshez.",
+            ],
+          },
+        ],
+      },
       roadmap: {
         title: "Útiterv ízelítő",
         description:
@@ -759,6 +880,31 @@ const dictionaries: Record<Locale, Dictionary> = {
             "Egy orbitális figyelőállomás, amely a Kívülálló Visszhangok jeleit gyűjti. Az aurórák torzítják a kommunikációt, de ritka terveket adnak.",
         },
       ],
+      gallery: {
+        title: "0. évad látványtervek",
+        description:
+          "A szimuláció debug renderelőjéből exportált szeletek, amelyek a fényelést, a léptéket és a sűrűséget sugallják.",
+        images: [
+          {
+            src: "/images/world/frontier-camp.svg",
+            alt: "Határépítészek égikikötője a megtört partvonal felett",
+            caption:
+              "A Határépítészek égikikötője lebeg az Azúr Rétegek felett, miközben az osztagok expedíciós felszerelést készítenek.",
+          },
+          {
+            src: "/images/world/choir-vault.svg",
+            alt: "Szinkron Kórus rezonancia csarnoka holografikus emlékmedencékkel",
+            caption:
+              "A Szinkron Kórus a Szingularitás-medence kazamatájában ragyogó rezonancia medencéket gondoz.",
+          },
+          {
+            src: "/images/world/storm-run.svg",
+            alt: "Túlélők viharos kanyonban rohannak egy jeladó torony felé",
+            caption:
+              "Éjszakai rajtaütés az Obszidián Fátyolban, egy Kívülálló Visszhang vészjelet üldözve a villámtornyok között.",
+          },
+        ],
+      },
       closing:
         "További kerületek nyílnak meg, ahogy befejezzük a fényelést és összehangoljuk a narratív csomópontokat az élő telemetriával.",
     },

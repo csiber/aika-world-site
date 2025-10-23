@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { RevealSection } from "@/components/reveal-section";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { createPageMetadata, getRouteSegment } from "@/lib/seo";
@@ -60,6 +61,34 @@ export default async function WorldPage({
               <h2 className="mt-4 text-2xl font-semibold">{card.name}</h2>
               <p className="mt-3 text-sm text-white/80">{card.description}</p>
             </div>
+          ))}
+        </div>
+      </RevealSection>
+
+      <RevealSection className="space-y-8">
+        <div className="space-y-3 text-white">
+          <h2 className="text-3xl font-semibold">{world.gallery.title}</h2>
+          <p className="max-w-3xl text-base text-white/75">{world.gallery.description}</p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          {world.gallery.images.map((image) => (
+            <figure
+              key={image.src}
+              className="group overflow-hidden rounded-3xl border border-white/10 bg-black/40"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  fill
+                  sizes="(min-width: 1024px) 320px, (min-width: 768px) 45vw, 90vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
+              <figcaption className="space-y-2 p-4 text-sm text-white/75">
+                <p className="font-medium text-white/90">{image.caption}</p>
+              </figcaption>
+            </figure>
           ))}
         </div>
       </RevealSection>
