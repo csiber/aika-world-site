@@ -49,7 +49,7 @@ export const openGraphImages = [
     alt: "AIKA: World open graph kártya sötét témához",
     type: "image/svg+xml",
   },
-] satisfies Metadata["openGraph"]["images"];
+] satisfies NonNullable<Metadata["openGraph"]>["images"];
 
 type OpenGraphImage = (typeof openGraphImages)[number];
 
