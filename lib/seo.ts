@@ -51,6 +51,10 @@ export const openGraphImages = [
   },
 ] satisfies Metadata["openGraph"]["images"];
 
+type OpenGraphImage = (typeof openGraphImages)[number];
+
+export const openGraphImageUrls = openGraphImages.map((image: OpenGraphImage) => image.url);
+
 export function getSiteUrl(): string {
   return siteConfig.siteUrl;
 }
@@ -116,7 +120,7 @@ export function createPageMetadata({
       card: "summary_large_image",
       title: fullTitle,
       description,
-      images: openGraphImages.map((image) => image.url),
+      images: openGraphImageUrls,
     },
   };
 }

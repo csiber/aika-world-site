@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
-import { openGraphImages, siteConfig } from "@/lib/seo";
+import { openGraphImageUrls, openGraphImages, siteConfig } from "@/lib/seo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteConfig.name,
     description: siteConfig.descriptions.en,
-    images: openGraphImages.map((image) => image.url),
+    images: openGraphImageUrls,
   },
 };
 
