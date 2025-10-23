@@ -1,12 +1,11 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { AnalyticsConsent } from "@/components/analytics-consent";
 import { LocaleEffect } from "@/components/locale-effect";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { NavigationBar } from "@/components/navigation/navigation-bar";
-import { navOrder, getDictionary, type Locale, locales } from "@/lib/i18n";
-
-export const dynamicParams = false;
+import { navOrder, getDictionary, type Locale, locales, isLocale } from "@/lib/i18n";
 
 export function generateStaticParams(): Array<{ lang: Locale }> {
   return locales.map((lang) => ({ lang }));
@@ -17,9 +16,12 @@ export default async function LocaleLayout({
   params,
 }: {
   children: ReactNode;
-  params: Promise<{ lang: Locale }>;
+  params: Promise<{ lang: string }>;
 }) {
   const { lang } = await params;
+  if (!isLocale(lang)) {
+    notFound();
+  }
   const dictionary = getDictionary(lang);
   const navItems = navOrder.map((key) => ({
     label: dictionary.nav[key],

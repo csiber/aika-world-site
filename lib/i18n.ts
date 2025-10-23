@@ -2,6 +2,10 @@ export const locales = ["en", "hu"] as const;
 
 export type Locale = (typeof locales)[number];
 
+export function isLocale(value: string): value is Locale {
+  return locales.includes(value as Locale);
+}
+
 export type NavKey = "home" | "world" | "systems" | "devlog" | "about" | "contact";
 
 export const navOrder: NavKey[] = [
