@@ -1,14 +1,17 @@
+import { notFound } from "next/navigation";
 import { RevealSection } from "@/components/reveal-section";
-import type { Locale } from "@/lib/i18n";
-import { getDictionary } from "@/lib/i18n";
+import { getDictionary, isLocale } from "@/lib/i18n";
 import { createPageMetadata, getRouteSegment } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ lang: Locale }>;
+  params: Promise<{ lang: string }>;
 }) {
   const { lang } = await params;
+  if (!isLocale(lang)) {
+    notFound();
+  }
   const dictionary = getDictionary(lang);
 
   return createPageMetadata({
@@ -22,9 +25,12 @@ export async function generateMetadata({
 export default async function DevlogPage({
   params,
 }: {
-  params: Promise<{ lang: Locale }>;
+  params: Promise<{ lang: string }>;
 }) {
   const { lang } = await params;
+  if (!isLocale(lang)) {
+    notFound();
+  }
   const dictionary = getDictionary(lang);
   const devlog = dictionary.devlog;
 
