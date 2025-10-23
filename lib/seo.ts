@@ -85,11 +85,13 @@ export function createPageMetadata({
   title,
   description,
   slug = "",
+  type,
 }: {
   locale: Locale;
   title: string;
   description: string;
   slug?: string;
+  type?: NonNullable<Metadata["openGraph"]>["type"];
 }): Metadata {
   const canonicalPath = buildLocalePath(locale, slug);
   const languageAlternates = buildLanguageAlternates(slug);
@@ -112,6 +114,7 @@ export function createPageMetadata({
       locale: ogLocale,
       alternateLocale: getAlternateOgLocales(locale),
       images: openGraphImages,
+      ...(type ? { type } : {}),
     },
     twitter: {
       card: "summary_large_image",
