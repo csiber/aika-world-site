@@ -1,20 +1,20 @@
 import type {Metadata} from "next";
 import {notFound} from "next/navigation";
-import {getTranslations, unstable_setRequestLocale} from "next-intl/server";
+import {getTranslations, setRequestLocale} from "next-intl/server";
 import type {ReactNode} from "react";
 import Footer from "@/components/Footer";
 import NavBar from "@/components/NavBar";
 import {createLanguageAlternates} from "@/lib/i18n";
-import {isValidLocale, locales, type Locale} from "@/i18n.config";
+import {isValidLocale, type Locale} from "@/i18n.config";
 
 export const runtime = "edge";
 
 export async function generateMetadata({
   params,
 }: {
-  params: {locale: string};
+  params: Promise<{locale: string}>;
 }): Promise<Metadata> {
-  const {locale} = params;
+  const {locale} = await params;
 
   if (!isValidLocale(locale)) {
     return {};
@@ -23,32 +23,31 @@ export async function generateMetadata({
   const t = await getTranslations({
     locale,
     namespace: "common",
-    keyPrefix: "metadata",
   });
 
   return {
-    title: t("title"),
-    description: t("description"),
+    title: t("metadata.title"),
+    description: t("metadata.description"),
     alternates: {
       languages: createLanguageAlternates("/"),
     },
   };
 }
 
-export default function LocaleLayout({
+export default async function LocaleLayout({
   children,
   params,
 }: Readonly<{
   children: ReactNode;
-  params: {locale: Locale};
+  params: Promise<{locale: Locale}>;
 }>) {
-  const {locale} = params;
+  const {locale} = await params;
 
   if (!isValidLocale(locale)) {
     notFound();
   }
 
-  unstable_setRequestLocale(locale);
+  setRequestLocale(locale);
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
