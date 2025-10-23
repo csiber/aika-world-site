@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "title": "Aika World – Főoldal",
+    "description": "Merülj el Aika világában, és fedezd fel az univerzum történeteit, rendszereit és szereplőit."
+  },
+  "hero": {
+    "title": "Üdv az Aika világában",
+    "subtitle": "Az Aika World egy folyamatosan bővülő univerzum, ahol a történetmesélés, a világépítés és az interaktív élmények találkoznak.",
+    "cta": "Fedezd fel a világot",
+    "support": "Ismerd meg a történetet és a rendszereket magyarul és angolul."
+  },
+  "highlights": {
+    "worldbuilding": {
+      "title": "Gazdag világépítés",
+      "description": "Minden régió saját történelemmel, kultúrával és konfliktusokkal rendelkezik, amelyek egyetlen nagy történetté állnak össze."
+    },
+    "systems": {
+      "title": "Egyedi rendszerek",
+      "description": "A játékmechanikák az Aika világának hangulatát szolgálják, és mély döntéseket követelnek a résztvevőktől."
+    },
+    "community": {
+      "title": "Elkötelezett közösség",
+      "description": "Alkotók és rajongók közösen építik tovább Aika történeteit, eseményeit és karaktereit."
+    }
+  }
+}

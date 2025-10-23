@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "title": "Aika World – Rólunk",
+    "description": "Ismerd meg az Aika World alkotóit, célkitűzéseit és történetmesélési alapelveit."
+  },
+  "title": "Rólunk",
+  "intro": "Az Aika World egy független alkotói kezdeményezés, amely a részletgazdag történetmesélésre, a karakterekre és a közösségi élményekre épít.",
+  "sections": {
+    "mission": {
+      "title": "Küldetésünk",
+      "description": "Olyan világot építünk, amelyben a döntéseknek súlya van, a karakterek fejlődése követhető és minden kaland új réteget tár fel."
+    },
+    "team": {
+      "title": "Csapatunk",
+      "description": "Írókból, illusztrátorokból és rendszermérnökökből álló csapatunk folyamatosan együtt dolgozik a következő fejezeteken."
+    },
+    "approach": {
+      "title": "Megközelítésünk",
+      "description": "A lore minden elemét dokumentáljuk, hogy a játékvezetők és a játékosok egyaránt követni tudják Aika fejlődését."
+    }
+  }
+}
