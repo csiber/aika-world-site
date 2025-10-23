@@ -9,10 +9,6 @@ import {isValidLocale, locales, type Locale} from "@/i18n.config";
 
 export const runtime = "edge";
 
-export function generateStaticParams() {
-  return locales.map((locale) => ({locale}));
-}
-
 export async function generateMetadata({
   params,
 }: {
