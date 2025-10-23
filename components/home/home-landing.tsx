@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
 import { RevealSection } from "@/components/reveal-section";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +20,7 @@ const heroVariants = {
     y: 0,
     transition: {
       duration: 0.7,
-      ease: [0.16, 1, 0.3, 1],
+      ease: [0.16, 1, 0.3, 1] as const,
       staggerChildren: 0.12,
     },
   },
@@ -27,7 +28,7 @@ const heroVariants = {
 
 const heroItem = {
   hidden: { opacity: 0, y: 32 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const } },
 };
 
 const cardVariants = {
@@ -38,17 +39,73 @@ const cardVariants = {
     transition: {
       duration: 0.55,
       delay: 0.08 * index,
-      ease: [0.2, 0.6, 0.2, 1],
+      ease: [0.2, 0.6, 0.2, 1] as const,
     },
   }),
 };
 
-export function HomeLanding({ locale, content }: HomeLandingProps) {
-  const [submitted, setSubmitted] = useState(false);
+type FormStatus = "idle" | "submitting" | "success" | "error";
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+export function HomeLanding({ locale, content }: HomeLandingProps) {
+  const [newsletterStatus, setNewsletterStatus] = useState<FormStatus>("idle");
+  const [newsletterFeedback, setNewsletterFeedback] = useState<string | null>(null);
+  const [newsletterToken, setNewsletterToken] = useState("");
+  const [newsletterReset, setNewsletterReset] = useState(0);
+
+  const newsletterEndpoint = process.env.NEXT_PUBLIC_NEWSLETTER_FORM_ENDPOINT;
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+  const isConfigured = Boolean(newsletterEndpoint && turnstileSiteKey);
+  const isSubmitting = newsletterStatus === "submitting";
+  const configErrorMessage = !newsletterEndpoint
+    ? content.newsletter.endpointError
+    : !turnstileSiteKey
+      ? content.newsletter.turnstileError
+      : null;
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSubmitted(true);
+
+    if (!newsletterEndpoint) {
+      setNewsletterStatus("error");
+      setNewsletterFeedback(content.newsletter.endpointError);
+      return;
+    }
+
+    if (!newsletterToken) {
+      setNewsletterStatus("error");
+      setNewsletterFeedback(content.newsletter.turnstileError);
+      setNewsletterReset((value) => value + 1);
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    formData.append("cf-turnstile-response", newsletterToken);
+
+    setNewsletterStatus("submitting");
+    setNewsletterFeedback(null);
+
+    try {
+      const response = await fetch(newsletterEndpoint, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit newsletter form");
+      }
+
+      setNewsletterStatus("success");
+      setNewsletterFeedback(content.newsletter.success);
+      event.currentTarget.reset();
+      setNewsletterToken("");
+      setNewsletterReset((value) => value + 1);
+    } catch (error) {
+      console.error(error);
+      setNewsletterStatus("error");
+      setNewsletterFeedback(content.newsletter.error);
+      setNewsletterReset((value) => value + 1);
+    }
   };
 
   return (
@@ -220,18 +277,69 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
               type="email"
               placeholder={content.newsletter.placeholder}
               className="w-full rounded-full border border-white/30 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-white/50 focus:border-white focus:outline-none"
-              disabled={submitted}
+              name="email"
+              autoComplete="email"
+              disabled={isSubmitting || !isConfigured}
             />
+            {turnstileSiteKey ? (
+              <div className="rounded-2xl border border-white/20 bg-black/40 px-4 py-2">
+                <TurnstileWidget
+                  siteKey={turnstileSiteKey}
+                  onSuccess={(token) => {
+                    setNewsletterToken(token);
+                    if (newsletterStatus === "error") {
+                      setNewsletterStatus("idle");
+                      setNewsletterFeedback(null);
+                    }
+                  }}
+                  onError={() => {
+                    setNewsletterToken("");
+                    setNewsletterStatus("error");
+                    setNewsletterFeedback(content.newsletter.turnstileError);
+                  }}
+                  onExpire={() => {
+                    setNewsletterToken("");
+                  }}
+                  resetSignal={newsletterReset}
+                  className="mx-auto"
+                />
+              </div>
+            ) : (
+              <p className="rounded-2xl border border-dashed border-rose-400/60 bg-rose-500/10 px-4 py-2 text-xs text-rose-200">
+                {content.newsletter.turnstileError}
+              </p>
+            )}
             <button
               type="submit"
-              disabled={submitted}
+              disabled={isSubmitting || !isConfigured}
               className={cn(
                 "rounded-full bg-white px-4 py-3 text-sm font-semibold text-indigo-950 transition-transform hover:-translate-y-0.5",
-                submitted && "cursor-not-allowed bg-white/60 text-indigo-900/80"
+                (isSubmitting || !isConfigured) && "cursor-not-allowed bg-white/60 text-indigo-900/80"
               )}
             >
-              {submitted ? content.newsletter.success : content.newsletter.button}
+              {isSubmitting ? content.newsletter.submitting : content.newsletter.button}
             </button>
+            <p
+              className={cn(
+                "text-xs",
+                !isConfigured
+                  ? "text-rose-200"
+                  : newsletterStatus === "success"
+                    ? "text-emerald-300"
+                    : newsletterStatus === "error"
+                      ? "text-rose-200"
+                      : "text-white/60"
+              )}
+              aria-live="polite"
+            >
+              {!isConfigured
+                ? configErrorMessage ?? content.newsletter.helperText
+                : newsletterStatus === "success"
+                  ? newsletterFeedback ?? content.newsletter.success
+                  : newsletterStatus === "error"
+                    ? newsletterFeedback ?? content.newsletter.error
+                    : content.newsletter.helperText}
+            </p>
           </motion.form>
         </div>
       </RevealSection>
