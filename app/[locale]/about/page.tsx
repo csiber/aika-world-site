@@ -8,9 +8,9 @@ export const runtime = "edge";
 export async function generateMetadata({
   params,
 }: {
-  params: {locale: string};
+  params: Promise<{locale: string}>;
 }): Promise<Metadata> {
-  const {locale} = params;
+  const {locale} = await params;
 
   if (!isValidLocale(locale)) {
     return {};
@@ -19,12 +19,11 @@ export async function generateMetadata({
   const t = await getTranslations({
     locale,
     namespace: "about",
-    keyPrefix: "metadata",
   });
 
   return {
-    title: t("title"),
-    description: t("description"),
+    title: t("metadata.title"),
+    description: t("metadata.description"),
     alternates: {
       languages: createLanguageAlternates("/about"),
     },

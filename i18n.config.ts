@@ -1,4 +1,4 @@
-import {createSharedPathnamesNavigation} from "next-intl/navigation";
+import {createNavigation} from "next-intl/navigation";
 
 export const locales = ["hu", "en"] as const;
 export type Locale = (typeof locales)[number];
@@ -21,8 +21,7 @@ export function isValidLocale(locale: string): locale is Locale {
   return locales.includes(locale as Locale);
 }
 
-export const {Link, redirect, usePathname, useRouter} =
-  createSharedPathnamesNavigation({
-    locales,
-    localePrefix,
-  });
+export const {Link, redirect, usePathname, useRouter} = createNavigation({
+  locales,
+  localePrefix,
+});

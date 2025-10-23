@@ -1,6 +1,6 @@
 "use client";
 
-import {usePathname, useRouter} from "next-intl/client";
+import {usePathname, useRouter} from "@/i18n.config";
 import {useTransition, type ChangeEvent} from "react";
 import type {Locale} from "@/i18n.config";
 import {locales} from "@/i18n.config";
