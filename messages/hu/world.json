@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "title": "Aika World – Világ",
+    "description": "Utazz végig Aika régióin, és fedezd fel a történelmi és természeti különbségeket, amelyek formálják a világot."
+  },
+  "title": "Aika világa",
+  "intro": "A kontinenseket átszelő régiók mind más-más kihívásokat, szövetségeket és titkokat rejtenek, amelyek a történet minden fejezetét alakítják.",
+  "regions": {
+    "north": {
+      "title": "Északi fennsíkok",
+      "description": "A zord klíma és a nomád törzsek közti szövetségek határozzák meg a túlélést és a kereskedelmet."
+    },
+    "central": {
+      "title": "Központi városállamok",
+      "description": "Az Aika civilizáció szíve, ahol a mágia és a technológia együtt formálja a mindennapokat."
+    },
+    "isles": {
+      "title": "Déli szigetek",
+      "description": "Ősi romok, aktív vulkánok és titkos kikötők várják a felfedezőket és kalandorokat."
+    }
+  },
+  "callToAction": {
+    "title": "Csatlakozz az utazáshoz",
+    "description": "Vegyél részt a világ alakításában, és oszd meg saját történeteidet a közösséggel."
+  }
+}

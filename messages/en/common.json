@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "title": "Aika World",
+    "description": "Discover the world of Aika and learn about the creative vision behind it."
+  },
+  "nav": {
+    "landing": "Home",
+    "about": "About",
+    "systems": "Systems",
+    "world": "World",
+    "language": "Language"
+  },
+  "languages": {
+    "hu": "Hungarian",
+    "en": "English"
+  }
+}

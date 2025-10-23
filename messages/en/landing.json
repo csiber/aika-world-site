@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "title": "Aika World – Landing",
+    "description": "Dive into the world of Aika and explore its stories, systems and characters."
+  },
+  "hero": {
+    "title": "Welcome to the world of Aika",
+    "subtitle": "Aika World is a constantly growing universe where storytelling, worldbuilding and interactive experiences meet.",
+    "cta": "Explore the world",
+    "support": "Experience every chapter in both Hungarian and English."
+  },
+  "highlights": {
+    "worldbuilding": {
+      "title": "Deep worldbuilding",
+      "description": "Each region offers its own history, culture and conflicts that weave into a single overarching narrative."
+    },
+    "systems": {
+      "title": "Distinct systems",
+      "description": "Gameplay mechanics are crafted to support the atmosphere of Aika and reward meaningful decisions."
+    },
+    "community": {
+      "title": "Engaged community",
+      "description": "Creators and fans collaborate to expand the stories, events and characters of Aika."
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "title": "Aika World – About",
+    "description": "Meet the creators of Aika World and discover the principles that guide our storytelling."
+  },
+  "title": "About",
+  "intro": "Aika World is an independent creative initiative built on detailed storytelling, memorable characters and shared community experiences.",
+  "sections": {
+    "mission": {
+      "title": "Our mission",
+      "description": "We craft a world where choices matter, character growth is trackable and every adventure reveals a new layer."
+    },
+    "team": {
+      "title": "The team",
+      "description": "Writers, illustrators and system designers work side by side to deliver the next chapters."
+    },
+    "approach": {
+      "title": "Our approach",
+      "description": "Every piece of lore is documented so storytellers and players can follow the evolution of Aika."
+    }
+  }
+}
