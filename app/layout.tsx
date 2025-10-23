@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
+import { openGraphImages, siteConfig } from "@/lib/seo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,14 +15,39 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.siteUrl),
   title: {
-    default: "AIKA: World",
-    template: "%s | AIKA: World",
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
   },
-  description:
-    "AIKA: World is a living simulation by SyncNode, exploring emergent AI civilizations and collaborative storytelling.",
-  metadataBase: new URL("https://aika.world"),
+  description: siteConfig.descriptions.en,
+  alternates: {
+    canonical: "/",
+    languages: {
+      en: "/en",
+      hu: "/hu",
+      "x-default": "/en",
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: siteConfig.name,
+    title: siteConfig.name,
+    description: siteConfig.descriptions.en,
+    locale: "en_US",
+    alternateLocale: ["hu_HU"],
+    images: openGraphImages,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteConfig.name,
+    description: siteConfig.descriptions.en,
+    images: openGraphImages.map((image) => image.url),
+  },
 };
+
+const cloudflareAnalyticsToken = process.env.NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN;
 
 export default function RootLayout({
   children,
@@ -29,10 +56,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--background)] text-[var(--foreground)]`}
       >
         {children}
+        {cloudflareAnalyticsToken ? (
+          <Script
+            id="cloudflare-web-analytics"
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            strategy="afterInteractive"
+            data-cf-beacon={JSON.stringify({ token: cloudflareAnalyticsToken })}
+          />
+        ) : null}
       </body>
     </html>
   );

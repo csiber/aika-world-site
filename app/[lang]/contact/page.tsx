@@ -1,21 +1,23 @@
-import type { Metadata } from "next";
 import { ContactPlaceholderForm } from "@/components/contact/contact-placeholder-form";
 import { RevealSection } from "@/components/reveal-section";
 import type { Locale } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n";
+import { createPageMetadata, getRouteSegment } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ lang: Locale }>;
-}): Promise<Metadata> {
+}) {
   const { lang } = await params;
   const dictionary = getDictionary(lang);
 
-  return {
-    title: `${dictionary.contact.title} | AIKA: World`,
+  return createPageMetadata({
+    locale: lang,
+    title: dictionary.contact.title,
     description: dictionary.contact.description,
-  };
+    slug: getRouteSegment("contact"),
+  });
 }
 
 export default async function ContactPage({

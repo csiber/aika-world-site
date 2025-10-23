@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { RevealSection } from "@/components/reveal-section";
@@ -117,41 +118,59 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
         animate="visible"
       >
         <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-purple-500/40 blur-3xl" aria-hidden />
-        <motion.span variants={heroItem} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.3em]">
-          {content.hero.eyebrow}
-          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em]">
-            {content.hero.badge}
-          </span>
-        </motion.span>
-        <motion.h1
-          variants={heroItem}
-          className="mt-6 max-w-3xl text-balance text-4xl font-semibold leading-tight md:text-6xl"
-        >
-          {content.hero.title}
-        </motion.h1>
-        <motion.p
-          variants={heroItem}
-          className="mt-6 max-w-2xl text-lg text-white/80 md:text-xl"
-        >
-          {content.hero.description}
-        </motion.p>
-        <motion.div
-          variants={heroItem}
-          className="mt-8 flex flex-col gap-3 sm:flex-row"
-        >
-          <Link
-            href={`/${locale}/${content.hero.primaryCta.href === "home" ? "" : content.hero.primaryCta.href}`.replace(/\/$/, "")}
-            className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-indigo-950 shadow-lg shadow-indigo-500/30 transition-transform hover:-translate-y-0.5 hover:shadow-indigo-500/50"
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(240px,0.8fr)] lg:items-center">
+          <div>
+            <motion.span variants={heroItem} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.3em]">
+              {content.hero.eyebrow}
+              <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em]">
+                {content.hero.badge}
+              </span>
+            </motion.span>
+            <motion.h1
+              variants={heroItem}
+              className="mt-6 max-w-3xl text-balance text-4xl font-semibold leading-tight md:text-6xl"
+            >
+              {content.hero.title}
+            </motion.h1>
+            <motion.p
+              variants={heroItem}
+              className="mt-6 max-w-2xl text-lg text-white/80 md:text-xl"
+            >
+              {content.hero.description}
+            </motion.p>
+            <motion.div
+              variants={heroItem}
+              className="mt-8 flex flex-col gap-3 sm:flex-row"
+            >
+              <Link
+                href={`/${locale}/${content.hero.primaryCta.href === "home" ? "" : content.hero.primaryCta.href}`.replace(/\/$/, "")}
+                className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-indigo-950 shadow-lg shadow-indigo-500/30 transition-transform hover:-translate-y-0.5 hover:shadow-indigo-500/50"
+              >
+                {content.hero.primaryCta.label}
+              </Link>
+              <Link
+                href={`/${locale}/${content.hero.secondaryCta.href === "home" ? "" : content.hero.secondaryCta.href}`.replace(/\/$/, "")}
+                className="inline-flex items-center justify-center rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 hover:border-white/60"
+              >
+                {content.hero.secondaryCta.label}
+              </Link>
+            </motion.div>
+          </div>
+          <motion.figure
+            variants={heroItem}
+            className="relative mx-auto max-w-sm overflow-hidden rounded-full border border-white/20 bg-black/50 p-6 shadow-[0_20px_60px_-40px_rgba(123,83,255,0.6)]"
           >
-            {content.hero.primaryCta.label}
-          </Link>
-          <Link
-            href={`/${locale}/${content.hero.secondaryCta.href === "home" ? "" : content.hero.secondaryCta.href}`.replace(/\/$/, "")}
-            className="inline-flex items-center justify-center rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 hover:border-white/60"
-          >
-            {content.hero.secondaryCta.label}
-          </Link>
-        </motion.div>
+            <Image
+              src="/images/hero/aika-hero-orb.svg"
+              alt={content.hero.imageAlt}
+              width={600}
+              height={600}
+              priority
+              sizes="(min-width: 1280px) 380px, (min-width: 768px) 320px, 240px"
+              className="h-auto w-full"
+            />
+          </motion.figure>
+        </div>
       </motion.section>
 
       <RevealSection className="grid gap-8 rounded-3xl border border-white/10 bg-white/5 p-10 text-sm leading-relaxed text-white/90">
@@ -222,6 +241,17 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
               variants={cardVariants}
               className="rounded-2xl border border-white/10 bg-white/5 p-6"
             >
+              <div className="flex items-center justify-between">
+                <Image
+                  src={`/images/features/${feature.icon}.svg`}
+                  alt={feature.name}
+                  width={144}
+                  height={144}
+                  loading="lazy"
+                  sizes="(min-width: 1280px) 140px, (min-width: 768px) 120px, 96px"
+                  className="h-16 w-16 shrink-0 md:h-20 md:w-20"
+                />
+              </div>
               <h3 className="text-lg font-semibold text-white">{feature.name}</h3>
               <p className="mt-3 text-sm text-white/75">{feature.description}</p>
             </motion.div>

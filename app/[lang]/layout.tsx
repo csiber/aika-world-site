@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { AnalyticsConsent } from "@/components/analytics-consent";
 import { LocaleEffect } from "@/components/locale-effect";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { NavigationBar } from "@/components/navigation/navigation-bar";
@@ -81,6 +82,7 @@ export default async function LocaleLayout({
           <p className="mt-10 text-center text-xs text-white/50">{rights}</p>
         </footer>
       </div>
+      <AnalyticsConsent message={dictionary.consent.message} acknowledge={dictionary.consent.acknowledge} />
     </>
   );
 }

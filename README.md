@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AIKA: World – fejlesztői útmutató
 
-## Getting Started
+A projekt egy Next.js alapú, többnyelvű marketing oldal, amely Cloudflare Pages + Workers környezetre van optimalizálva. Az alábbi leírás célja, hogy új fejlesztő legfeljebb 10 perc alatt be tudja indítani a rendszert és átlássa az alapvető működést.
 
-First, run the development server:
+## Fejlesztői gyorsindító
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Node 18+ és npm szükséges (a lockfile npm-hez készült).
+2. Telepítés: `npm install`
+3. Fejlesztői szerver indítása: `npm run dev`
+4. Böngészőben nyisd meg a `http://localhost:3000` címet.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+A projekt nem használ SQLite-ot; a form endpontok és a Turnstile integráció külső szolgáltatásokhoz csatlakoznak, így lokális adatbázis beállításra nincs szükség.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Hasznos npm parancsok
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Parancs | Leírás |
+| --- | --- |
+| `npm run dev` | Next.js fejlesztői mód, hot reloaddal. |
+| `npm run build` | Production build Cloudflare Pages számára (statikus export + edge runtime). |
+| `npm run start` | Preview szerver a buildelt kimenet ellenőrzésére. |
+| `npm run lint` | Statikus ellenőrzés a projekt ESLint szabályaival. |
 
-## Learn More
+## Build és deploy folyamat
 
-To learn more about Next.js, take a look at the following resources:
+1. `npm run build` lokálisan ellenőrzi, hogy a Next.js alkalmazás statikusan előállítható.
+2. Cloudflare Pages-en a build parancs ugyanaz (`npm run build`), az outputot az `.open-next` konfiguráció írja le.
+3. A Workers funkciókat a `wrangler.jsonc` és az `open-next.config.ts` fájlok szabályozzák.
+4. Élesítés előtt érdemes Lighthouse-t futtatni (Chrome DevTools) és ellenőrizni, hogy a Performance + SEO legalább 90 pont.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## I18n struktúra
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- A kulcsok és szövegek a `lib/i18n.ts` fájlban találhatók.
+- A `Dictionary` típus határozza meg az elérhető tartalmi blokkokat; minden új komponenshez itt kell felvenni a lokalizált szöveget.
+- A nyelvi útvonalak (`/en`, `/hu`) fixen statikusan generálódnak az `app/[lang]` mappában.
 
-## Deploy on Vercel
+## UI komponensek
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Minden nagyobb UI elem a `components/` könyvtárban él.
+- A marketing szakaszok animációi a `framer-motion` könyvtárat használják (`components/home/home-landing.tsx`).
+- A Cloudflare Turnstile widget újrafelhasználható verziója: `components/turnstile-widget.tsx`.
+- Az analitika hozzájárulási sáv: `components/analytics-consent.tsx`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Környezeti változók
+
+| Változó | Szerep |
+| --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | Teljes bázis URL (pl. `https://aika.world`), meta tagekhez és sitemaphez. |
+| `NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN` | Cloudflare Web Analytics token; ha nincs megadva, a script nem töltődik be. |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site kulcs a kapcsolatfelvételi űrlaphoz és hírlevélhez. |
+| `NEXT_PUBLIC_CONTACT_FORM_ENDPOINT` | Külső endpoint, ahová a kapcsolatfelvételi űrlap POST-olja az adatokat. |
+| `NEXT_PUBLIC_NEWSLETTER_FORM_ENDPOINT` | Külső endpoint a hírlevél feliratkozáshoz. |
+
+Éles környezetben minden értéket a Cloudflare Pages projekt environment-jében kell felvenni.
+
+## Kódstílus és minőség
+
+- TypeScript minden fájlban kötelező.
+- A Tailwind utility osztályok preferáltak, saját CSS csak a `app/globals.css` fájlban található változókkal történjen.
+- A képi assetek SVG formátumban élnek a `public/images` és `public/og` mappákban; PNG feltöltése kerülendő.
+
+## Ellenőrzőlista élesítés előtt
+
+- [ ] `npm run build` hibamentesen lefut.
+- [ ] Lighthouse desktop: Performance ≥ 90, SEO ≥ 90.
+- [ ] Cloudflare Web Analytics token aktív és a consent banner megjelenik.
+- [ ] Hreflang és canonical tagek ellenőrizve (View Source).
+- [ ] `sitemap.xml` és `robots.txt` kiszolgálva van (`npm run start` után ellenőrizhető).
+
+További üzemeltetési részletek az `OPS_NOTES.md` fájlban találhatók.
