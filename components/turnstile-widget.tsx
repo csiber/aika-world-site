@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Script from "next/script";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -62,6 +63,16 @@ export function TurnstileWidget({
   const errorRef = useRef(onError);
   const expireRef = useRef(onExpire);
 
+  const handleScriptReady = useCallback(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (window.turnstile) {
+      setReady(true);
+    }
+  }, []);
+
   useEffect(() => {
     successRef.current = onSuccess;
   }, [onSuccess]);
@@ -79,35 +90,9 @@ export function TurnstileWidget({
       return;
     }
 
-    const existingScript = document.getElementById(scriptId) as HTMLScriptElement | null;
-
-    const handleLoad = () => {
+    if (window.turnstile) {
       setReady(true);
-    };
-
-    if (existingScript) {
-      if (window.turnstile) {
-        setReady(true);
-      } else {
-        existingScript.addEventListener("load", handleLoad);
-      }
-
-      return () => {
-        existingScript.removeEventListener("load", handleLoad);
-      };
     }
-
-    const script = document.createElement("script");
-    script.id = scriptId;
-    script.src = scriptSrc;
-    script.async = true;
-    script.defer = true;
-    script.addEventListener("load", handleLoad);
-    document.head.appendChild(script);
-
-    return () => {
-      script.removeEventListener("load", handleLoad);
-    };
   }, []);
 
   useEffect(() => {
@@ -155,6 +140,10 @@ export function TurnstileWidget({
       window.turnstile.reset(widgetIdRef.current);
     }
   }, [resetSignal]);
-
-  return <div ref={containerRef} className={cn("cf-turnstile", className)} />;
+  return (
+    <>
+      <Script id={scriptId} src={scriptSrc} strategy="lazyOnload" onReady={handleScriptReady} onLoad={handleScriptReady} />
+      <div ref={containerRef} className={cn("cf-turnstile", className)} />
+    </>
+  );
 }

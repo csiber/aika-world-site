@@ -27,6 +27,7 @@ type PillarItem = {
 type FeatureItem = {
   name: string;
   description: string;
+  icon: string;
 };
 
 type RoadmapPhase = {
@@ -91,6 +92,13 @@ type ContactForm = {
 };
 
 export type Dictionary = {
+  meta: {
+    description: string;
+  };
+  consent: {
+    message: string;
+    acknowledge: string;
+  };
   nav: Record<NavKey, string>;
   home: {
     hero: {
@@ -98,6 +106,7 @@ export type Dictionary = {
       badge: string;
       title: string;
       description: string;
+      imageAlt: string;
       primaryCta: { label: string; href: NavKey };
       secondaryCta: { label: string; href: NavKey };
     };
@@ -185,6 +194,14 @@ export type Dictionary = {
 
 const dictionaries: Record<Locale, Dictionary> = {
   en: {
+    meta: {
+      description:
+        "AIKA: World is a living simulation by SyncNode, exploring emergent AI civilizations and collaborative storytelling.",
+    },
+    consent: {
+      message: "We do not use tracking cookies — only privacy-first Cloudflare Web Analytics runs here.",
+      acknowledge: "Understood",
+    },
     nav: {
       home: "Home",
       world: "World",
@@ -200,6 +217,7 @@ const dictionaries: Record<Locale, Dictionary> = {
         title: "Step into AIKA: World",
         description:
           "AIKA: World is a living simulation where emergent AI factions and human storytellers co-create the canon in real time.",
+        imageAlt: "Illustration of AIKA: World's luminous simulation core",
         primaryCta: { label: "Meet the factions", href: "world" },
         secondaryCta: { label: "Follow the devlog", href: "devlog" },
       },
@@ -265,21 +283,25 @@ const dictionaries: Record<Locale, Dictionary> = {
             name: "Worker-native simulation",
             description:
               "Cloudflare Workers stream the state lattice so every interaction stays low-latency and globally synchronized.",
+            icon: "worker-simulation",
           },
           {
             name: "Living lore dashboard",
             description:
               "Curators can patch narrative beats, unlock new threads, and observe how factions shift in response.",
+            icon: "lore-dashboard",
           },
           {
             name: "Player signal loops",
             description:
               "Community prompts, polls, and faction contracts update the model weights driving world behavior.",
+            icon: "signal-loops",
           },
           {
             name: "Accessible mod hooks",
             description:
               "Schema-driven content packs let contributors extend regions, NPCs, and rituals without touching core code.",
+            icon: "mod-hooks",
           },
         ],
       },
@@ -539,6 +561,14 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
   },
   hu: {
+    meta: {
+      description:
+        "Az AIKA: World egy élő szimuláció a SyncNode-tól, amely feltárja a felemelkedő MI civilizációkat és a közösségi történetmesélést.",
+    },
+    consent: {
+      message: "Nem használunk követő sütiket – csak a Cloudflare Web Analytics fut.",
+      acknowledge: "Értem",
+    },
     nav: {
       home: "Kezdőlap",
       world: "Világ",
@@ -554,6 +584,7 @@ const dictionaries: Record<Locale, Dictionary> = {
         title: "Lépj be az AIKA: World világába",
         description:
           "Az AIKA: World egy élő szimuláció, ahol mesterséges frakciók és emberi történetmesélők együtt formálják a kánont valós időben.",
+        imageAlt: "Az AIKA: World fénylő szimulációs magjának illusztrációja",
         primaryCta: { label: "Ismerd meg a frakciókat", href: "world" },
         secondaryCta: { label: "Kövesd a devlogot", href: "devlog" },
       },
@@ -619,21 +650,25 @@ const dictionaries: Record<Locale, Dictionary> = {
             name: "Worker-alapú szimuláció",
             description:
               "A Cloudflare Workers sugározza az állapot-rácsot, így minden interakció alacsony késleltetéssel, globálisan szinkronban történik.",
+            icon: "worker-simulation",
           },
           {
             name: "Élő lore vezérlőpult",
             description:
               "A kurátorok foltozhatják a narratív csomópontokat, új szálakat nyithatnak és figyelhetik a frakciók reakcióját.",
+            icon: "lore-dashboard",
           },
           {
             name: "Játékos visszacsatolási hurkok",
             description:
               "Közösségi promptok, szavazások és frakciós szerződések frissítik a világ viselkedését vezérlő modelleket.",
+            icon: "signal-loops",
           },
           {
             name: "Bővíthető mod csatornák",
             description:
               "Sémavezérelt tartalomcsomagokkal a hozzájárulók új régiókat, NPC-ket és rituálékat adhatnak hozzá a mag kód módosítása nélkül.",
+            icon: "mod-hooks",
           },
         ],
       },

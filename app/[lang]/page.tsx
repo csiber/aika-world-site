@@ -1,20 +1,22 @@
-import type { Metadata } from "next";
 import { HomeLanding } from "@/components/home/home-landing";
 import type { Locale } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n";
+import { createPageMetadata, getRouteSegment } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ lang: Locale }>;
-}): Promise<Metadata> {
+}) {
   const { lang } = await params;
   const dictionary = getDictionary(lang);
 
-  return {
+  return createPageMetadata({
+    locale: lang,
     title: dictionary.home.hero.title,
     description: dictionary.home.whatIs.subtitle,
-  };
+    slug: getRouteSegment("home"),
+  });
 }
 
 export default async function LocaleHome({

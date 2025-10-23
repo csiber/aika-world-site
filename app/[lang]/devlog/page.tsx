@@ -1,20 +1,23 @@
-import type { Metadata } from "next";
 import { RevealSection } from "@/components/reveal-section";
 import type { Locale } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n";
+import { createPageMetadata, getRouteSegment } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ lang: Locale }>;
-}): Promise<Metadata> {
+}) {
   const { lang } = await params;
   const dictionary = getDictionary(lang);
 
-  return {
-    title: `${dictionary.devlog.title} | AIKA: World`,
+  return createPageMetadata({
+    locale: lang,
+    title: dictionary.devlog.title,
     description: dictionary.devlog.description,
-  };
+    slug: getRouteSegment("devlog"),
+    type: "article",
+  });
 }
 
 export default async function DevlogPage({
