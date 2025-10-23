@@ -91,7 +91,7 @@ export function createPageMetadata({
   title: string;
   description: string;
   slug?: string;
-  type?: Metadata["openGraph"]["type"];
+  type?: NonNullable<Metadata["openGraph"]>["type"];
 }): Metadata {
   const canonicalPath = buildLocalePath(locale, slug);
   const languageAlternates = buildLanguageAlternates(slug);
