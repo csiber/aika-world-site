@@ -9,11 +9,6 @@ const normalizedSiteUrl = configuredSiteUrl
   ? configuredSiteUrl.replace(/\/+$/, "")
   : fallbackSiteUrl;
 
-const ogLocaleMap: Record<Locale, string> = {
-  en: "en_US",
-  hu: "hu_HU",
-};
-
 const descriptionByLocale = Object.fromEntries(
   locales.map((locale) => [locale, getDictionary(locale).meta.description]),
 ) as Record<Locale, string>;
@@ -33,27 +28,6 @@ export const routeSegments: Record<NavKey, string> = {
   about: "about",
   contact: "contact",
 };
-
-export const openGraphImages = [
-  {
-    url: "/og/aika-world-light.svg",
-    width: 1200,
-    height: 630,
-    alt: "AIKA: World open graph kártya világos témához",
-    type: "image/svg+xml",
-  },
-  {
-    url: "/og/aika-world-dark.svg",
-    width: 1200,
-    height: 630,
-    alt: "AIKA: World open graph kártya sötét témához",
-    type: "image/svg+xml",
-  },
-] satisfies NonNullable<Metadata["openGraph"]>["images"];
-
-type OpenGraphImage = (typeof openGraphImages)[number];
-
-export const openGraphImageUrls = openGraphImages.map((image: OpenGraphImage) => image.url);
 
 export function getSiteUrl(): string {
   return siteConfig.siteUrl;
@@ -76,26 +50,19 @@ function buildLanguageAlternates(slug = ""): Record<string, string> {
   return languages;
 }
 
-function getAlternateOgLocales(current: Locale): string[] {
-  return locales.filter((locale) => locale !== current).map((locale) => ogLocaleMap[locale]);
-}
-
 export function createPageMetadata({
   locale,
   title,
   description,
   slug = "",
-  type,
 }: {
   locale: Locale;
   title: string;
   description: string;
   slug?: string;
-  type?: NonNullable<Metadata["openGraph"]>["type"];
 }): Metadata {
   const canonicalPath = buildLocalePath(locale, slug);
   const languageAlternates = buildLanguageAlternates(slug);
-  const ogLocale = ogLocaleMap[locale];
 
   const fullTitle = `${title} | ${siteConfig.name}`;
 
@@ -106,21 +73,10 @@ export function createPageMetadata({
       canonical: canonicalPath,
       languages: languageAlternates,
     },
-    openGraph: {
-      url: canonicalPath,
-      title: fullTitle,
-      description,
-      siteName: siteConfig.name,
-      locale: ogLocale,
-      alternateLocale: getAlternateOgLocales(locale),
-      images: openGraphImages,
-      ...(type ? { type } : {}),
-    },
     twitter: {
       card: "summary_large_image",
       title: fullTitle,
       description,
-      images: openGraphImageUrls,
     },
   };
 }

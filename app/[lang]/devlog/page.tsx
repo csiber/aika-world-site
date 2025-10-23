@@ -16,7 +16,6 @@ export async function generateMetadata({
     title: dictionary.devlog.title,
     description: dictionary.devlog.description,
     slug: getRouteSegment("devlog"),
-    type: "article",
   });
 }
 

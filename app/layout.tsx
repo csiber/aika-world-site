@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
-import { openGraphImageUrls, openGraphImages, siteConfig } from "@/lib/seo";
+import { siteConfig } from "@/lib/seo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,21 +29,10 @@ export const metadata: Metadata = {
       "x-default": "/en",
     },
   },
-  openGraph: {
-    type: "website",
-    url: "/",
-    siteName: siteConfig.name,
-    title: siteConfig.name,
-    description: siteConfig.descriptions.en,
-    locale: "en_US",
-    alternateLocale: ["hu_HU"],
-    images: openGraphImages,
-  },
   twitter: {
     card: "summary_large_image",
     title: siteConfig.name,
     description: siteConfig.descriptions.en,
-    images: openGraphImageUrls,
   },
 };
 
