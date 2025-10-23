@@ -49,7 +49,7 @@ export const openGraphImages = [
     alt: "AIKA: World open graph kártya sötét témához",
     type: "image/svg+xml",
   },
-] satisfies Metadata["openGraph"]["images"];
+] satisfies NonNullable<Metadata["openGraph"]>["images"];
 
 type OpenGraphImage = (typeof openGraphImages)[number];
 
@@ -91,7 +91,7 @@ export function createPageMetadata({
   title: string;
   description: string;
   slug?: string;
-  type?: Metadata["openGraph"]["type"];
+  type?: NonNullable<Metadata["openGraph"]>["type"];
 }): Metadata {
   const canonicalPath = buildLocalePath(locale, slug);
   const languageAlternates = buildLanguageAlternates(slug);
