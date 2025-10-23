@@ -30,5 +30,15 @@
 			"database_name": "aika-world-db",
 			"database_id": "9857d534-0700-427a-aab7-592e1fe95dbf"
 		}
-	]
+	],
+	"observability": {
+		"enabled": false,
+		"head_sampling_rate": 1,
+		"logs": {
+			"enabled": true,
+			"head_sampling_rate": 1,
+			"persist": true,
+			"invocation_logs": true
+		}
+	}
 }
