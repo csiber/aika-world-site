@@ -82,8 +82,12 @@ type ContactForm = {
   messageLabel: string;
   messagePlaceholder: string;
   submitLabel: string;
-  disabledHint: string;
+  submittingLabel: string;
+  helperText: string;
   success: string;
+  error: string;
+  turnstileError: string;
+  endpointError: string;
 };
 
 export type Dictionary = {
@@ -122,7 +126,12 @@ export type Dictionary = {
       description: string;
       placeholder: string;
       button: string;
+      submitting: string;
       success: string;
+      error: string;
+      turnstileError: string;
+      endpointError: string;
+      helperText: string;
       disclaimer: string;
     };
   };
@@ -315,7 +324,12 @@ const dictionaries: Record<Locale, Dictionary> = {
           "Get curated updates when new builds deploy, along with early access invitations and lore highlights.",
         placeholder: "Enter your e-mail address",
         button: "Notify me",
-        success: "Thanks! We'll keep you posted soon.",
+        submitting: "Sending…",
+        success: "You're on the list! We'll keep you posted soon.",
+        error: "We couldn't add you just now. Please try again in a moment.",
+        turnstileError: "Please confirm the Cloudflare Turnstile check before subscribing.",
+        endpointError: "Newsletter sign-ups are temporarily unavailable. Follow our channels for updates meanwhile.",
+        helperText: "No spam—only milestone briefings and early invitations.",
         disclaimer: "We send a single, high-signal digest per milestone. Unsubscribe anytime.",
       },
     },
@@ -491,7 +505,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     contact: {
       title: "Contact",
       description:
-        "We'd love to hear from collaborators, researchers, and early playtesters. The full contact form goes live in the next drop.",
+        "We'd love to hear from collaborators, researchers, and early playtesters. Send us a note below or use the direct channels.",
       channels: {
         title: "Immediate channels",
         items: [
@@ -506,8 +520,12 @@ const dictionaries: Record<Locale, Dictionary> = {
         messageLabel: "Message",
         messagePlaceholder: "Share how you'd like to collaborate, or what you want to learn about AIKA: World.",
         submitLabel: "Send message",
-        disabledHint: "Form submission unlocks soon. For now, reach us via the listed channels.",
-        success: "Thanks! We'll respond once submissions open.",
+        submittingLabel: "Sending…",
+        helperText: "We usually reply within two or three days. Cloudflare Turnstile keeps spam away.",
+        success: "Thanks! We'll get back as soon as we can.",
+        error: "We couldn't send your message. Please try again shortly or reach us via e-mail.",
+        turnstileError: "Please confirm the Cloudflare Turnstile challenge before sending.",
+        endpointError: "Contact form submissions are temporarily unavailable. Reach us via the channels above.",
       },
     },
     footer: {
@@ -660,7 +678,12 @@ const dictionaries: Record<Locale, Dictionary> = {
           "Értesítést küldünk az új build-ekről, korai hozzáférési meghívókról és kiemelt lore részletekről.",
         placeholder: "Írd be az e-mail címed",
         button: "Értesíts",
+        submitting: "Feliratkozás…",
         success: "Köszönjük! Hamarosan jelentkezünk.",
+        error: "Nem sikerült feliratkozni. Próbáld meg újra egy kicsit később.",
+        turnstileError: "Kérjük, erősítsd meg a Cloudflare Turnstile ellenőrzést a feliratkozás előtt.",
+        endpointError: "A hírlevél-feliratkozás jelenleg nem érhető el. Kövesd a fenti csatornáinkat addig is.",
+        helperText: "Nem küldünk spamet – csak mérföldköves összefoglalókat és meghívókat.",
         disclaimer:
           "Csak mérföldkövenként küldünk egy tömör, nagy értékű összefoglalót. Bármikor leiratkozhatsz.",
       },
@@ -838,7 +861,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     contact: {
       title: "Kapcsolat",
       description:
-        "Örömmel hallunk kollaborátorokról, kutatókról és korai playtesterekről. A teljes űrlap a következő kiadásban él.",
+        "Örömmel hallunk kollaborátorokról, kutatókról és korai playtesterekről. Írj nekünk az alábbi űrlapon vagy a közvetlen csatornákon.",
       channels: {
         title: "Azonnali csatornák",
         items: [
@@ -854,9 +877,13 @@ const dictionaries: Record<Locale, Dictionary> = {
         messagePlaceholder:
           "Írd le, hogyan működnél együtt, vagy miről szeretnél többet megtudni az AIKA: World kapcsán.",
         submitLabel: "Üzenet küldése",
-        disabledHint:
-          "Az űrlap beküldés hamarosan aktiválódik. Addig használd a felsorolt csatornákat.",
-        success: "Köszönjük! Válaszolunk, amint a beküldés megnyílik.",
+        submittingLabel: "Küldés…",
+        helperText:
+          "Általában 2-3 napon belül válaszolunk. A Cloudflare Turnstile óvja az űrlapot a spamtől.",
+        success: "Köszönjük! Hamarosan jelentkezünk.",
+        error: "Nem sikerült elküldeni az üzenetet. Próbáld meg később, vagy írj közvetlenül e-mailt.",
+        turnstileError: "Kérjük, igazold a Cloudflare Turnstile ellenőrzést a beküldés előtt.",
+        endpointError: "Az űrlap beküldése jelenleg nem elérhető. Használd a fenti csatornákat.",
       },
     },
     footer: {
