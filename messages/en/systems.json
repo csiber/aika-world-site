@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "title": "Aika World – Systems",
+    "description": "Learn about the systems that power the world of Aika and see how they influence the story and play."
+  },
+  "title": "Systems",
+  "intro": "The systems of Aika World respond to player decisions and the rhythm of the story so every adventure feels distinct.",
+  "systems": {
+    "magic": {
+      "title": "Ethereal magic",
+      "description": "The flow of aether keeps magic in balance, yet every spell leaves a mark on the fabric of the world.",
+      "impact": "Overuse can trigger distortions, forcing mages to wield their power responsibly."
+    },
+    "technology": {
+      "title": "Ancient technology",
+      "description": "The machinery of lost civilizations awakens for those who decipher forgotten codes and rites.",
+      "impact": "Maintaining balance between technology and magic is vital for the world's stability."
+    },
+    "economy": {
+      "title": "Living economy",
+      "description": "Trade routes and faction influence shift constantly in response to player choices.",
+      "impact": "Every deal or alliance shapes the narrative, opening new opportunities or sparking conflict."
+    }
+  }
+}

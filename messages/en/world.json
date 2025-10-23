@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "title": "Aika World – World",
+    "description": "Travel across the regions of Aika and discover the histories and landscapes that shape the world."
+  },
+  "title": "The world of Aika",
+  "intro": "Each region offers unique challenges, alliances and secrets that influence every chapter of the narrative.",
+  "regions": {
+    "north": {
+      "title": "Northern plateaus",
+      "description": "Harsh climates and alliances between nomadic tribes define survival and trade."
+    },
+    "central": {
+      "title": "Central city-states",
+      "description": "The heart of Aika's civilization, where magic and technology shape everyday life together."
+    },
+    "isles": {
+      "title": "Southern isles",
+      "description": "Ancient ruins, active volcanoes and hidden harbors await explorers and adventurers."
+    }
+  },
+  "callToAction": {
+    "title": "Join the journey",
+    "description": "Help shape the world and share your own stories with the community."
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "title": "Aika World – Rendszerek",
+    "description": "Ismerd meg az Aika világát működtető rendszereket, és tudd meg, milyen hatással vannak a játékra és a történetre."
+  },
+  "title": "Rendszerek",
+  "intro": "Az Aika World rendszerei a játékosok döntéseire és a történet ritmusára reagálnak, hogy minden kaland egyedi legyen.",
+  "systems": {
+    "magic": {
+      "title": "Éteri mágia",
+      "description": "Az éter energiája biztosítja a mágia egyensúlyát, de minden használat nyomot hagy a világ szövetén.",
+      "impact": "A túlzott energiahasználat torzulásokat okozhat, ezért a mágusoknak felelősen kell bánniuk erejükkel."
+    },
+    "technology": {
+      "title": "Ősi technológia",
+      "description": "Az elveszett civilizációk gépezetei újra működésbe lépnek, ha valaki megfejti a kódokat és a rítusokat.",
+      "impact": "A technológia és a mágia közti egyensúly megtartása létfontosságú a világ stabilitásához."
+    },
+    "economy": {
+      "title": "Élő gazdaság",
+      "description": "A kereskedelmi útvonalak és a frakciók erőviszonyai folyamatosan változnak a játékosok döntéseinek hatására.",
+      "impact": "Minden üzlet és szövetség kihat a történetre, új lehetőségeket vagy konfliktusokat teremtve."
+    }
+  }
+}

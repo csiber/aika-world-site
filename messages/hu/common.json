@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "title": "Aika World",
+    "description": "Fedezd fel az Aika világát és ismerd meg az alkotói víziót."
+  },
+  "nav": {
+    "landing": "Főoldal",
+    "about": "Rólunk",
+    "systems": "Rendszerek",
+    "world": "Világ",
+    "language": "Nyelv"
+  },
+  "languages": {
+    "hu": "Magyar",
+    "en": "English"
+  }
+}
