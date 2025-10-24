@@ -50,9 +50,10 @@ export default async function LocaleLayout({
         </main>
         <footer className="border-t border-white/10 bg-black/70 py-12 text-white">
           <div className="mx-auto grid max-w-6xl gap-10 px-6 md:grid-cols-[2fr_1fr_1fr]">
-            <div className="space-y-4">
-              <p className="text-sm uppercase tracking-[0.4em] text-white/50">{dictionary.footer.tagline}</p>
-              <p className="max-w-md text-sm text-white/70">{dictionary.footer.description}</p>
+            <div className="space-y-3">
+              <p className="text-sm uppercase tracking-[0.4em] text-white/50">{dictionary.footer.studioBlurb}</p>
+              <p className="text-sm text-white/70">{dictionary.footer.credit}</p>
+              <p className="text-xs text-white/50">{dictionary.footer.builtWith}</p>
             </div>
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-white/60">{dictionary.footer.navTitle}</h3>
@@ -71,14 +72,22 @@ export default async function LocaleLayout({
               <LocaleSwitcher locale={lang} />
               <div>
                 <h4 className="mt-6 text-sm font-semibold uppercase tracking-[0.3em] text-white/60">
-                  {dictionary.footer.contactLabel}
+                  {dictionary.footer.reachUs}
                 </h4>
                 <ul className="mt-3 space-y-1 text-sm text-white/80">
                   {dictionary.contact.channels.items.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
+                  <li>
+                    <Link href={`mailto:${dictionary.footer.contactEmail}`} className="hover:text-white">
+                      {dictionary.footer.contactEmail}
+                    </Link>
+                  </li>
                 </ul>
               </div>
+              <p className="text-xs text-white/50">
+                {[dictionary.footer.privacy, dictionary.footer.terms, dictionary.footer.cookies].join(" • ")}
+              </p>
             </div>
           </div>
           <p className="mt-10 text-center text-xs text-white/50">{rights}</p>
