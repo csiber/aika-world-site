@@ -1,16 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { locales, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-
-const switchVariants = {
-  rest: { opacity: 0.4, scale: 1 },
-  hover: { opacity: 1, scale: 1.05 },
-  active: { opacity: 1, scale: 1.08 },
-};
 
 type LocaleSwitcherProps = {
   locale: Locale;
@@ -29,24 +22,18 @@ export function LocaleSwitcher({ locale }: LocaleSwitcherProps) {
         const isActive = entry === locale;
 
         return (
-          <motion.span
-            key={entry}
-            variants={switchVariants}
-            initial="rest"
-            whileHover="hover"
-            animate={isActive ? "active" : "rest"}
-            className="inline-flex"
-          >
+          <span key={entry} className="inline-flex">
             <Link
               href={href}
               className={cn(
-                "px-2 py-1 text-foreground/80 transition-colors",
-                isActive && "text-foreground"
+                "px-2 py-1 text-foreground/70 transition-transform transition-opacity duration-150",
+                "hover:scale-105 hover:text-foreground",
+                isActive && "scale-110 text-foreground"
               )}
             >
               {entry.toUpperCase()}
             </Link>
-          </motion.span>
+          </span>
         );
       })}
     </div>

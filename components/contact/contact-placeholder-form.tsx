@@ -1,7 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
-import type { Variants } from "framer-motion";
 import { useState } from "react";
 import { TurnstileWidget } from "@/components/turnstile-widget";
 import type { Dictionary } from "@/lib/i18n";
@@ -9,15 +7,6 @@ import { cn } from "@/lib/utils";
 
 type ContactPlaceholderFormProps = {
   content: Dictionary["contact"]["form"];
-};
-
-const formVariants: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: [0.2, 0.6, 0.2, 1] as const },
-  },
 };
 
 type FormStatus = "idle" | "submitting" | "success" | "error";
@@ -85,13 +74,9 @@ export function ContactPlaceholderForm({ content }: ContactPlaceholderFormProps)
   };
 
   return (
-    <motion.form
+    <form
       onSubmit={handleSubmit}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.3 }}
-      variants={formVariants}
-      className="grid gap-4 rounded-3xl border border-white/10 bg-white/5 p-6 text-white shadow-[0_20px_60px_-40px_rgba(123,83,255,0.6)]"
+      className="grid gap-4 rounded-3xl border border-white/10 bg-white/5 p-6 text-white shadow-[0_20px_60px_-40px_rgba(123,83,255,0.6)] transition-transform"
     >
       <label className="grid gap-2 text-sm">
         <span className="uppercase tracking-[0.3em] text-white/60">{content.nameLabel}</span>
@@ -185,6 +170,6 @@ export function ContactPlaceholderForm({ content }: ContactPlaceholderFormProps)
               ? feedback ?? content.error
               : content.helperText}
       </p>
-    </motion.form>
+    </form>
   );
 }

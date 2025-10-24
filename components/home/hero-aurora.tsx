@@ -1,8 +1,7 @@
 "use client";
 
-import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import { useEffect, useRef } from "react";
-import type { MutableRefObject, RefObject } from "react";
+import type { CSSProperties, MutableRefObject, RefObject } from "react";
 import { cn } from "@/lib/utils";
 
 type HeroAuroraProps = {
@@ -28,42 +27,10 @@ type SparkDefinition = {
 };
 
 const orbs: OrbDefinition[] = [
-  {
-    id: "alpha",
-    size: 420,
-    parallax: 14,
-    top: "-12%",
-    left: "-6%",
-    opacity: 0.8,
-    gradientClass: "from-purple-500/60 via-indigo-500/20 to-transparent",
-  },
-  {
-    id: "beta",
-    size: 360,
-    parallax: 18,
-    top: "58%",
-    left: "62%",
-    opacity: 0.65,
-    gradientClass: "from-fuchsia-500/40 via-sky-500/20 to-transparent",
-  },
-  {
-    id: "gamma",
-    size: 260,
-    parallax: 10,
-    top: "24%",
-    left: "68%",
-    opacity: 0.7,
-    gradientClass: "from-emerald-400/40 via-cyan-400/20 to-transparent",
-  },
-  {
-    id: "delta",
-    size: 240,
-    parallax: 20,
-    top: "70%",
-    left: "-10%",
-    opacity: 0.55,
-    gradientClass: "from-indigo-500/30 via-purple-500/10 to-transparent",
-  },
+  { id: "alpha", size: 420, parallax: 14, top: "-12%", left: "-6%", opacity: 0.8, gradientClass: "from-purple-500/60 via-indigo-500/20 to-transparent" },
+  { id: "beta", size: 360, parallax: 18, top: "58%", left: "62%", opacity: 0.65, gradientClass: "from-fuchsia-500/40 via-sky-500/20 to-transparent" },
+  { id: "gamma", size: 260, parallax: 10, top: "24%", left: "68%", opacity: 0.7, gradientClass: "from-emerald-400/40 via-cyan-400/20 to-transparent" },
+  { id: "delta", size: 240, parallax: 20, top: "70%", left: "-10%", opacity: 0.55, gradientClass: "from-indigo-500/30 via-purple-500/10 to-transparent" },
 ];
 
 const sparks: SparkDefinition[] = [
@@ -76,35 +43,21 @@ const sparks: SparkDefinition[] = [
 ];
 
 export function HeroAurora({ containerRef }: HeroAuroraProps) {
-  const pointerX = useMotionValue(0);
-  const pointerY = useMotionValue(0);
-  const prefersReducedMotion = useReducedMotion();
-
-  const smoothX = useSpring(pointerX, {
-    stiffness: 90,
-    damping: 18,
-    mass: 0.6,
-  });
-
-  const smoothY = useSpring(pointerY, {
-    stiffness: 90,
-    damping: 18,
-    mass: 0.6,
-  });
-
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const originRef = useRef({ x: 0, y: 0 });
-
-  const groupTranslateX = useTransform(smoothX, (value) => value * 0.04);
-  const groupTranslateY = useTransform(smoothY, (value) => value * 0.04);
+  const rafRef = useRef<number | null>(null);
+  const pointerRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    const element = containerRef.current;
-    if (!element || prefersReducedMotion) {
+    const wrapper = wrapperRef.current;
+    const host = containerRef.current;
+
+    if (!wrapper || !host) {
       return;
     }
 
     const updateOrigin = () => {
-      const rect = element.getBoundingClientRect();
+      const rect = host.getBoundingClientRect();
       originRef.current = {
         x: rect.left + rect.width / 2,
         y: rect.top + rect.height / 2,
@@ -114,18 +67,33 @@ export function HeroAurora({ containerRef }: HeroAuroraProps) {
     updateOrigin();
 
     const resizeObserver = new ResizeObserver(updateOrigin);
-    resizeObserver.observe(element);
+    resizeObserver.observe(host);
     window.addEventListener("resize", updateOrigin);
+
+    const applyTransform = () => {
+      rafRef.current = null;
+      if (!wrapper) {
+        return;
+      }
+      wrapper.style.setProperty("--aurora-x", `${pointerRef.current.x}px`);
+      wrapper.style.setProperty("--aurora-y", `${pointerRef.current.y}px`);
+    };
+
+    const scheduleUpdate = () => {
+      if (rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(applyTransform);
+      }
+    };
 
     const handlePointerMove = (event: PointerEvent) => {
       const { x, y } = originRef.current;
-      pointerX.set(event.clientX - x);
-      pointerY.set(event.clientY - y);
+      pointerRef.current = { x: event.clientX - x, y: event.clientY - y };
+      scheduleUpdate();
     };
 
     const handlePointerLeave = () => {
-      pointerX.set(0);
-      pointerY.set(0);
+      pointerRef.current = { x: 0, y: 0 };
+      scheduleUpdate();
     };
 
     window.addEventListener("pointermove", handlePointerMove);
@@ -136,123 +104,86 @@ export function HeroAurora({ containerRef }: HeroAuroraProps) {
       window.removeEventListener("resize", updateOrigin);
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerleave", handlePointerLeave);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
     };
-  }, [containerRef, pointerX, pointerY, prefersReducedMotion]);
-
-  if (prefersReducedMotion) {
-    return null;
-  }
+  }, [containerRef]);
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div
+      ref={wrapperRef}
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      style={{ "--aurora-x": "0px", "--aurora-y": "0px" } as CSSProperties}
+    >
       {orbs.map((orb) => (
-        <AuroraOrb
+        <div
           key={orb.id}
-          definition={orb}
-          smoothX={smoothX}
-          smoothY={smoothY}
+          className={cn(
+            "absolute rounded-full blur-3xl transition-transform duration-300 ease-out",
+            "bg-gradient-to-br",
+            orb.gradientClass
+          )}
+          style={{
+            width: orb.size,
+            height: orb.size,
+            top: orb.top,
+            left: orb.left,
+            opacity: orb.opacity,
+            transform: `translate3d(calc(var(--aurora-x) / ${orb.parallax}), calc(var(--aurora-y) / ${orb.parallax}), 0)` as string,
+          }}
         />
       ))}
 
-      <motion.div
+      <div
         aria-hidden
-        className="absolute inset-0"
-        animate={{ rotate: [0, 3, 0], scale: [1, 1.01, 1] }}
-        transition={{ duration: 22, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
-        style={{
-          background:
-            "radial-gradient(circle at 30% 20%, rgba(129, 140, 248, 0.18), transparent 55%), radial-gradient(circle at 70% 60%, rgba(192, 132, 252, 0.16), transparent 60%)",
-        }}
-      />
-
-      <motion.svg
-        aria-hidden
-        className="absolute inset-0"
-        viewBox="0 0 600 600"
-        preserveAspectRatio="xMidYMid slice"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.25, 0.45, 0.25] }}
-        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute inset-0 animate-aurora-rotate"
+        style={{ transform: "translate3d(calc(var(--aurora-x) * 0.02), calc(var(--aurora-y) * 0.02), 0)" }}
       >
-        <motion.g style={{ translateX: groupTranslateX, translateY: groupTranslateY }}>
-          <circle cx="180" cy="120" r="48" fill="url(#aurora-ring)" opacity="0.4" />
-          <circle cx="420" cy="320" r="36" fill="url(#aurora-ring)" opacity="0.35" />
-          <path
-            d="M100 480 Q 260 380 420 420 T 560 340"
-            stroke="url(#aurora-line)"
-            strokeWidth="1.5"
-            fill="none"
-            opacity="0.6"
-          />
-          <path
-            d="M60 200 Q 200 120 340 180 T 540 160"
-            stroke="url(#aurora-line)"
-            strokeWidth="1.2"
-            fill="none"
-            opacity="0.5"
-          />
-        </motion.g>
-        <defs>
-          <radialGradient id="aurora-ring" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(192,132,252,0.6)" />
-            <stop offset="60%" stopColor="rgba(99,102,241,0.35)" />
-            <stop offset="100%" stopColor="rgba(99,102,241,0)" />
-          </radialGradient>
-          <linearGradient id="aurora-line" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgba(129,140,248,0)" />
-            <stop offset="50%" stopColor="rgba(192,132,252,0.7)" />
-            <stop offset="100%" stopColor="rgba(96,165,250,0)" />
-          </linearGradient>
-        </defs>
-      </motion.svg>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,_rgba(129,140,248,0.18),_transparent_55%),_radial-gradient(circle_at_70%_60%,_rgba(192,132,252,0.16),_transparent_60%)]" />
+      </div>
+
+      <div className="absolute inset-0">
+        <svg viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full animate-aurora-glow">
+          <g
+            style={{
+              transform: "translate3d(calc(var(--aurora-x) * 0.04), calc(var(--aurora-y) * 0.04), 0)",
+              transformOrigin: "center",
+            }}
+          >
+            <circle cx="180" cy="120" r="48" fill="url(#aurora-ring)" opacity="0.4" />
+            <circle cx="420" cy="320" r="36" fill="url(#aurora-ring)" opacity="0.35" />
+            <path d="M100 480 Q 260 380 420 420 T 560 340" stroke="url(#aurora-line)" strokeWidth="1.5" fill="none" opacity="0.6" />
+            <path d="M60 200 Q 200 120 340 180 T 540 160" stroke="url(#aurora-line)" strokeWidth="1.2" fill="none" opacity="0.5" />
+          </g>
+          <defs>
+            <radialGradient id="aurora-ring" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="rgba(192,132,252,0.6)" />
+              <stop offset="60%" stopColor="rgba(99,102,241,0.35)" />
+              <stop offset="100%" stopColor="rgba(99,102,241,0)" />
+            </radialGradient>
+            <linearGradient id="aurora-line" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(165,180,252,0.65)" />
+              <stop offset="100%" stopColor="rgba(125,211,252,0.45)" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
 
       {sparks.map((spark) => (
-        <motion.span
+        <div
           key={spark.id}
-          aria-hidden
-          className="absolute h-1 w-1 rounded-full bg-white"
-          style={{ top: spark.top, left: spark.left, scale: spark.scale }}
-          animate={{ opacity: [0, 0.9, 0] }}
-          transition={{ duration: 3 + spark.delay, repeat: Infinity, ease: "easeInOut", delay: spark.delay }}
+          className="absolute rounded-full bg-gradient-to-br from-white/80 via-white/40 to-transparent opacity-60"
+          style={{
+            width: 12 * spark.scale,
+            height: 12 * spark.scale,
+            top: spark.top,
+            left: spark.left,
+            animationDelay: `${spark.delay}s`,
+            animation: "spark-glow 5s ease-in-out infinite",
+          }}
         />
       ))}
     </div>
   );
 }
-
-type AuroraOrbProps = {
-  definition: OrbDefinition;
-  smoothX: ReturnType<typeof useSpring>;
-  smoothY: ReturnType<typeof useSpring>;
-};
-
-function AuroraOrb({ definition, smoothX, smoothY }: AuroraOrbProps) {
-  const { gradientClass, id, left, opacity, parallax, size, top } = definition;
-
-  const translateX = useTransform(smoothX, (value) => value / parallax);
-  const translateY = useTransform(smoothY, (value) => value / parallax);
-
-  return (
-    <motion.span
-      key={id}
-      aria-hidden
-      className={cn(
-        "absolute rounded-full blur-3xl",
-        "bg-gradient-to-br",
-        gradientClass,
-      )}
-      style={{
-        width: size,
-        height: size,
-        top,
-        left,
-        opacity,
-        translateX,
-        translateY,
-      }}
-      animate={{ scale: [1, 1.08, 0.98, 1], rotate: [0, 4, -2, 0] }}
-      transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-    />
-  );
-}
-

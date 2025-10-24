@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import type { Dictionary } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -31,33 +30,20 @@ export function LivePulse({ feedBadge, feedTitle, filters, graphCaption }: Pulse
   return (
     <div className="grid gap-6 rounded-3xl border border-white/10 bg-gradient-to-br from-black/60 via-indigo-950/40 to-purple-950/40 p-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <motion.span
-          className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.4em] text-white/80"
-          animate={{ opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <motion.span
-            className="inline-flex h-2 w-2 rounded-full bg-emerald-300"
-            animate={{ opacity: [0.4, 1, 0.4] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          />
+        <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.4em] text-white/80 animate-pulse">
+          <span className="inline-flex h-2 w-2 rounded-full bg-emerald-300 animate-ping" />
           {feedBadge}
-        </motion.span>
-        <motion.h3
-          className="text-3xl font-semibold text-white"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        >
+        </span>
+        <h3 className="text-3xl font-semibold text-white">
           {feedTitle}
-        </motion.h3>
+        </h3>
       </div>
 
       <div className="flex flex-wrap gap-2">
         {filters.map((filter) => {
           const isActive = filter.key === activeFilter;
           return (
-            <motion.button
+            <button
               key={filter.key}
               type="button"
               onClick={() => setActiveFilter(filter.key)}
@@ -67,21 +53,18 @@ export function LivePulse({ feedBadge, feedTitle, filters, graphCaption }: Pulse
                   ? "border-white/70 bg-white/20 text-white shadow-[0_0_25px_rgba(123,83,255,0.35)]"
                   : "border-white/20 bg-white/5 text-white/70 hover:border-white/40"
               )}
-              whileTap={{ scale: 0.97 }}
             >
               {filter.label}
-            </motion.button>
+            </button>
           );
         })}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)] lg:items-start">
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 p-6">
-          <motion.div
+          <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(147,197,253,0.12),_transparent_65%)]"
-            animate={{ opacity: [0.6, 1, 0.6] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(147,197,253,0.12),_transparent_65%)] animate-pulse"
           />
           {pathData ? (
             <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="relative z-10 h-48 w-full">
@@ -95,23 +78,8 @@ export function LivePulse({ feedBadge, feedTitle, filters, graphCaption }: Pulse
                   <stop offset="100%" stopColor="rgba(56,189,248,0.9)" />
                 </linearGradient>
               </defs>
-              <motion.path
-                d={`${pathData} L 100 100 L 0 100 Z`}
-                fill="url(#pulse-area)"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.6 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              />
-              <motion.path
-                d={pathData}
-                fill="none"
-                stroke="url(#pulse-line)"
-                strokeWidth={1.8}
-                strokeLinecap="round"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-              />
+              <path d={`${pathData} L 100 100 L 0 100 Z`} fill="url(#pulse-area)" opacity={0.6} />
+              <path d={pathData} fill="none" stroke="url(#pulse-line)" strokeWidth={1.8} strokeLinecap="round" />
             </svg>
           ) : null}
         </div>
