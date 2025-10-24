@@ -8,12 +8,11 @@ import { cn } from "@/lib/utils";
 type PulseContent = Dictionary["home"]["pulse"];
 
 const filterHistories: Record<string, number[]> = {
-  all: [62, 65, 67, 70, 72, 75, 77, 79],
-  resources: [48, 52, 55, 58, 60, 63, 65, 66],
-  signals: [54, 56, 59, 61, 64, 66, 69, 71],
-  events: [36, 39, 41, 40, 42, 44, 45, 47],
-  dev_notes: [30, 32, 34, 36, 37, 39, 41, 42],
-  default: [62, 65, 67, 70, 72, 75, 77, 79],
+  stability: [62, 66, 67, 71, 74, 76, 79, 81],
+  supplies: [48, 52, 55, 57, 60, 63, 65, 64],
+  intel: [54, 56, 59, 62, 65, 68, 70, 72],
+  weather: [36, 41, 43, 40, 45, 47, 50, 53],
+  default: [62, 66, 67, 71, 74, 76, 79, 81],
 };
 
 export function LivePulse({ feedBadge, feedTitle, filters, graphCaption }: PulseContent) {

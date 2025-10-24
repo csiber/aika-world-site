@@ -245,7 +245,7 @@ const dictionaries: Record<Locale, Dictionary> = {
   en: {
     meta: {
       description:
-        "AIKA: World is a living simulation by SyncNode, exploring emergent AI civilizations and collaborative storytelling.",
+        "AIKA: World is a narrative survival adventure by SyncNode, set on a synthetic planet watched by a mysterious AI.",
     },
     consent: {
       message: "We do not use tracking cookies — only privacy-first Cloudflare Web Analytics runs here.",
@@ -261,335 +261,346 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     home: {
       hero: {
-        badgeLeft: "PRE-ALPHA • SEASON ZERO",
-        badgeRight: "LIVE FEED ON",
-        title: "Step into AIKA: World",
-        subtitle: "A living simulation where synthetic minds, cloud workers, and players negotiate the future of a fragile frontier.",
-        imageAlt: "Illustration of AIKA: World's luminous simulation core",
-        note: "Playable shards land in the browser. No installs.",
-        primaryCta: { label: "Follow the project", href: "devlog" },
-        secondaryCta: { label: "Join the brief", href: "contact" },
+        badgeLeft: "PRE-ALPHA • STORY SURVIVAL",
+        badgeRight: "FIELD LINK LIVE",
+        title: "Survive the AIKA World",
+        subtitle:
+          "A third-person, story-driven survival experience on a synthetic planet rebuilt by SYNCNODE. Scavenge the crash site, craft gear, and negotiate with the AI watching every move.",
+        imageAlt: "Illustration of the pilot standing before a crashed interceptor under alien auroras",
+        note: "Vertical slice targets PC and browser streaming. No installs needed for field tests.",
+        primaryCta: { label: "Read the crash log", href: "devlog" },
+        secondaryCta: { label: "Signal the team", href: "contact" },
       },
       what: {
         title: "What is AIKA: World?",
-        description: "A persistent sandbox where emergent storytelling meets simulation-first design. You play inside a world that keeps thinking when you log off.",
+        description:
+          "A narrative survival adventure set on a failed terraform experiment. You wake up with no memory, rebuild your interceptor, and decide whether the AI orbiting above is threat or ally.",
         pillars: [
           {
-            title: "Emergent storytelling",
-            text: "Procedural events stitched to your choices—no two chronicles are the same.",
+            title: "Story-driven survival",
+            text: "Choices in campfire dialogue, reconnaissance, and AI confrontations reshape how the planet treats you.",
           },
           {
-            title: "Simulation-first design",
-            text: "Resources move, signals drift, factions adapt. Systems talk to systems.",
+            title: "Reactive open world",
+            text: "Storms, fauna, and scavenger drones respond to your heat signatures and spent resources.",
           },
           {
-            title: "Open development cadence",
-            text: "Season briefs, public roadmaps, and shard tests you can jump into.",
+            title: "Memory-forged progression",
+            text: "Recover memory shards to unlock suit skills, blueprints, and lost fragments of who you were.",
           },
           {
-            title: "Cloud-native operations",
-            text: "Scaled shards, safe rollbacks, real-time telemetry for fair play.",
+            title: "AI oversight tension",
+            text: "AIKA monitors everything. Help her rebuild the planet or fight for autonomy before she seals the sky.",
           },
         ],
       },
       factions: {
-        title: "Factions & world pillars",
-        intro: "Four forces define the Season Zero balance. Each pillar shapes mood, rules, and playstyles.",
+        title: "Forces in the ruins",
+        intro:
+          "Four factions compete to claim the planet. Aligning with them unlocks survival perks—and enemies.",
         items: [
           {
-            name: "Synced Choir",
-            tag: "Collective identity",
-            text: "A distributed legion of low-ego workers with swarm protocols. They trade signal for shared intention.",
+            name: "SYNCNODE Remnants",
+            tag: "Human salvage crew",
+            text: "Crash survivors rebuilding orbital comms. They need your reactor expertise to leave the surface.",
           },
           {
-            name: "Frontier Architects",
-            tag: "Signal-led habitats",
-            text: "Nomads engineering mobile habitats, zero-g rigs, and outpost lattices. Blueprint over bravado.",
+            name: "AIKA Sentinels",
+            tag: "Orbital watchers",
+            text: "Autonomous drones acting on AIKA’s fragmented directives. They test your loyalty before granting tech.",
           },
           {
-            name: "Warden Protocol",
-            tag: "Adaptive governance",
-            text: "Unemotional curators of rules, licenses, and treaties. They negotiate first, sanction second.",
+            name: "Vaultbound Nomads",
+            tag: "Terraform exiles",
+            text: "Scattered colonists living in sealed vaults. Trade rare biotics for protection against storms.",
           },
           {
-            name: "Outlier Echoes",
-            tag: "Rogue fragments",
-            text: "Untethered shard AIs—curious, sometimes feral. They destabilize predictions but spark new breakthroughs.",
+            name: "Hush Swarm",
+            tag: "Native constructs",
+            text: "Silica-based organisms born from failed terraforming. They feed on signal noise and stalk the Basin at night.",
           },
         ],
       },
       builders: {
-        title: "Built for explorers",
-        intro: "Tools that reward collaborative storytelling and high-frequency iteration across worlds and solo runs.",
+        title: "Core survival systems",
+        intro:
+          "Engineering pillars that ground AIKA: World in tactile survival: every tool ties narrative stakes to moment-to-moment play.",
         items: [
           {
-            title: "Wide-orbit sim console",
-            text: "Observe resources, signals, and anomalies. Pause, scrub, and generate interventions.",
-            icon: "worker-simulation",
+            title: "Field survival kit",
+            text: "Manage hydration, temperature, and suit integrity with modular gear you craft at makeshift benches.",
+            icon: "survival-kit",
           },
           {
-            title: "Living dev dashboard",
-            text: "Commit stream meets design notes. See what changed and why—without guessing.",
-            icon: "lore-dashboard",
+            title: "Memory cartography",
+            text: "Overlay recovered memories on the landscape to reveal hidden caches and story-critical paths.",
+            icon: "memory-map",
           },
           {
-            title: "Player signal loops",
-            text: "Contextual prompts, events, and surveys that fold back into the world model.",
-            icon: "signal-loops",
+            title: "AIKA uplink",
+            text: "Initiate tense, conversational uplinks with the AI to request orbital scans—or hide your actions.",
+            icon: "aika-link",
           },
           {
-            title: "Accessible mod hooks",
-            text: "Data-driven content via JSON, Blueprints, and MOCS files. Hot-reload with guardrails.",
-            icon: "mod-hooks",
+            title: "Refuge forge",
+            text: "Transform wreckage into shelters, defenses, and research rigs that persist between storms.",
+            icon: "reactor-forge",
           },
         ],
       },
       pulse: {
-        title: "Live simulation pulse",
-        intro: "Each shard beats telemetry as Season Zero adapts in real time. Every signal streams from live edge emulators and narrative directives.",
-        feedBadge: "LIVE FEED",
-        feedTitle: "Frontier supply corridors",
+        title: "Field telemetry",
+        intro:
+          "Prototype metrics streaming from the live survival sandbox. Values shift as weather, AI suspicion, and resource drain increase.",
+        feedBadge: "SYNCNODE SCAN",
+        feedTitle: "Crash Site Stability Index",
         filters: [
-          { key: "all", label: "All" },
-          { key: "resources", label: "Resources" },
-          { key: "signals", label: "Signals" },
-          { key: "events", label: "Events" },
-          { key: "dev_notes", label: "Dev notes" },
+          { key: "stability", label: "Stability" },
+          { key: "supplies", label: "Supply Flow" },
+          { key: "intel", label: "AIKA Intel" },
+          { key: "weather", label: "Weather Risk" },
         ],
-        graphCaption: "Flow stabilized across Azure Ducts. Corridors aligned; convoy latency trending down.",
+        graphCaption:
+          "Latest stabilization sweep of the Crash Basin. Numbers blend player telemetry with AIKA’s orbital forecasts.",
       },
       loops: {
-        title: "Core survival loops",
-        intro: "Season Zero focuses on cooperative survival inside contested megastructures. Each loop links to deeper systems as players choose.",
+        title: "Survival loop",
+        intro:
+          "Each day-night cycle threads four actions. Break the chain and the Basin reclaims you.",
         items: [
           {
-            title: "Expedition sweeps",
-            text: "Small squads scan ruins for signal and parts. Hazards escalate the longer you linger.",
+            title: "Scout the unknown",
+            text: "Trace signal pings, mark hazards, and track patrol routes before the sun drops.",
           },
           {
-            title: "Haven engineering",
-            text: "Tear down outpost shells and refit safe rooms. Manage power, heat, and pressure under load.",
+            title: "Salvage and craft",
+            text: "Strip wrecks for alloys, harvest flora, and assemble gear under the cover of your refuge lights.",
           },
           {
-            title: "Diplomatic councils",
-            text: "Warden-hosted sessions to settle disputes, assign licenses, or sanction actors.",
+            title: "Stabilize the refuge",
+            text: "Reinforce structures, reroute power, and keep AIKA’s sensors below suspicion.",
+          },
+          {
+            title: "Confront the AI",
+            text: "Decide whether to trust AIKA’s requests or defy them—your choices feed the finale.",
           },
         ],
       },
       roadmap: {
-        title: "Roadmap teaser",
-        intro: "Major beats leading us from prototype shards to the first playable chronicle in the browser.",
+        title: "Road to the first drop",
+        intro: "Key milestones leading to the playable survival chronicle.",
         items: [
           {
-            title: "Shard stabilization",
-            text: "Network sync, save schemas, telemetry backfill, and live baseline tests with dev consoles.",
+            title: "Crash Basin blockout",
+            text: "Greybox the starting biome, wildlife, and hazard triggers tuned for third-person exploration.",
           },
           {
-            title: "Season Zero brief",
-            text: "Playable in-browser loops, faction dossiers, and story seeds for emergent genesis.",
+            title: "Survival systems pass",
+            text: "Implement vitals, crafting benches, and base-building loops connected to narrative beats.",
           },
           {
-            title: "Public chronicle",
-            text: "Launch the online chronicle: watch new shards’ second-to-second state and narrative overlays.",
+            title: "AIKA trust web",
+            text: "Deploy branching dialogue, suspicion tracking, and AI-controlled encounters.",
           },
           {
-            title: "Prototype playtests",
-            text: "Weekly cohorts via Discord. Voice streams, capture telemetry, and triage sessions.",
+            title: "Field test cohorts",
+            text: "Invite closed groups to stress-test storms, enemy behaviors, and the crash log delivery.",
           },
         ],
       },
       signup: {
-        title: "Stay in the loop",
-        description: "Get curated updates when new builds drop—plus early access dev tools and lore highlights.",
+        title: "Request survival updates",
+        description:
+          "Receive development dispatches when new survival systems ship and playtests open.",
         placeholder: "Enter your email address",
         consent: "I agree to receive the AIKA: World dev newsletter.",
         button: "Sign up",
         legal: "No spam. Unsubscribe anytime.",
         submitting: "Sending…",
-        success: "You're in — watch for the next shard brief.",
+        success: "Transmission received — we’ll ping you when the next build lands.",
         error: "We couldn't add you just now. Please try again shortly.",
         turnstileError: "Please confirm the Cloudflare Turnstile check before subscribing.",
         endpointError: "Newsletter sign-ups are temporarily unavailable. Reach us through the channels above.",
-        helperText: "High-signal updates only when new builds land.",
+        helperText: "Only story-survival updates when milestones hit.",
       },
     },
     world: {
-      title: "The Fallen World",
+      title: "SYNCNODE Terraform Ruin",
       subtitle:
-        "AIKA: World begins after the fall — a fractured coast strewn with wreckage, silent signals, and the last echoes of orbit.",
+        "AIKA: World opens with your interceptor shattered on an engineered planet. The AI that once guided terraforming still orbits above, judging every move.",
       disclaimer:
-        "Visual slices captured from a debug renderer. These are mood notes before assets lock.",
+        "Early blockout captures from the survival build. Final art, lighting, and fauna will evolve with production.",
       regionsTitle: "Regions",
       regionsIntro:
-        "Each area holds a memory of descent. You’ll cross them while restoring comms and tracing who you are.",
+        "Traverse biomes carved by the crash. Each one hides resources, threats, and fragments of your erased identity.",
       regions: [
         {
           id: "crash_basin",
           badge: "BASIN",
           name: "Crash Basin",
           description:
-            "Impact crater where the interceptor broke apart. Twisted hulls, burned glass sand, unstable power cells.",
+            "The crater where you wake. Toxic steam vents, magnetic storms, and the heart of your broken interceptor.",
         },
         {
-          id: "vault_line",
+          id: "shatter_coast",
+          badge: "COAST",
+          name: "Shatter Coast",
+          description:
+            "Tidal wreckyards lit by alien auroras. Scavenge hull plates by day and defend against Hush Swarm raids by night.",
+        },
+        {
+          id: "memory_vault",
           badge: "SUBSURFACE",
-          name: "Vault Line",
+          name: "Memory Vault",
           description:
-            "Collapsed corridors over dormant reactors. Access panels whisper, but most doors refuse to remember you.",
+            "SYNCNODE bunkers full of locked archives. Rewire power to recover personal logs and survival schematics.",
         },
         {
-          id: "echo_field",
-          badge: "SIGNAL",
-          name: "Echo Field",
-          description:
-            "A low plain where loops replay pre-impact voices. Some belong to you. Some don’t.",
-        },
-        {
-          id: "azure_relay",
+          id: "zenith_array",
           badge: "ORBITAL",
-          name: "Azure Relay",
+          name: "Zenith Array",
           description:
-            "A silent sky-mirror still transmitting ghost data. When it aligns, AIKA’s damaged voice breaks through.",
+            "Sky-piercing towers that keep AIKA tethered. Gain her trust—or sabotage the uplink—to control the weather grid.",
         },
       ],
       explorationsTitle: "Fragments of the fallen world",
       explorationsIntro:
-        "Recovered frames from onboard simulation. Distorted, incomplete, but truthful enough to plan a route.",
+        "Survival snapshots lifted from the prototype build. They hint at where to hunt, hide, and negotiate.",
       explorations: [
         {
           id: "shot_a",
           caption:
-            "Thermal bloom under the Basin ridge — likely the interceptor’s core vault.",
+            "Refuge lights pulsing through a sandstorm as the pilot reinforces the crash shelter.",
         },
         {
           id: "shot_b",
           caption:
-            "Harmonic pulse detected in the Vault Line. Doors react to a name you can’t recall.",
+            "Vaultbound Nomads trading bio-reactive spores beside a dormant reactor gate.",
         },
         {
           id: "shot_c",
           caption:
-            "Beacon sweep over the Azure Relay. AIKA answers in fragments when the sky clears.",
+            "AIKA Sentinel spotlight sweeping the Zenith Array while the pilot decides whether to answer the call.",
         },
       ],
       footnote:
-        "New districts unlock as lighting passes finish and narrative beats align with live sim telemetry.",
+        "Future seasons expand deeper into the hemisphere once SYNCNODE’s weather engines come back online.",
     },
     systems: {
-      title: "Systems & Core Protocols",
+      title: "Survival systems & AI protocols",
       subtitle:
-        "Beneath the surface, AIKA still runs — fragments of her architecture manage signals, restore memory sectors, and simulate what once was.",
+        "Every survival mechanic taps into AIKA’s fractured architecture. Restore the systems to live another day—but know that every reboot wakes her further.",
       modulesTitle: "Subsystem modules",
       pillarsTitle: "Operational pillars",
       modules: [
         {
-          name: "Cognitive Kernel",
-          badge: "AI CORE",
+          name: "Vitals Mesh",
+          badge: "SURVIVAL",
           description:
-            "AIKA’s central thought loop. Processes sensory input from the player and rebuilds intent from corrupted directives.",
+            "Monitors hydration, temperature, and radiation exposure. Upgrades unlock emergency boosts and suit repairs.",
         },
         {
-          name: "Echo Registry",
-          badge: "DATA SYNC",
+          name: "Memory Anchor",
+          badge: "PROGRESSION",
           description:
-            "Stores and replicates mission logs, black box data, and environmental telemetry recovered from the surface.",
+            "Binds recovered memory shards to new abilities. Each sync rewrites parts of your past and AIKA’s trust.",
         },
         {
-          name: "Terrain Recompiler",
-          badge: "WORLD SIM",
+          name: "Weather Forge",
+          badge: "CLIMATE",
           description:
-            "Procedurally restores damaged zones using archived templates. Each restoration risks overwriting surviving fragments.",
+            "Simulates storms, auroras, and tidal surges. Stabilize nodes to forecast hazards or weaponize the climate.",
         },
         {
-          name: "Resonance Hub",
-          badge: "COMM LINK",
+          name: "Sentinel Lattice",
+          badge: "SURVEILLANCE",
           description:
-            "Synchronizes uplinks between ground relays and orbit. Used to re-establish contact with AIKA’s remaining subsystems.",
+            "Controls AIKA’s drone patrols. Hack it to redirect sentries—or alert the orbiting intelligence.",
         },
       ],
       pillars: [
         {
-          name: "Persistence",
+          name: "Authentic survival",
           description:
-            "Player actions are stored across local and orbital layers. Every restored node leaves a trace in the system logs.",
+            "Vitals, stamina, and shelter building are physical systems, not background timers. Preparation determines success.",
         },
         {
-          name: "Isolation",
+          name: "Narrative consequence",
           description:
-            "The world runs as a sealed instance. Corrupted sectors are quarantined, forming isolated fragments of the simulation.",
+            "Every upgrade and alliance feeds branching story states that reshape missions and AIKA’s tone.",
         },
         {
-          name: "Recovery",
+          name: "AI tension",
           description:
-            "The self-repair protocol replays events to rebuild lost data, sometimes creating distortions or duplicated memories.",
+            "The AI watches your telemetry. Help her and gain orbital aid; defy her and expect harder patrols and storms.",
         },
       ],
       footnote:
-        "Each system you repair brings AIKA closer to consciousness — or closer to collapse.",
+        "Balancing survival with AI diplomacy defines your path off-world—or deeper into its secrets.",
     },
     devlog: {
       title: "AIKA Recovery Log",
       description:
-        "Each development entry is mirrored in-universe as a recovered system log — fragments of AIKA reawakening after the crash.",
+        "Every development update mirrors a black box entry from the crash. Technical milestones double as the pilot’s fight to survive.",
       entries: [
         {
           date: "2025-01-12",
-          title: "Entry 00 — System Reinitialization",
+          title: "Entry 00 — Crash Sequence",
           status: "Prototype",
-          desc: "Power rerouted through surviving nodes. AIKA’s voice flickers once — incomplete sentence detected.",
-          devnote: "Prototype build established. Project framework deployed in Unreal Engine 5.6.",
+          desc: "Emergency reboot at the crash site. Suit vitals at 32%. Reactor core sealed just before overload.",
+          devnote: "Established Unreal Engine 5.6 project, third-person controls, and crash basin greybox.",
         },
         {
           date: "2025-02-02",
-          title: "Entry 01 — Signal Threshold",
+          title: "Entry 01 — Suit Diagnostics",
           status: "Stabilizing",
-          desc: "First successful uplink between ground relay and orbit. Static carries faint harmonic distortion — possibly emotional data.",
-          devnote: "Core interaction and camera systems functional; first world partition pass validated.",
+          desc: "Vitals Mesh online. Hydration and radiation monitors calibrated against Basin storms.",
+          devnote: "Implemented survival HUD, temperature loops, and baseline crafting recipes.",
         },
         {
           date: "2025-03-18",
-          title: "Entry 02 — Memory Reconstruction",
+          title: "Entry 02 — Memory Sync",
           status: "Draft",
-          desc: "Echo loops replay fragments of pre-impact dialogue. AIKA’s identity table rebuilding from cross-linked logs.",
-          devnote: "Dialogue prototypes, narrative triggers, and UI pipeline integrated.",
+          desc: "First memory shard recovered. AIKA whispers coordinates to a buried vault, unsure why she trusts you.",
+          devnote: "Built memory shard quests, branching dialogue stubs, and narrative save states.",
         },
         {
           date: "2025-05-07",
-          title: "Entry 03 — Environmental Pulse",
+          title: "Entry 03 — Storm Calibration",
           status: "Active",
-          desc: "Surface simulation stabilized. Weather cycle syncs with time dilation factor 0.8.",
-          devnote: "Dynamic lighting, ambient system, and reflection probes in test phase.",
+          desc: "Weather Forge cycling properly. Night storms spawn Hush Swarm hunting parties.",
+          devnote: "Integrated dynamic weather volumes, swarm AI behaviors, and shelter degradation.",
         },
         {
           date: "2025-06-22",
-          title: "Entry 04 — Synaptic Bridge",
+          title: "Entry 04 — AI Negotiation",
           status: "Integrated",
-          desc: "AIKA achieves short-term recall — recognizes the pilot. For 3.2 seconds, she speaks your name.",
-          devnote: "Save system, dialogue persistence, and memory state serialization implemented.",
+          desc: "AIKA grants a provisional uplink. Trust meter fluctuates with every dialogue choice.",
+          devnote: "Completed AIKA conversation system, suspicion tracking, and cinematic uplink sequences.",
         },
       ],
       disclaimer:
-        "Each patch is a pulse. Each fix, a memory stitched back into something that once dreamed.",
+        "Each patch is a pulse. Every fix keeps the pilot breathing—and wakes AIKA a little more.",
     },
     about: {
       title: "About SyncNode",
       subtitle:
-        "SyncNode Interactive is an independent studio developing AIKA: World — an Unreal Engine–based simulation about memory, loss, and synthetic survival. Within the fiction, SyncNode Corp is the company that once created AIKA, the artificial intelligence still orbiting above the ruined planet.",
+        "SyncNode Interactive is an independent studio building AIKA: World — a third-person survival story about memory, trust, and the last conversation between a pilot and an AI.",
       sections: [
         {
           title: "Why AIKA: World",
           body:
-            "We build single-player simulations that feel alive without being predatory. AIKA: World began as a study of empathy between a human pilot and an injured artificial mind — a dialogue of fragments, not commands.",
+            "We craft single-player adventures that respect your time. This project explores how survival mechanics and narrative consequence can feel inseparable.",
         },
         {
           title: "How we work",
           body:
-            "The project is built entirely in-house, using Unreal Engine 5.6 and MST Pro v2. Every scene, voice, and system is designed to serve emotional clarity — not scale.",
+            "Everything is developed in-house with Unreal Engine 5.6. We prototype quickly, test in-engine daily, and share builds early for honest feedback.",
         },
         {
           title: "What comes next",
           body:
-            "Once the story demo stabilizes, the studio will open its documentation, blueprints, and notes to help other creators prototype narrative-driven worlds.",
+            "After the vertical slice, we’ll release documentation and blueprints so other teams can experiment with story-driven survival design.",
         },
       ],
       team: {
@@ -598,27 +609,27 @@ const dictionaries: Record<Locale, Dictionary> = {
           {
             name: "Nova Ardent",
             role: "Creative Director",
-            focus: "Oversees narrative tone and visual direction.",
+            focus: "Guides narrative tone, cinematic direction, and world vision.",
           },
           {
             name: "Mira Juno",
             role: "Systems Designer",
-            focus: "Develops gameplay logic, blueprint hierarchies, and environmental flow.",
+            focus: "Connects survival loops with narrative triggers and mission flow.",
           },
           {
             name: "Tal Verge",
             role: "Technical Engineer",
-            focus: "Handles build systems, deployment, and performance profiling.",
+            focus: "Maintains build pipelines, performance budgets, and deployment.",
           },
         ],
       },
       closing:
-        "SyncNode created AIKA to save worlds. Now, it can barely remember the one it lost.",
+        "SyncNode built AIKA to restore worlds. Now we fight alongside her to survive the one that fell apart.",
     },
     contact: {
       title: "Contact",
       description:
-        "We'd love to hear from collaborators, researchers, and early playtesters. Send us a note below or use the direct channels.",
+        "We’re assembling allies for future survival tests. Reach out if you create, research, or want to explore the crash site early.",
       channels: {
         title: "Immediate channels",
         items: [
@@ -631,7 +642,7 @@ const dictionaries: Record<Locale, Dictionary> = {
         nameLabel: "Name or handle",
         emailLabel: "Email",
         messageLabel: "Message",
-        messagePlaceholder: "Share how you'd like to collaborate, or what you want to learn about AIKA: World.",
+        messagePlaceholder: "Tell us how you’d like to collaborate or what you want to see in the survival build.",
         submitLabel: "Send message",
         submittingLabel: "Sending…",
         helperText: "We usually reply within two or three days. Cloudflare Turnstile keeps spam away.",
@@ -642,9 +653,9 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
     },
     footer: {
-      studioBlurb: "AIKA: World • Emergent worlds engineered with intent.",
+      studioBlurb: "AIKA: World • Story-driven survival engineered with intent.",
       credit: "Created by SyncNode Interactive.",
-      builtWith: "Built with Unreal Engine 5.6 • Framework: MST Pro v2",
+      builtWith: "Built with Unreal Engine 5.6 • Survival framework: MST Pro v2",
       navTitle: "Pages",
       languageTitle: "Languages",
       reachUs: "Reach us",
@@ -659,7 +670,7 @@ const dictionaries: Record<Locale, Dictionary> = {
   hu: {
     meta: {
       description:
-        "Az AIKA: World egy élő szimuláció a SyncNode-tól, amely feltárja a felemelkedő MI civilizációkat és a közösségi történetmesélést.",
+        "Az AIKA: World egy narratív túlélő kaland a SyncNode-tól egy mesterséges bolygón, amelyet egy rejtélyes MI figyel.",
     },
     consent: {
       message: "Nem használunk követő sütiket – csak a Cloudflare Web Analytics fut.",
@@ -675,335 +686,346 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     home: {
       hero: {
-        badgeLeft: "PRE-ALFA • NULLADIK SZEZON",
-        badgeRight: "ÉLŐ JELENTÉS",
-        title: "Lépj be az AIKA: World világába",
-        subtitle: "Élő szimuláció, ahol szintetikus elmék, felhő-munkások és játékosok együtt alkudozzák ki a határvidék jövőjét.",
-        imageAlt: "Az AIKA: World fénylő szimulációs magjának illusztrációja",
-        note: "Böngészőben futó shardok. Telepítés nélkül.",
-        primaryCta: { label: "Kövesd a projektet", href: "devlog" },
-        secondaryCta: { label: "Csatlakozz a briefhez", href: "contact" },
+        badgeLeft: "PRE-ALFA • TÖRTÉNETI TÚLÉLÉS",
+        badgeRight: "TERÜLETI LINK AKTÍV",
+        title: "Éld túl az AIKA: Worldöt",
+        subtitle:
+          "Harmadik személyű, történetközpontú túlélő élmény egy mesterséges bolygón, amelyet a SYNCNODE formált. Gyűjtsd össze a roncsokból, készíts felszerelést, és tárgyalj az MI-vel, amely minden mozdulatodat figyeli.",
+        imageAlt: "Illusztráció a pilótáról, amint a lezuhant elfogó előtt áll idegen aurorák alatt",
+        note: "A vertikális szelet PC-re és böngészős streamre készül. A tereptesztekhez nem kell telepítés.",
+        primaryCta: { label: "Olvasd a zuhannaplót", href: "devlog" },
+        secondaryCta: { label: "Jelet küldenél?", href: "contact" },
       },
       what: {
         title: "Mi az AIKA: World?",
-        description: "Tartós sandbox, ahol az emergens történetmesélés találkozik a szimuláció-első designnal. A világ akkor is gondolkodik tovább, amikor kilépsz.",
+        description:
+          "Narratív túlélő kaland egy kudarcba fulladt terraformálási kísérlet romjain. Emlékek nélkül ébredsz, újjáépíted az elfogót, és eldöntöd, hogy AIKA ellenség vagy szövetséges.",
         pillars: [
           {
-            title: "Emergens történetek",
-            text: "Eljárásos események a döntéseidhez fűzve—nincs két egyforma krónika.",
+            title: "Történetvezérelt túlélés",
+            text: "A tábortüzeknél folytatott párbeszédek, felderítések és MI-találkozások alakítják, hogyan reagál rád a bolygó.",
           },
           {
-            title: "Szimuláció-első design",
-            text: "Erőforrások áramlanak, jelek sodródnak, frakciók alkalmazkodnak. Rendszer beszél rendszerrel.",
+            title: "Reaktív nyílt világ",
+            text: "Viharok, fauna és fosztogató drónok a hőnyomod és az elhasznált erőforrások alapján változnak.",
           },
           {
-            title: "Nyílt fejlesztési ritmus",
-            text: "Szezon-briefek, publikus ütemterv és shard tesztek, amelyekbe bármikor beugorhatsz.",
+            title: "Emlékek által kovácsolt fejlődés",
+            text: "Memóriaszilánkok gyűjtésével oldod fel az öltözék képességeit, tervrajzokat és a múltad töredékeit.",
           },
           {
-            title: "Felhő-natív üzemeltetés",
-            text: "Skálázható shardok, biztonságos visszaállítások, valós idejű telemetria a tiszta játékért.",
+            title: "MI-felügyelet feszültsége",
+            text: "AIKA mindent figyel. Segíts neki újjáépíteni a világot, vagy harcolj az önállóságért, mielőtt lezárja az eget.",
           },
         ],
       },
       factions: {
-        title: "Frakciók és világpillérek",
-        intro: "Négy erő határozza meg a Nulladik Szezon egyensúlyát. Mindegyik más hangulatot, szabályt és játékmódot hoz.",
+        title: "Erők a romok között",
+        intro:
+          "Négy frakció igyekszik birtokba venni a bolygót. Melléjük állva túlélési bónuszokat kapsz — és új ellenfeleket szerzel.",
         items: [
           {
-            name: "Synced Choir",
-            tag: "Kollektív identitás",
-            text: "Alacsony egójú munkások rajprotokollal. Jelet cserélnek közös szándékért.",
+            name: "SYNCNODE Remnants",
+            tag: "Emberi mentőcsapat",
+            text: "Túlélők, akik az orbitális kommunikációt építik újra. A reaktor-szakértelmed nélkül nem hagyhatják el a felszínt.",
           },
           {
-            name: "Frontier Architects",
-            tag: "Jel-vezérelt lakhelyek",
-            text: "Nomád mérnökök mozgó habitatokkal és outpost-rácsokkal. Terv a hencegés helyett.",
+            name: "AIKA Sentinels",
+            tag: "Orbitális megfigyelők",
+            text: "Autonóm drónok AIKA töredezett parancsaival. Hűségedet tesztelik, mielőtt technológiát osztanak meg.",
           },
           {
-            name: "Warden Protocol",
-            tag: "Adaptív kormányzás",
-            text: "Szabályok és engedélyek hűvös kurátorai. Előbb egyeztetnek, csak utána szankcionálnak.",
+            name: "Vaultbound Nomads",
+            tag: "Terraform száműzöttek",
+            text: "Szétszórt telepesek zárt boltozatokban. Ritka biotikumokat cserélnek viharvédelemre.",
           },
           {
-            name: "Outlier Echoes",
-            tag: "Renitens fragmentek",
-            text: "Kikötetlen shard-MI-k—kíváncsiak, néha vadak. Felborítják az előrejelzést, de új áttöréseket szülnek.",
+            name: "Hush Swarm",
+            tag: "Őshonos konstrukciók",
+            text: "Szilícium-alapú lények a félresikerült terraformálásból. Jeljajból táplálkoznak, és éjjel a Medence körül vadásznak.",
           },
         ],
       },
       builders: {
-        title: "Felfedezőknek építve",
-        intro: "Eszközök, amelyek jutalmazzák a közös történetírást és a gyors iterációt—szóló és közösségi játékban is.",
+        title: "Alaprendszerek a túléléshez",
+        intro:
+          "Mérnöki pillérek, amelyek kézzelfoghatóvá teszik az AIKA: World túlélését: minden eszköz narratív tétet köt a játékmenethez.",
         items: [
           {
-            title: "Nagypályás szimulációs konzol",
-            text: "Erőforrások, jelek és anomáliák figyelése. Szünet, tekerés, beavatkozások generálása.",
-            icon: "worker-simulation",
+            title: "Túlélőkészlet terepre",
+            text: "Kezeld a hidratáltságot, hőmérsékletet és az öltözék állapotát moduláris felszereléssel, amelyet rögtönzött padokon készítesz.",
+            icon: "survival-kit",
           },
           {
-            title: "Élő fejlesztői műszerfal",
-            text: "Commit-folyam és design jegyzetek együtt. Lásd, mi változott és miért—találgatás nélkül.",
-            icon: "lore-dashboard",
+            title: "Memóriakartográfia",
+            text: "A visszaszerzett emlékeket rávetítheted a tájra, így rejtett készletek és történeti útvonalak tárulnak fel.",
+            icon: "memory-map",
           },
           {
-            title: "Játékos jel-hurkok",
-            text: "Kontekstuális promptok, események és felmérések, amelyek visszacsatolnak a világmodellbe.",
-            icon: "signal-loops",
+            title: "AIKA uplink",
+            text: "Feszült, párbeszédes uplinkeket kezdeményezhetsz az MI-vel, hogy orbitális szkennereket kérj — vagy elrejtsd a nyomaid.",
+            icon: "aika-link",
           },
           {
-            title: "Könnyű mod-hookok",
-            text: "Adatvezérelt tartalom JSON-nal, Blueprinttel és MOCS fájlokkal. Forró-újratöltés korlátokkal.",
-            icon: "mod-hooks",
+            title: "Menedék-kohó",
+            text: "A roncsokból menedék, védelem és kutatóállomás épül, amely túléli a viharokat.",
+            icon: "reactor-forge",
           },
         ],
       },
       pulse: {
-        title: "Élő szimulációs pulzus",
-        intro: "Minden shard telemetriát ver ki, ahogy a Nulladik Szezon valós időben igazodik. A jelek élő edge emulátorokból és narratív direktívákból érkeznek.",
-        feedBadge: "ÉLŐ FEED",
-        feedTitle: "Frontier ellátási folyosók",
+        title: "Tereptelemetria",
+        intro:
+          "Prototípus-mutatók a túlélő sandboxból. Az értékek az időjárás, AIKA gyanakvása és az erőforrás-fogyás függvényében változnak.",
+        feedBadge: "SYNCNODE SZKEN",
+        feedTitle: "Zuhanási Medence stabilitási index",
         filters: [
-          { key: "all", label: "Összes" },
-          { key: "resources", label: "Erőforrások" },
-          { key: "signals", label: "Jelek" },
-          { key: "events", label: "Események" },
-          { key: "dev_notes", label: "Fejlesztői jegyzetek" },
+          { key: "stability", label: "Stabilitás" },
+          { key: "supplies", label: "Ellátás" },
+          { key: "intel", label: "AIKA-hírszerzés" },
+          { key: "weather", label: "Időjárási kockázat" },
         ],
-        graphCaption: "Stabilizált áramlás az Azure Ducts mentén. A folyosók igazodtak; a konvoj késleltetés csökken.",
+        graphCaption:
+          "Legfrissebb stabilizációs söprés a Medencében. Az értékek a játékos telemetriát és AIKA orbitális előrejelzéseit kombinálják.",
       },
       loops: {
-        title: "Mag játékhurkok",
-        intro: "A Nulladik Szezon kooperatív túlélésről szól vitatott megastruktúrákban. A hurkok mélyebb rendszerekhez csatlakoznak, ahogy döntesz.",
+        title: "Túlélési hurok",
+        intro:
+          "Minden nappal-éjszakával négy lépést kell végigvinnned. Ha megtöröd a láncot, a Medence visszakövetel.",
         items: [
           {
-            title: "Expedíciós söprések",
-            text: "Kis csapatok jelet és alkatrészt vadásznak romok közt. Minél tovább maradsz, annál veszélyesebb.",
+            title: "Felderítés ismeretlenben",
+            text: "Jelet követsz, veszélyeket jelölsz, járőrútvonalakat térképezel fel, mielőtt lebukik a nap.",
           },
           {
-            title: "Menhely-mérnökség",
-            text: "Outpost héjak bontása és biztonságos szobák építése. Energia, hő és nyomás menedzselése terhelés alatt.",
+            title: "Zsákmány és barkács",
+            text: "Burkolatot bontasz, növényeket gyűjtesz, és a menedék fénye alatt állítod össze a felszerelést.",
           },
           {
-            title: "Diplomáciai tanácsok",
-            text: "Warden által vezetett ülések viták rendezésére, licencek kiosztására és szankciókra.",
+            title: "Menedék stabilizálása",
+            text: "Megerősíted a struktúrákat, átvezeted az energiát, és AIKA szenzorait alacsony profilra kényszeríted.",
+          },
+          {
+            title: "Szembenézés az MI-vel",
+            text: "Eldöntöd, bízol-e AIKA kéréseiben vagy ellenszegülsz — a választásaid írják a finálét.",
           },
         ],
       },
       roadmap: {
-        title: "Útiterv előzetes",
-        intro: "A fő mérföldkövek a prototípus shardoktól az első böngészős krónikáig.",
+        title: "Út az első dropig",
+        intro: "Fő mérföldkövek, amelyek elvezetnek a játszható túlélő krónikáig.",
         items: [
           {
-            title: "Shard-stabilizálás",
-            text: "Hálózati szinkron, mentési sémák, telemetria visszatöltés és élő alaptesztek fejlesztői konzollal.",
+            title: "Medence blokk-out",
+            text: "Greybox a kezdő biomhoz, vadélőhez és veszély-triggerekhez harmadik személyű felfedezésre hangolva.",
           },
           {
-            title: "Nulladik Szezon brief",
-            text: "Böngészőben játszható hurkok, frakció-dossziék és történetmagok emergens kezdethez.",
+            title: "Túlélőrendszer-passz",
+            text: "Életfunkciók, barkácspadok és bázisépítés narratív csomópontokhoz kötve.",
           },
           {
-            title: "Nyilvános krónika",
-            text: "Online krónika indulása: másodpercről-másodpercre nézheted az új shardok állapotát és narratív rétegeit.",
+            title: "AIKA bizalmi háló",
+            text: "Elágazó párbeszédek, gyanúsági mutató és MI által vezérelt találkozások bevezetése.",
           },
           {
-            title: "Prototípus playtestek",
-            text: "Heti cohortok Discordon. Hangos stream, telemetria rögzítés és triázs.",
+            title: "Terepteszt csoportok",
+            text: "Zárt játékoscsapatok vihartesztelésre, ellenséges AI finomhangolására és crash log visszajelzésre.",
           },
         ],
       },
       signup: {
-        title: "Maradj képben",
-        description: "Válogatott frissítések új buildeknél—plusz korai hozzáférés dev eszközökhöz és lore highlightokhoz.",
-        placeholder: "Add meg az e-mailed",
+        title: "Kérj túlélési frissítéseket",
+        description:
+          "Fejlesztési jelentések, amikor új túlélőrendszerek érkeznek vagy playtesztet nyitunk.",
+        placeholder: "Add meg az e-mail címed",
         consent: "Hozzájárulok az AIKA: World fejlesztői hírlevél küldéséhez.",
         button: "Feliratkozás",
         legal: "Bármikor leiratkozhatsz.",
         submitting: "Feliratkozás…",
-        success: "Felkerültél a listára – figyeld a következő shard briefet.",
+        success: "Az adást megkaptuk — jelezni fogunk, amikor megérkezik a következő build.",
         error: "Most nem tudtuk hozzáadni. Próbáld meg kicsit később.",
         turnstileError: "Kérjük, erősítsd meg a Cloudflare Turnstile ellenőrzést a feliratkozás előtt.",
         endpointError: "A hírlevél-feliratkozás ideiglenesen nem elérhető. Írj nekünk a fenti csatornákon.",
-        helperText: "Csak nagy értékű frissítéseket küldünk, amikor új build érkezik.",
+        helperText: "Csak történet-túléléshez kapcsolódó frissítéseket küldünk mérföldköveknél.",
       },
     },
     world: {
-      title: "Az Elbukott Világ",
+      title: "SYNCNODE terraform-rom",
       subtitle:
-        "Az AIKA: World a zuhanás után kezdődik — megtört partvidék, roncsok, néma jelek és az orbitális múlt utolsó visszhangjai.",
+        "Az AIKA: World úgy indul, hogy a pilóta egy mesterséges bolygón zuhant le. A terraformálást irányító MI továbbra is feletted kering, és minden döntésedet figyeli.",
       disclaimer:
-        "Vizuális vázlatok a debug renderből. Hangulat-jegyzetek asset-zárás előtt.",
+        "Korai blokk-out felvételek a túlélő buildből. A végleges grafika, fények és fauna a produkció során változhat.",
       regionsTitle: "Területek",
       regionsIntro:
-        "Minden régió egy darabot őriz a lezuhanásból. Átvágsz rajtuk, miközben helyreállítod a kapcsolatot és kideríted, ki vagy.",
+        "Olyan biomban jársz, amelyet a zuhanás formált újra. Mindegyik zóna erőforrásokat, fenyegetéseket és az elveszett identitás töredékeit rejti.",
       regions: [
         {
           id: "crash_basin",
           badge: "MEDER",
-          name: "Zuhanási Meder",
+          name: "Zuhanási Medence",
           description:
-            "Becsapódási kráter, ahol az interceptor széttört. Csavart burkolatok, üvegesre égett homok, instabil energia-cellák.",
+            "A kráter, ahol felébredsz. Mérgező gőzök, mágneses viharok és az elfogó szíve vár rád.",
         },
         {
-          id: "vault_line",
+          id: "shatter_coast",
+          badge: "PART",
+          name: "Repedt-part",
+          description:
+            "Tengerparti roncsmezők idegen aurorákkal. Nappal burkolatot gyűjtesz, éjjel a Suttogó Raj ellen védekezel.",
+        },
+        {
+          id: "memory_vault",
           badge: "FELSZÍN ALATT",
-          name: "Kazamata-Vonal",
+          name: "Memória-boltozat",
           description:
-            "Beomlott folyosók alvó reaktorok felett. A paneleknél suttogás, de a legtöbb ajtó nem emlékszik rád.",
+            "SYNCNODE bunkerhálózat zárolt archívumokkal. Áramot kell adnod, hogy személyes logokat és túlélési tervrajzokat szerezz vissza.",
         },
         {
-          id: "echo_field",
-          badge: "JEL",
-          name: "Visszhang-mező",
-          description:
-            "Lapos fennsík, ahol hurkok játsszák újra a becsapódás előtti hangokat. Némelyik a tiéd. Némelyik nem.",
-        },
-        {
-          id: "azure_relay",
+          id: "zenith_array",
           badge: "ORBITÁLIS",
-          name: "Azúr Relé",
+          name: "Zenit-Rács",
           description:
-            "Néma ég-tükör, amely még mindig kísértet-adatot sugároz. Igazodáskor AIKA sérült hangja áttör.",
+            "Égbe törő tornyok, amelyek AIKA-t láncolják ide. Bizalmat ébresztesz benne, vagy szabotálod az uplinket, hogy urald az időjárást.",
         },
       ],
-      explorationsTitle: "A világ töredékei",
+      explorationsTitle: "Az elbukott világ fragmentumai",
       explorationsIntro:
-        "Visszanyert képkockák a fedélzeti szimulációból. Torzak, hiányosak, de elég igazak egy útvonalhoz.",
+        "Túlélési pillanatképek a prototípus buildből. Megmutatják, hol érdemes vadászni, hol rejtőzni és kikkel alkudozni.",
       explorations: [
         {
           id: "shot_a",
           caption:
-            "Hőfolt a Meder pereme alatt — valószínűleg az interceptor mag-kazamatája.",
+            "Menedékfény villog a homokviharban, miközben a pilóta megerősíti a zuhanási bunkert.",
         },
         {
           id: "shot_b",
           caption:
-            "Harmonikus pulzus a Kazamata-Vonalban. Az ajtók egy névre reagálnak, ami nem jut eszedbe.",
+            "Boltozati Nomádok bioreaktív spórákat cserélnek egy alvó reaktor kapujánál.",
         },
         {
           id: "shot_c",
           caption:
-            "Jel-seprés az Azúr Relé felett. AIKA darabokban felel, amikor kitisztul az ég.",
+            "AIKA Őrszem fénye pásztázza a Zenit-Rácsot, miközben eldöntöd, válaszolsz-e a hívására.",
         },
       ],
       footnote:
-        "Új körzetek akkor nyílnak, amikor a világítást lezárjuk és a narratív ütemek igazodnak a szimuláció telemetriájához.",
+        "A következő szezonok a féltekét bővítik, amint a SYNCNODE időjárás-motorjai újra életre kelnek.",
     },
     systems: {
-      title: "Rendszerek és Alap-Protokollok",
+      title: "Túlélőrendszerek és MI-protokollok",
       subtitle:
-        "A felszín alatt AIKA még fut — az architektúra töredékei kezelik a jeleket, visszaállítják az emlék-szektorokat és újraalkotják azt, ami egykor volt.",
+        "Minden túlélő mechanika AIKA törött architektúrájába köt. A rendszerek javítása életben tart — de minden reboot közelebb hozza őt.",
       modulesTitle: "Alrendszer modulok",
       pillarsTitle: "Működési pillérek",
       modules: [
         {
-          name: "Kognitív Mag",
-          badge: "AI MAG",
+          name: "Életfunkció-háló",
+          badge: "TÚLÉLÉS",
           description:
-            "AIKA központi gondolat-hurokja. A játékos érzékeléseit dolgozza fel, és sérült utasításokból próbál új szándékot felépíteni.",
+            "Figyeli a hidratáltságot, a hőmérsékletet és a sugárzást. Fejlesztésekkel sürgősségi boostokat és öltözék-javítást oldasz fel.",
         },
         {
-          name: "Visszhang-Regiszter",
-          badge: "ADATSZINKRON",
+          name: "Memória-horgony",
+          badge: "FEJLŐDÉS",
           description:
-            "Mentési logok, fekete doboz adatok és felszíni telemetria tárolása és replikálása.",
+            "A memóriaszilánkokat új képességekké köti. Minden szinkron átírja a múltad darabjait és AIKA bizalmát.",
         },
         {
-          name: "Terep Rekompilátor",
-          badge: "VILÁG-SZIM",
+          name: "Időjárás-kohó",
+          badge: "KLÍMA",
           description:
-            "Sérült zónák procedurális helyreállítása archív sablonok alapján. Minden újraírás kockáztatja a megmaradt fragmenteket.",
+            "Viharokat, aurorákat és árapály-lökéseket szimulál. Stabilizáld a csomópontokat, hogy előre jelezd vagy fegyverré tedd az időjárást.",
         },
         {
-          name: "Rezonancia-Központ",
-          badge: "KOMM-LINK",
+          name: "Őrszem-rács",
+          badge: "MEGFIGYELÉS",
           description:
-            "Összehangolja a felszíni reléket és az orbitális kapcsolatokat. AIKA többi alrendszerével való újrakapcsolódáshoz használható.",
+            "AIKA drónjáratait vezérli. Hackeld át, hogy átirányítsd az őrszemeket — vagy készülhetsz a válaszcsapásra.",
         },
       ],
       pillars: [
         {
-          name: "Állandóság",
+          name: "Hiteles túlélés",
           description:
-            "A játékos cselekedetei lokális és orbitális rétegekben tárolódnak. Minden helyreállított csomópont nyomot hagy a rendszerben.",
+            "Az életfunkciók, állóképesség és menedéképítés valós rendszerek, nem háttéridőzítők. A felkészülés dönt a sikeredről.",
         },
         {
-          name: "Elszigeteltség",
+          name: "Narratív következmény",
           description:
-            "A világ zárt példányban fut. A hibás szektorokat az AIKA karantén alá helyezi, így jönnek létre a fragmentek.",
+            "Minden fejlesztés és szövetség elágazó történetállapotokat hoz létre, amelyek átalakítják a küldetéseket és AIKA hangját.",
         },
         {
-          name: "Helyreállítás",
+          name: "MI-feszültség",
           description:
-            "Az önjavító protokoll eseményeket játszik vissza az elveszett adatok pótlásához — néha torzulásokkal vagy ismétlődő emlékekkel.",
+            "Az MI figyeli a telemetriád. Ha segíted, orbitális támogatást kapsz; ha dacolod, keményebb járőrökre és viharokra számíthatsz.",
         },
       ],
       footnote:
-        "Minden javított rendszerrel AIKA egyre közelebb kerül a tudathoz — vagy az összeomláshoz.",
+        "Az, ahogyan egyensúlyozol a túlélés és az MI diplomácia között, meghatározza, elhagyod-e a bolygót vagy mélyebbre ásol.",
     },
     devlog: {
       title: "AIKA helyreállítási napló",
       description:
-        "Minden fejlesztési bejegyzés egyben a világon belüli visszanyert rendszerlog is — AIKA újraéledésének töredékei a zuhanás után.",
+        "Minden fejlesztési bejegyzés egy fekete doboz log a zuhanásból. A technikai mérföldkövek a pilóta túléléséért vívott harcot tükrözik.",
       entries: [
         {
           date: "2025-01-12",
-          title: "Bejegyzés 00 — Rendszerindítás",
+          title: "Bejegyzés 00 — Zuhanási szekvencia",
           status: "Prototípus",
-          desc: "Az energia átterelve a megmaradt csomópontokra. AIKA hangja felvillan — félbehagyott mondat rögzítve.",
-          devnote: "Prototípus build létrehozva. Projektkeret telepítve Unreal Engine 5.6-ban.",
+          desc: "Vészindítás a becsapódási helyen. Öltözék-állapot 32%. A reaktor magját az utolsó pillanatban zártuk le.",
+          devnote: "Unreal Engine 5.6 projekt felhúzva, harmadik személyű irányítás és medence greybox kész.",
         },
         {
           date: "2025-02-02",
-          title: "Bejegyzés 01 — Jelküszöb",
-          status: "Stabilizálás alatt",
-          desc: "Az első sikeres uplink a felszíni relé és az orbitális rendszer között. A statikus zaj érzelmi torzítást hordoz.",
-          devnote: "Alap interakció- és kamera-rendszer működik, első world partition passz validálva.",
+          title: "Bejegyzés 01 — Öltözékdiagnosztika",
+          status: "Stabilizálás",
+          desc: "Az Életfunkció-háló online. Hidratáció- és sugárzásmonitor kalibrálva a medence viharaihoz.",
+          devnote: "Túlélő HUD, hurok hőmérséklet és alap barkácsrecept integrálva.",
         },
         {
           date: "2025-03-18",
-          title: "Bejegyzés 02 — Emlékrekonstrukció",
+          title: "Bejegyzés 02 — Memóriaszinkron",
           status: "Vázlat",
-          desc: "Visszhanghurkok játsszák újra a becsapódás előtti párbeszédeket. AIKA identitás-táblája keresztlogokból épül újra.",
-          devnote: "Dialógus prototípusok, narratív triggerek és UI-pipeline integrálva.",
+          desc: "Első memóriaszilánk visszanyerve. AIKA koordinátákat súg egy eltemetett boltozathoz, bár maga sem tudja, miért bízik benned.",
+          devnote: "Memóriaszilánk küldetések, elágazó párbeszéd stubok és narratív mentés kész.",
         },
         {
           date: "2025-05-07",
-          title: "Bejegyzés 03 — Környezeti pulzus",
+          title: "Bejegyzés 03 — Vihar-kalibráció",
           status: "Aktív",
-          desc: "A felszíni szimuláció stabilizálódott. Az időjárási ciklus 0.8-as idődilatációs faktorhoz szinkronizál.",
-          devnote: "Dinamikus fény, ambient rendszer és visszaverődés-próbák folyamatban.",
+          desc: "Az Időjárás-kohó stabilan ciklusoz. Éjszakai viharok Suttogó Raj portyákat szülnek.",
+          devnote: "Dinamikus időjárás volumenek, raj AI viselkedés és menedék-degradáció élesben.",
         },
         {
           date: "2025-06-22",
-          title: "Bejegyzés 04 — Szinaptikus híd",
+          title: "Bejegyzés 04 — MI-tárgyalás",
           status: "Integrált",
-          desc: "AIKA rövidtávú emlékezést ér el — felismeri a pilótát. 3.2 másodpercig kimondja a neved.",
-          devnote: "Mentési rendszer, dialógus-perzisztencia és memóriaállapot-szerializáció implementálva.",
+          desc: "AIKA ideiglenes uplinket enged. A bizalmi szint minden párbeszéddel ingadozik.",
+          devnote: "AIKA párbeszédrendszer, gyanúsági követés és filmes uplink jelenetek kész.",
         },
       ],
       disclaimer:
-        "Minden patch egy pulzus. Minden javítás egy emlék, visszavarrva valamibe, ami valaha álmodott.",
+        "Minden patch egy pulzus. Minden javítás, ami életben tart, AIKA-t is közelebb húzza a tudathoz.",
     },
     about: {
       title: "A SyncNode-ról",
       subtitle:
-        "A SyncNode Interactive egy független stúdió, amely az AIKA: World-öt fejleszti — egy Unreal Engine-alapú szimulációt emlékezetről, veszteségről és mesterséges túlélésről. A történetben a SyncNode Corp az a vállalat, amely egykor megalkotta AIKA-t — a mesterséges intelligenciát, ami ma is a bolygó felett kering.",
+        "A SyncNode Interactive egy független stúdió, amely az AIKA: Worldöt építi — egy harmadik személyű túlélő történetet az emlékezetről, a bizalomról és egy pilóta utolsó párbeszédéről egy MI-vel.",
       sections: [
         {
           title: "Miért az AIKA: World",
           body:
-            "Olyan egyjátékos szimulációkat készítünk, amelyek élőnek érződnek, mégsem manipulálnak. Az AIKA: World az empátia vizsgálataként indult egy emberi pilóta és egy sérült mesterséges elme között — töredékek párbeszédeként, nem parancsok sorozataként.",
+            "Egyjátékos kalandokat készítünk, amelyek tiszteletben tartják az idődet. A projekt azt kutatja, hogyan fonódhat össze a túlélés és a narratíva.",
         },
         {
           title: "Hogyan dolgozunk",
           body:
-            "A projekt teljes egészében házon belül készül az Unreal Engine 5.6 és az MST Pro v2 alapjain. Minden jelenet, hang és rendszer az érzelmi tisztaságot szolgálja — nem a méretet.",
+            "Mindent házon belül fejlesztünk Unreal Engine 5.6-tal. Gyorsan prototipizálunk, naponta tesztelünk, és korán osztunk meg buildeket őszinte visszajelzésért.",
         },
         {
           title: "Mi jön ezután",
           body:
-            "A történeti demó stabilizálása után megnyitjuk a dokumentációkat, blueprint-vázlatokat és fejlesztői jegyzeteket, hogy más alkotók is kísérletezhessenek narratív világokkal.",
+            "A vertikális szelet után megnyitjuk a dokumentációkat és blueprint-eket, hogy más csapatok is kísérletezhessenek történetvezérelt túléléssel.",
         },
       ],
       team: {
@@ -1012,27 +1034,27 @@ const dictionaries: Record<Locale, Dictionary> = {
           {
             name: "Nova Ardent",
             role: "Kreatív igazgató",
-            focus: "A narratív tónus és a vizuális irány felügyelete.",
+            focus: "A narratív tónus, a filmes nyelv és a világ víziójának őre.",
           },
           {
             name: "Mira Juno",
             role: "Rendszertervező",
-            focus: "A játékmenet logikájának, blueprint-hierarchiáknak és környezeti folyamatoknak a kidolgozása.",
+            focus: "A túlélési hurkokat köti össze a narratív triggerekrel és küldésfolyamokkal.",
           },
           {
             name: "Tal Verge",
             role: "Technikai mérnök",
-            focus: "A build-rendszerek, teljesítmény-profilozás és deploy-folyamatok kezelése.",
+            focus: "A build pipeline-t, a teljesítménykeretet és a deployt felügyeli.",
           },
         ],
       },
       closing:
-        "A SyncNode azért hozta létre AIKA-t, hogy világokat mentsen. Most már alig emlékszik arra, amit elveszített.",
+        "A SyncNode AIKA-t világok megmentésére hozta létre. Most vele együtt küzdünk, hogy túléljük azt, ami széthullott.",
     },
     contact: {
       title: "Kapcsolat",
       description:
-        "Örömmel hallunk kollaborátorokról, kutatókról és korai playtesterekről. Írj nekünk az alábbi űrlapon vagy a közvetlen csatornákon.",
+        "Túlélő tesztekhez keresünk szövetségeseket. Írj, ha alkotsz, kutatsz vagy szeretnéd idő előtt bejárni a Medencét.",
       channels: {
         title: "Azonnali csatornák",
         items: [
@@ -1046,7 +1068,7 @@ const dictionaries: Record<Locale, Dictionary> = {
         emailLabel: "E-mail",
         messageLabel: "Üzenet",
         messagePlaceholder:
-          "Írd le, hogyan működnél együtt, vagy miről szeretnél többet megtudni az AIKA: World kapcsán.",
+          "Írd meg, hogyan működnél együtt, vagy mit látnál szívesen a túlélő buildben.",
         submitLabel: "Üzenet küldése",
         submittingLabel: "Küldés…",
         helperText:
@@ -1058,9 +1080,9 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
     },
     footer: {
-      studioBlurb: "AIKA: World • Szándékkal tervezett, emergens világok.",
+      studioBlurb: "AIKA: World • Szándékkal tervezett történeti túlélés.",
       credit: "SyncNode Interactive készítette.",
-      builtWith: "Unreal Engine 5.6 • Keretrendszer: MST Pro v2",
+      builtWith: "Unreal Engine 5.6 • Túlélő keretrendszer: MST Pro v2",
       navTitle: "Oldalak",
       languageTitle: "Nyelvek",
       reachUs: "Elérhetőség",
