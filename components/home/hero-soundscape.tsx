@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 type HeroSoundscapeProps = {
   heroRef: MutableRefObject<HTMLDivElement | null>;
-  targets: RefObject<HTMLElement>[];
+  targets: Array<RefObject<HTMLElement | null>>;
 };
 
 type AmbientNodes = {
