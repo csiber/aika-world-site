@@ -36,7 +36,7 @@ A projekt nem használ SQLite-ot; a form endpontok és a Turnstile integráció 
 ## UI komponensek
 
 - Minden nagyobb UI elem a `components/` könyvtárban él.
-- A marketing szakaszok animációi a `framer-motion` könyvtárat használják (`components/home/home-landing.tsx`).
+- A marketing szakaszok animációit Tailwind és egyedi CSS animációk biztosítják (`components/home/home-landing.tsx`).
 - A Cloudflare Turnstile widget újrafelhasználható verziója: `components/turnstile-widget.tsx`.
 - Az analitika hozzájárulási sáv: `components/analytics-consent.tsx`.
 

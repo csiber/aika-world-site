@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
@@ -14,37 +13,6 @@ import { LivePulse } from "./live-pulse";
 type HomeLandingProps = {
   locale: Locale;
   content: Dictionary["home"];
-};
-
-const heroVariants = {
-  hidden: { opacity: 0, y: 40 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.7,
-      ease: [0.16, 1, 0.3, 1] as const,
-      staggerChildren: 0.12,
-    },
-  },
-};
-
-const heroItem = {
-  hidden: { opacity: 0, y: 32 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const } },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (index: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.55,
-      delay: 0.08 * index,
-      ease: [0.2, 0.6, 0.2, 1] as const,
-    },
-  }),
 };
 
 type FormStatus = "idle" | "submitting" | "success" | "error";
@@ -114,42 +82,25 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
 
   return (
     <div className="space-y-24 py-12 md:space-y-32 md:py-16">
-      <motion.section
+      <section
         ref={heroRef}
         className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-purple-700/30 via-indigo-900/40 to-gray-950 p-10 text-white shadow-[0_40px_120px_-60px_rgba(123,83,255,0.65)]"
-        variants={heroVariants}
-        initial="hidden"
-        animate="visible"
       >
         <HeroAurora containerRef={heroRef} />
         <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-purple-500/30 blur-3xl" aria-hidden />
         <div className="relative z-10 grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(240px,0.8fr)] lg:items-center">
-          <div>
-            <motion.span
-              variants={heroItem}
-              className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.3em]"
-            >
+          <div className="space-y-6">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.3em]">
               <span>{content.hero.badgeLeft}</span>
               <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em]">
                 {content.hero.badgeRight}
               </span>
-            </motion.span>
-            <motion.h1
-              variants={heroItem}
-              className="mt-6 max-w-3xl text-balance text-4xl font-semibold leading-tight md:text-6xl"
-            >
+            </span>
+            <h1 className="max-w-3xl text-balance text-4xl font-semibold leading-tight md:text-6xl">
               {content.hero.title}
-            </motion.h1>
-            <motion.p
-              variants={heroItem}
-              className="mt-6 max-w-2xl text-lg text-white/80 md:text-xl"
-            >
-              {content.hero.subtitle}
-            </motion.p>
-            <motion.div
-              variants={heroItem}
-              className="mt-8 flex flex-col gap-3 sm:flex-row"
-            >
+            </h1>
+            <p className="max-w-2xl text-lg text-white/80 md:text-xl">{content.hero.subtitle}</p>
+            <div className="mt-2 flex flex-col gap-3 sm:flex-row">
               <Link
                 href={`/${locale}/${content.hero.primaryCta.href === "home" ? "" : content.hero.primaryCta.href}`.replace(/\/$/, "")}
                 className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-indigo-950 shadow-lg shadow-indigo-500/30 transition-transform hover:-translate-y-0.5 hover:shadow-indigo-500/50"
@@ -162,45 +113,27 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
               >
                 {content.hero.secondaryCta.label}
               </Link>
-            </motion.div>
-            <motion.p
-              variants={heroItem}
-              className="mt-4 text-xs uppercase tracking-[0.25em] text-white/60"
-            >
-              {content.hero.note}
-            </motion.p>
+            </div>
+            <p className="text-xs uppercase tracking-[0.25em] text-white/60">{content.hero.note}</p>
           </div>
-          <motion.figure
-            variants={heroItem}
-            className="relative mx-auto max-w-sm overflow-hidden rounded-full border border-white/20 bg-black/50 p-6 shadow-[0_20px_60px_-40px_rgba(123,83,255,0.6)]"
-          >
-            <motion.div
+          <figure className="relative mx-auto max-w-sm overflow-hidden rounded-full border border-white/20 bg-black/50 p-6 shadow-[0_20px_60px_-40px_rgba(123,83,255,0.6)]">
+            <div aria-hidden className="absolute -inset-3 rounded-full border border-white/10 opacity-60 animate-spin-slow" />
+            <div
               aria-hidden
-              className="absolute -inset-3 rounded-full border border-white/10"
-              animate={{ opacity: [0.4, 0.9, 0.4], rotate: [0, 3, -2, 0] }}
-              transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute inset-6 rounded-full bg-gradient-to-br from-purple-500/20 via-indigo-500/10 to-cyan-400/10 blur-2xl animate-pulse"
             />
-            <motion.div
-              aria-hidden
-              className="absolute inset-6 rounded-full bg-gradient-to-br from-purple-500/20 via-indigo-500/10 to-cyan-400/10 blur-2xl"
-              animate={{ scale: [1, 1.08, 0.96, 1], opacity: [0.5, 0.9, 0.4, 0.5] }}
-              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div
-              aria-hidden
-              className="absolute inset-0"
-              animate={{ rotate: [0, 12, -8, 0] }}
-              transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
-            >
+            <div aria-hidden className="absolute inset-0 animate-spin-slower">
               <svg viewBox="0 0 400 400" className="h-full w-full">
                 <g stroke="rgba(180,198,255,0.2)" strokeWidth="1" fill="none">
                   <circle cx="200" cy="200" r="120" />
                   <circle cx="200" cy="200" r="170" />
                   <path d="M40 200 Q 200 40 360 200" />
                   <path d="M40 200 Q 200 360 360 200" />
+                  <path d="M200 40 Q 120 200 200 360" />
+                  <path d="M200 40 Q 280 200 200 360" />
                 </g>
               </svg>
-            </motion.div>
+            </div>
             <Image
               src="/images/hero/aika-hero-orb.svg"
               alt={content.hero.imageAlt}
@@ -210,9 +143,9 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
               sizes="(min-width: 1280px) 380px, (min-width: 768px) 320px, 240px"
               className="relative h-auto w-full"
             />
-          </motion.figure>
+          </figure>
         </div>
-      </motion.section>
+      </section>
 
       <RevealSection className="grid gap-8 rounded-3xl border border-white/10 bg-white/5 p-10 text-sm leading-relaxed text-white/90">
         <div className="space-y-4">
@@ -220,67 +153,48 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
           <p className="text-base text-white/80 md:text-lg">{content.what.description}</p>
         </div>
         <ul className="grid gap-6 md:grid-cols-4">
-          {content.what.pillars.map((pillar, index) => (
-            <motion.li
+          {content.what.pillars.map((pillar) => (
+            <li
               key={pillar.title}
-              custom={index}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={cardVariants}
-              className="rounded-2xl border border-white/5 bg-gradient-to-br from-white/10 to-white/5 p-6"
+              className="rounded-2xl border border-white/5 bg-gradient-to-br from-white/10 to-white/5 p-6 transition-transform hover:-translate-y-1"
             >
               <h3 className="text-lg font-semibold text-white">{pillar.title}</h3>
               <p className="mt-3 text-sm text-white/80">{pillar.text}</p>
-            </motion.li>
+            </li>
           ))}
         </ul>
       </RevealSection>
 
       <RevealSection className="space-y-10 rounded-3xl border border-white/10 bg-white/[0.04] p-10">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h2 className="text-3xl font-semibold text-white">{content.factions.title}</h2>
-            <p className="mt-3 max-w-2xl text-base text-white/75">{content.factions.intro}</p>
-          </div>
+        <div className="space-y-4">
+          <h2 className="text-3xl font-semibold text-white">{content.factions.title}</h2>
+          <p className="max-w-2xl text-base text-white/75">{content.factions.intro}</p>
         </div>
         <div className="grid gap-6 md:grid-cols-2">
-          {content.factions.items.map((pillar, index) => (
-            <motion.article
-              key={pillar.name}
-              custom={index}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.15 }}
-              variants={cardVariants}
-              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 p-6 backdrop-blur"
+          {content.factions.items.map((faction) => (
+            <article
+              key={faction.name}
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 p-6 transition-transform hover:-translate-y-1"
             >
-              <div className="absolute -top-12 right-0 h-32 w-32 rounded-full bg-purple-500/20 blur-3xl transition-transform group-hover:scale-110" aria-hidden />
-              <span className="text-xs uppercase tracking-[0.4em] text-white/50">{pillar.tag}</span>
-              <h3 className="mt-4 text-2xl font-semibold text-white">{pillar.name}</h3>
-              <p className="mt-3 text-sm text-white/75">{pillar.text}</p>
-            </motion.article>
+              <div className="absolute -top-12 right-0 h-32 w-32 rounded-full bg-purple-500/20 blur-3xl transition-transform duration-500 group-hover:scale-110" aria-hidden />
+              <span className="text-xs uppercase tracking-[0.4em] text-white/50">{faction.tag}</span>
+              <h3 className="mt-4 text-2xl font-semibold text-white">{faction.name}</h3>
+              <p className="mt-3 text-sm text-white/75">{faction.text}</p>
+            </article>
           ))}
         </div>
       </RevealSection>
 
       <RevealSection className="space-y-10 rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-900/40 via-slate-900/60 to-black/70 p-10">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h2 className="text-3xl font-semibold text-white">{content.builders.title}</h2>
-            <p className="mt-3 max-w-2xl text-base text-white/80">{content.builders.intro}</p>
-          </div>
+        <div className="space-y-4">
+          <h2 className="text-3xl font-semibold text-white">{content.builders.title}</h2>
+          <p className="max-w-2xl text-base text-white/80">{content.builders.intro}</p>
         </div>
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          {content.builders.items.map((feature, index) => (
-            <motion.div
+          {content.builders.items.map((feature) => (
+            <div
               key={feature.title}
-              custom={index}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={cardVariants}
-              className="rounded-2xl border border-white/10 bg-white/5 p-6"
+              className="rounded-2xl border border-white/10 bg-white/5 p-6 transition-transform hover:-translate-y-1"
             >
               <div className="flex items-center justify-between">
                 <Image
@@ -295,7 +209,7 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
               </div>
               <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
               <p className="mt-3 text-sm text-white/75">{feature.text}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </RevealSection>
@@ -309,22 +223,15 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
       </RevealSection>
 
       <RevealSection className="space-y-10 rounded-3xl border border-white/10 bg-white/[0.04] p-10">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h2 className="text-3xl font-semibold text-white">{content.loops.title}</h2>
-            <p className="mt-3 max-w-2xl text-base text-white/80">{content.loops.intro}</p>
-          </div>
+        <div className="space-y-4">
+          <h2 className="text-3xl font-semibold text-white">{content.loops.title}</h2>
+          <p className="max-w-2xl text-base text-white/80">{content.loops.intro}</p>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
-          {content.loops.items.map((loop, index) => (
-            <motion.article
+          {content.loops.items.map((loop) => (
+            <article
               key={loop.title}
-              custom={index}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={cardVariants}
-              className="flex h-full flex-col gap-4 rounded-2xl border border-white/10 bg-gradient-to-br from-black/40 via-transparent to-white/5 p-6"
+              className="flex h-full flex-col gap-4 rounded-2xl border border-white/10 bg-gradient-to-br from-black/40 via-transparent to-white/5 p-6 transition-transform hover:-translate-y-1"
             >
               <div>
                 <h3 className="text-xl font-semibold text-white">{loop.title}</h3>
@@ -334,7 +241,7 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
                 <span className="inline-flex h-2 w-2 rounded-full bg-white/40" aria-hidden />
                 {content.pulse.feedBadge}
               </div>
-            </motion.article>
+            </article>
           ))}
         </div>
       </RevealSection>
@@ -346,14 +253,9 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
           {content.roadmap.items.map((phase, index) => (
-            <motion.div
+            <div
               key={phase.title}
-              custom={index}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={cardVariants}
-              className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-black/40 p-6"
+              className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-black/40 p-6 transition-transform hover:-translate-y-1"
             >
               <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.3em] text-white/60">
                 <span className="inline-flex h-2 w-2 rounded-full bg-purple-300/70" aria-hidden />
@@ -361,7 +263,7 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
               </div>
               <h3 className="text-xl font-semibold text-white">{phase.title}</h3>
               <p className="text-sm text-white/75">{phase.text}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </RevealSection>
@@ -373,14 +275,9 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
             <p className="text-base text-white/80">{content.signup.description}</p>
             <p className="text-xs text-white/60">{content.signup.legal}</p>
           </div>
-          <motion.form
+          <form
             onSubmit={handleSubmit}
             className="relative flex w-full max-w-md flex-col gap-3 rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg shadow-purple-500/20"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={cardVariants}
-            custom={0}
           >
             <input
               required
@@ -460,7 +357,7 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
                     ? signupFeedback ?? content.signup.error
                     : content.signup.helperText}
             </p>
-          </motion.form>
+          </form>
         </div>
       </RevealSection>
     </div>

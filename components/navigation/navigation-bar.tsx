@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -16,11 +15,6 @@ type NavigationBarProps = {
   locale: Locale;
 };
 
-const underlineVariants = {
-  rest: { scaleX: 0, opacity: 0 },
-  hover: { scaleX: 1, opacity: 1 },
-};
-
 export function NavigationBar({ items, locale }: NavigationBarProps) {
   const pathname = usePathname();
 
@@ -32,30 +26,21 @@ export function NavigationBar({ items, locale }: NavigationBarProps) {
           (item.href !== `/${locale}` && pathname?.startsWith(item.href));
 
         return (
-          <motion.div
-            key={item.href}
-            initial="rest"
-            whileHover="hover"
-            animate={isActive ? "hover" : "rest"}
-            className="relative"
-          >
+          <div key={item.href} className="group relative">
             <Link
               href={item.href}
               className={cn(
-                "px-1 py-0.5 text-sm font-medium tracking-wide text-foreground/80 transition-colors",
-                isActive && "text-foreground"
+                "px-1 py-0.5 text-sm font-medium tracking-wide text-foreground/70 transition-colors",
+                "after:absolute after:left-0 after:right-0 after:bottom-0 after:h-0.5 after:origin-left after:scale-x-0",
+                "after:rounded-full after:bg-foreground after:transition-transform after:duration-200 after:ease-in-out",
+                "group-hover:after:scale-x-100",
+                isActive && "text-foreground after:scale-x-100"
               )}
               prefetch
             >
               {item.label}
             </Link>
-            <motion.span
-              aria-hidden
-              variants={underlineVariants}
-              transition={{ duration: 0.24, ease: [0.4, 0, 0.2, 1] }}
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-left rounded-full bg-foreground/80"
-            />
-          </motion.div>
+          </div>
         );
       })}
     </div>
