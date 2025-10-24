@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">AIKA: World memóriatérkép ikon</title>
+  <desc id="desc">Holografikus térkép jelölőkkel és jelzésekből álló hálóval.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#19102b" />
+      <stop offset="100%" stop-color="#06050f" />
+    </linearGradient>
+    <linearGradient id="grid" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7ce6ff" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#2e69ff" stop-opacity="0.7" />
+    </linearGradient>
+    <radialGradient id="marker" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff9cb4" />
+      <stop offset="100%" stop-color="#ff3f72" />
+    </radialGradient>
+  </defs>
+  <rect width="160" height="160" rx="32" fill="url(#bg)" />
+  <g transform="translate(20 24)">
+    <rect x="12" y="16" width="96" height="64" rx="18" fill="#0a1428" stroke="#3a4f88" stroke-width="4" />
+    <path d="M20 44 Q44 22 68 38 T116 56" fill="none" stroke="url(#grid)" stroke-width="4" stroke-linecap="round" />
+    <path d="M20 58 Q40 84 62 72 T108 76" fill="none" stroke="url(#grid)" stroke-width="4" stroke-linecap="round" />
+    <circle cx="44" cy="38" r="7" fill="url(#marker)" />
+    <circle cx="72" cy="52" r="6" fill="#5af1ff" />
+    <circle cx="94" cy="64" r="5" fill="#84ffbe" />
+    <path d="M40 100 H116" stroke="#233157" stroke-width="8" stroke-linecap="round" />
+    <path d="M50 116 H126" stroke="#1a2744" stroke-width="10" stroke-linecap="round" />
+    <rect x="102" y="12" width="28" height="28" rx="8" fill="#141f3a" stroke="#4b66c6" stroke-width="3" />
+    <path d="M110 26 L118 18 L126 26" stroke="#4b66c6" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M118 30 V36" stroke="#4b66c6" stroke-width="3" stroke-linecap="round" />
+    <circle cx="122" cy="104" r="16" fill="#18264a" stroke="#4f8bff" stroke-width="4" />
+    <path d="M122 92 L122 116" stroke="#7bf2ff" stroke-width="4" stroke-linecap="round" />
+    <path d="M110 104 H134" stroke="#7bf2ff" stroke-width="4" stroke-linecap="round" />
+  </g>
+</svg>
