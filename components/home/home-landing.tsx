@@ -54,7 +54,7 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
   const [newsletterFeedback, setNewsletterFeedback] = useState<string | null>(null);
   const [newsletterToken, setNewsletterToken] = useState("");
   const [newsletterReset, setNewsletterReset] = useState(0);
-  const heroRef = useRef<HTMLDivElement | null>(null);
+  const heroRef = useRef<HTMLElement | null>(null);
 
   const newsletterEndpoint = process.env.NEXT_PUBLIC_NEWSLETTER_FORM_ENDPOINT;
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;

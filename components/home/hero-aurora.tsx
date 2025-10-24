@@ -6,7 +6,7 @@ import type { RefObject } from "react";
 import { cn } from "@/lib/utils";
 
 type HeroAuroraProps = {
-  containerRef: RefObject<HTMLElement>;
+  containerRef: RefObject<HTMLElement | null>;
 };
 
 type OrbDefinition = {
