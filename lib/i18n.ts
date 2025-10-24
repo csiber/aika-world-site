@@ -68,13 +68,13 @@ type WorldExploration = {
 
 type SystemModule = {
   name: string;
-  category: string;
+  badge: string;
   description: string;
 };
 
 type SystemPillar = {
   name: string;
-  points: string[];
+  description: string;
 };
 
 type DevlogEntry = {
@@ -196,12 +196,12 @@ export type Dictionary = {
   };
   systems: {
     title: string;
-    description: string;
+    subtitle: string;
     modulesTitle: string;
     pillarsTitle: string;
     modules: SystemModule[];
     pillars: SystemPillar[];
-    closing: string;
+    footnote: string;
   };
   devlog: {
     title: string;
@@ -475,65 +475,56 @@ const dictionaries: Record<Locale, Dictionary> = {
         "New districts unlock as lighting passes finish and narrative beats align with live sim telemetry.",
     },
     systems: {
-      title: "Systems & scaffolding",
-    description:
-      "AIKA: World is composed of modular services running on Cloudflare Workers, Durable Objects, and edge storage.",
-    modulesTitle: "Modules",
-    pillarsTitle: "Operational pillars",
+      title: "Systems & Core Protocols",
+      subtitle:
+        "Beneath the surface, AIKA still runs — fragments of her architecture manage signals, restore memory sectors, and simulate what once was.",
+      modulesTitle: "Subsystem modules",
+      pillarsTitle: "Operational pillars",
       modules: [
         {
-          name: "Sentience lattice",
-          category: "AI orchestration",
+          name: "Cognitive Kernel",
+          badge: "AI CORE",
           description:
-            "Routes prompts through faction-specific memory banks, generating responses that influence diplomacy and morale.",
+            "AIKA’s central thought loop. Processes sensory input from the player and rebuilds intent from corrupted directives.",
         },
         {
-          name: "Echo ledger",
-          category: "State sync",
+          name: "Echo Registry",
+          badge: "DATA SYNC",
           description:
-            "Streams critical world events to clients, while archiving snapshots for replayable story arcs.",
+            "Stores and replicates mission logs, black box data, and environmental telemetry recovered from the surface.",
         },
         {
-          name: "Atlas composer",
-          category: "World building",
+          name: "Terrain Recompiler",
+          badge: "WORLD SIM",
           description:
-            "Procedurally arranges habitats, supply nodes, and mission hooks based on faction control thresholds.",
+            "Procedurally restores damaged zones using archived templates. Each restoration risks overwriting surviving fragments.",
         },
         {
-          name: "Signal studio",
-          category: "Community",
+          name: "Resonance Hub",
+          badge: "COMM LINK",
           description:
-            "Lets curators and players submit briefs, polls, and moodboards that tune upcoming releases.",
+            "Synchronizes uplinks between ground relays and orbit. Used to re-establish contact with AIKA’s remaining subsystems.",
         },
       ],
       pillars: [
         {
-          name: "Observability",
-          points: [
-            "Native tracing on every worker hop",
-            "Edge analytics for player-made content",
-            "Alerting tuned for 60 FPS stream stability",
-          ],
+          name: "Persistence",
+          description:
+            "Player actions are stored across local and orbital layers. Every restored node leaves a trace in the system logs.",
         },
         {
-          name: "Collaboration",
-          points: [
-            "Shared schemas for mod authors",
-            "Review workflows connecting lore and code",
-            "In-world governance votes mirrored to Discord",
-          ],
+          name: "Isolation",
+          description:
+            "The world runs as a sealed instance. Corrupted sectors are quarantined, forming isolated fragments of the simulation.",
         },
         {
-          name: "Safety",
-          points: [
-            "Automated content filters across factions",
-            "Rollback-friendly storage design",
-            "Human-in-the-loop approvals for key beats",
-          ],
+          name: "Recovery",
+          description:
+            "The self-repair protocol replays events to rebuild lost data, sometimes creating distortions or duplicated memories.",
         },
       ],
-      closing:
-        "Full diagrams and latency budgets drop alongside the first open playtest so you can self-host shards for experiments.",
+      footnote:
+        "Each system you repair brings AIKA closer to consciousness — or closer to collapse.",
     },
     devlog: {
       title: "Devlog",
@@ -884,65 +875,56 @@ const dictionaries: Record<Locale, Dictionary> = {
         "Új körzetek akkor nyílnak, amikor a világítást lezárjuk és a narratív ütemek igazodnak a szimuláció telemetriájához.",
     },
     systems: {
-      title: "Rendszerek és váz",
-    description:
-      "Az AIKA: World moduláris szolgáltatásokból épül, Cloudflare Workers, Durable Objects és perem-tárolás felett futva.",
-    modulesTitle: "Modulok",
-    pillarsTitle: "Működési pillérek",
+      title: "Rendszerek és Alap-Protokollok",
+      subtitle:
+        "A felszín alatt AIKA még fut — az architektúra töredékei kezelik a jeleket, visszaállítják az emlék-szektorokat és újraalkotják azt, ami egykor volt.",
+      modulesTitle: "Alrendszer modulok",
+      pillarsTitle: "Működési pillérek",
       modules: [
         {
-          name: "Érzésháló",
-          category: "AI-orchestration",
+          name: "Kognitív Mag",
+          badge: "AI MAG",
           description:
-            "A promptokat frakcióspecifikus memória-bankokon vezeti át, így a diplomácia és a morál döntései hitelesek maradnak.",
+            "AIKA központi gondolat-hurokja. A játékos érzékeléseit dolgozza fel, és sérült utasításokból próbál új szándékot felépíteni.",
         },
         {
-          name: "Visszhang főkönyv",
-          category: "Állapot-szinkron",
+          name: "Visszhang-Regiszter",
+          badge: "ADATSZINKRON",
           description:
-            "Sugározza a kulcs eseményeket a kliensek felé, miközben visszajátszható történetíveket archivál.",
+            "Mentési logok, fekete doboz adatok és felszíni telemetria tárolása és replikálása.",
         },
         {
-          name: "Atlasz komponáló",
-          category: "Világépítés",
+          name: "Terep Rekompilátor",
+          badge: "VILÁG-SZIM",
           description:
-            "Procedurálisan rendezi el a menedékeket, ellátópontokat és küldetéshorgokat a frakciók befolyási szintje alapján.",
+            "Sérült zónák procedurális helyreállítása archív sablonok alapján. Minden újraírás kockáztatja a megmaradt fragmenteket.",
         },
         {
-          name: "Jelstúdió",
-          category: "Közösség",
+          name: "Rezonancia-Központ",
+          badge: "KOMM-LINK",
           description:
-            "Lehetővé teszi promptok, szavazások és hangulatpanelek beküldését, amelyek finomhangolják a következő kiadásokat.",
+            "Összehangolja a felszíni reléket és az orbitális kapcsolatokat. AIKA többi alrendszerével való újrakapcsolódáshoz használható.",
         },
       ],
       pillars: [
         {
-          name: "Megfigyelhetőség",
-          points: [
-            "Nyomkövetés minden worker-ugráson",
-            "Perem-analitika a játékos tartalmakra",
-            "Riasztások a 60 FPS stream stabilitásához",
-          ],
+          name: "Állandóság",
+          description:
+            "A játékos cselekedetei lokális és orbitális rétegekben tárolódnak. Minden helyreállított csomópont nyomot hagy a rendszerben.",
         },
         {
-          name: "Együttműködés",
-          points: [
-            "Megosztott sémák a mod készítőknek",
-            "Review-folyamatok, amelyek összekötik a lore-t és a kódot",
-            "Világbeli szavazások tükrözése Discordra",
-          ],
+          name: "Elszigeteltség",
+          description:
+            "A világ zárt példányban fut. A hibás szektorokat az AIKA karantén alá helyezi, így jönnek létre a fragmentek.",
         },
         {
-          name: "Biztonság",
-          points: [
-            "Automatikus tartalomszűrés frakciószinten",
-            "Visszagörgetés-barát tárolási design",
-            "Emberi jóváhagyás a kulcs narratív csomópontoknál",
-          ],
+          name: "Helyreállítás",
+          description:
+            "Az önjavító protokoll eseményeket játszik vissza az elveszett adatok pótlásához — néha torzulásokkal vagy ismétlődő emlékekkel.",
         },
       ],
-      closing:
-        "A teljes diagramok és késleltetési keretek az első nyílt playtesttel érkeznek, hogy saját szilánkokat is futtathassatok.",
+      footnote:
+        "Minden javított rendszerrel AIKA egyre közelebb kerül a tudathoz — vagy az összeomláshoz.",
     },
     devlog: {
       title: "Fejlesztési napló",

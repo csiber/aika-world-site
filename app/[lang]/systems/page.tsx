@@ -17,7 +17,7 @@ export async function generateMetadata({
   return createPageMetadata({
     locale: lang,
     title: dictionary.systems.title,
-    description: dictionary.systems.description,
+    description: dictionary.systems.subtitle,
     slug: getRouteSegment("systems"),
   });
 }
@@ -39,7 +39,7 @@ export default async function SystemsPage({
       <RevealSection className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-8 text-white">
         <span className="text-xs uppercase tracking-[0.4em] text-white/50">{dictionary.nav.systems}</span>
         <h1 className="text-4xl font-semibold leading-tight md:text-5xl">{systems.title}</h1>
-        <p className="max-w-3xl text-base text-white/75 md:text-lg">{systems.description}</p>
+        <p className="max-w-3xl text-base text-white/75 md:text-lg">{systems.subtitle}</p>
       </RevealSection>
 
       <RevealSection className="space-y-6">
@@ -50,7 +50,7 @@ export default async function SystemsPage({
               key={module.name}
               className="rounded-3xl border border-white/10 bg-gradient-to-br from-black/50 via-transparent to-white/10 p-6 text-white"
             >
-              <div className="text-xs uppercase tracking-[0.3em] text-white/50">{module.category}</div>
+              <div className="text-xs uppercase tracking-[0.3em] text-white/50">{module.badge}</div>
               <h3 className="mt-3 text-xl font-semibold">{module.name}</h3>
               <p className="mt-3 text-sm text-white/80">{module.description}</p>
             </div>
@@ -64,21 +64,14 @@ export default async function SystemsPage({
           {systems.pillars.map((pillar) => (
             <div key={pillar.name} className="rounded-2xl border border-white/10 bg-white/5 p-6">
               <h3 className="text-lg font-semibold">{pillar.name}</h3>
-              <ul className="mt-4 space-y-2 text-sm text-white/75">
-                {pillar.points.map((point) => (
-                  <li key={point} className="flex items-start gap-2">
-                    <span className="mt-1 inline-block h-2 w-2 rounded-full bg-white/60" aria-hidden />
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
+              <p className="mt-4 text-sm text-white/75">{pillar.description}</p>
             </div>
           ))}
         </div>
       </RevealSection>
 
       <RevealSection className="rounded-3xl border border-white/10 bg-white/5 p-8 text-sm text-white/75">
-        {systems.closing}
+        {systems.footnote}
       </RevealSection>
     </div>
   );
