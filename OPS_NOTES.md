@@ -4,7 +4,7 @@ Ez a dokumentum a Cloudflare Pages/Workers környezetben történő üzemelteté
 
 ## Cloudflare Pages beállítások
 
-- **Build parancs:** `npm run build`
+- **Build parancs:** `npm run build:cloudflare`
 - **Build output:** az `open-next.config.ts` határozza meg; a Pages automatikusan a `.open-next` mappát tölti fel.
 - **Environment variables:** mind a Production, mind a Preview környezetben állítsd be a README-ben felsorolt értékeket.
 - **Edge runtime:** a Turnstile és a dinamikus meta generálás miatt a Workers runtime engedélyezett; extra konfiguráció a `wrangler.jsonc` fájlban található.
@@ -42,7 +42,7 @@ Ez a dokumentum a Cloudflare Pages/Workers környezetben történő üzemelteté
 ## Incidenskezelés
 
 1. Ellenőrizd a Cloudflare status oldalt (Pages, Workers, Analytics).
-2. Futtasd lokálisan az `npm run build` parancsot – ha hibát jelez, gyors rollback szükséges.
+2. Futtasd lokálisan az `npm run build:cloudflare` parancsot – ha hibát jelez, gyors rollback szükséges.
 3. Ha a form endpoint nem válaszol, ideiglenesen kapcsold ki a bevitelt (állítsd `NEXT_PUBLIC_CONTACT_FORM_ENDPOINT` értékét üresre); a komponensek ekkor hibát jeleznek a felhasználónak.
 
 Frissítés esetén ezt a fájlt tartsd naprakészen.

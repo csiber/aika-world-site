@@ -16,16 +16,20 @@ A projekt nem használ SQLite-ot; a form endpontok és a Turnstile integráció 
 | Parancs | Leírás |
 | --- | --- |
 | `npm run dev` | Next.js fejlesztői mód, hot reloaddal. |
-| `npm run build` | Production build Cloudflare Pages számára (statikus export + edge runtime). |
-| `npm run start` | Preview szerver a buildelt kimenet ellenőrzésére. |
+| `npm run build` | Klasszikus Next.js build lokális hibakereséshez. |
+| `npm run build:cloudflare` | Cloudflare Pages/Workers build, elkészíti a `.open-next` mappát. |
+| `npm run start` | Next.js preview szerver a `.next` kimenethez. |
+| `npm run start:cloudflare` | Workers runtime preview az `.open-next` kimenettel. |
+| `npm run preview` | Cloudflare build + preview (megegyezik a Pages futtatással). |
 | `npm run lint` | Statikus ellenőrzés a projekt ESLint szabályaival. |
 
 ## Build és deploy folyamat
 
-1. `npm run build` lokálisan ellenőrzi, hogy a Next.js alkalmazás statikusan előállítható.
-2. Cloudflare Pages-en a build parancs ugyanaz (`npm run build`), az outputot az `.open-next` konfiguráció írja le.
-3. A Workers funkciókat a `wrangler.jsonc` és az `open-next.config.ts` fájlok szabályozzák.
-4. Élesítés előtt érdemes Lighthouse-t futtatni (Chrome DevTools) és ellenőrizni, hogy a Performance + SEO legalább 90 pont.
+1. `npm run build:cloudflare` állítja elő azt a `.open-next` kimenetet, amelyet a Cloudflare Pages + Workers használ.
+2. Cloudflare Pages-en a build parancsot `npm run build:cloudflare` értékre kell állítani, az output könyvtár marad `.open-next`.
+3. A klasszikus `npm run build` parancs továbbra is futtatható, ha csak a Next.js saját buildjét szeretnéd ellenőrizni.
+4. A Workers funkciókat a `wrangler.jsonc` és az `open-next.config.ts` fájlok szabályozzák.
+5. Élesítés előtt érdemes Lighthouse-t futtatni (Chrome DevTools) és ellenőrizni, hogy a Performance + SEO legalább 90 pont.
 
 ## I18n struktúra
 
@@ -60,7 +64,7 @@ A projekt nem használ SQLite-ot; a form endpontok és a Turnstile integráció 
 
 ## Ellenőrzőlista élesítés előtt
 
-- [ ] `npm run build` hibamentesen lefut.
+- [ ] `npm run build:cloudflare` hibamentesen lefut.
 - [ ] Lighthouse desktop: Performance ≥ 90, SEO ≥ 90.
 - [ ] Cloudflare Web Analytics token aktív és a consent banner megjelenik.
 - [ ] Hreflang és canonical tagek ellenőrizve (View Source).
