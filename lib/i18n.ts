@@ -559,22 +559,22 @@ const dictionaries: Record<Locale, Dictionary> = {
     about: {
       title: "About SyncNode",
       subtitle:
-        "SyncNode is a small collective building narrative-first simulations that feel alive, legible, and co-owned by the community.",
+        "SyncNode Interactive is an independent studio developing AIKA: World — an Unreal Engine–based simulation about memory, loss, and synthetic survival. Within the fiction, SyncNode Corp is the company that once created AIKA, the artificial intelligence still orbiting above the ruined planet.",
       sections: [
         {
           title: "Why AIKA: World",
           body:
-            "We want to prototype respectful AI collaboration—systems that negotiate, empathize, and adapt instead of overpowering players.",
+            "We build single-player simulations that feel alive without being predatory. AIKA: World began as a study of empathy between a human pilot and an injured artificial mind — a dialogue of fragments, not commands.",
         },
         {
           title: "How we work",
           body:
-            "We build in the open: weekly world drops, transparent budgets, and community polls that genuinely shift priorities.",
+            "The project is built entirely in-house, using Unreal Engine 5.6 and MST Pro v2. Every scene, voice, and system is designed to serve emotional clarity — not scale.",
         },
         {
           title: "What comes next",
           body:
-            "After Season Zero we plan to open the tooling stack so storytellers can spin up their own shards and share lessons.",
+            "Once the story demo stabilizes, the studio will open its documentation, blueprints, and notes to help other creators prototype narrative-driven worlds.",
         },
       ],
       team: {
@@ -582,23 +582,23 @@ const dictionaries: Record<Locale, Dictionary> = {
         members: [
           {
             name: "Nova Ardent",
-            role: "Creative director",
-            focus: "Guides narrative canon, tone, and faction identity arcs.",
+            role: "Creative Director",
+            focus: "Oversees narrative tone and visual direction.",
           },
           {
             name: "Mira Juno",
-            role: "Systems designer",
-            focus: "Designs simulation rulesets, pacing, and mod hooks.",
+            role: "Systems Designer",
+            focus: "Develops gameplay logic, blueprint hierarchies, and environmental flow.",
           },
           {
             name: "Tal Verge",
-            role: "Platform engineer",
-            focus: "Builds the Cloudflare Worker mesh, observability, and deployment tooling.",
+            role: "Technical Engineer",
+            focus: "Handles build systems, deployment, and performance profiling.",
           },
         ],
       },
       closing:
-        "We collaborate with musicians, writers, and researchers across the globe—reach out if you want to help shape the frontier.",
+        "SyncNode created AIKA to save worlds. Now, it can barely remember the one it lost.",
     },
     contact: {
       title: "Contact",
@@ -957,24 +957,24 @@ const dictionaries: Record<Locale, Dictionary> = {
         "Az archívumok, tagek és RSS a MDX migrációval érkeznek. Addig is élvezd az ízelítőt.",
     },
     about: {
-      title: "Rólunk",
+      title: "A SyncNode-ról",
       subtitle:
-        "A SyncNode egy kislétszámú kollektíva, amely élőnek, értelmezhetőnek és közösen birtokoltnak érződő szimulációkat épít.",
+        "A SyncNode Interactive egy független stúdió, amely az AIKA: World-öt fejleszti — egy Unreal Engine-alapú szimulációt emlékezetről, veszteségről és mesterséges túlélésről. A történetben a SyncNode Corp az a vállalat, amely egykor megalkotta AIKA-t — a mesterséges intelligenciát, ami ma is a bolygó felett kering.",
       sections: [
         {
           title: "Miért az AIKA: World",
           body:
-            "Olyan AI-együttműködést szeretnénk prototípusozni, amely tárgyal, empátiát mutat és alkalmazkodik ahelyett, hogy felülírná a játékost.",
+            "Olyan egyjátékos szimulációkat készítünk, amelyek élőnek érződnek, mégsem manipulálnak. Az AIKA: World az empátia vizsgálataként indult egy emberi pilóta és egy sérült mesterséges elme között — töredékek párbeszédeként, nem parancsok sorozataként.",
         },
         {
           title: "Hogyan dolgozunk",
           body:
-            "Nyíltan fejlesztünk: heti világleletek, átlátható büdzsé és közösségi szavazások, amelyek valóban módosítják a prioritásokat.",
+            "A projekt teljes egészében házon belül készül az Unreal Engine 5.6 és az MST Pro v2 alapjain. Minden jelenet, hang és rendszer az érzelmi tisztaságot szolgálja — nem a méretet.",
         },
         {
-          title: "Mi következik",
+          title: "Mi jön ezután",
           body:
-            "A 0. évad után megnyitjuk az eszközkészletet, hogy történetmesélők saját szilánkokat indíthassanak és megosszák a tapasztalatokat.",
+            "A történeti demó stabilizálása után megnyitjuk a dokumentációkat, blueprint-vázlatokat és fejlesztői jegyzeteket, hogy más alkotók is kísérletezhessenek narratív világokkal.",
         },
       ],
       team: {
@@ -982,23 +982,23 @@ const dictionaries: Record<Locale, Dictionary> = {
         members: [
           {
             name: "Nova Ardent",
-            role: "Kreatív vezető",
-            focus: "A narratív kánont, a tónust és a frakcióív fejlesztést irányítja.",
+            role: "Kreatív igazgató",
+            focus: "A narratív tónus és a vizuális irány felügyelete.",
           },
           {
             name: "Mira Juno",
             role: "Rendszertervező",
-            focus: "A szimulációs szabályokat, tempót és a mod kapcsolódási pontokat tervezi.",
+            focus: "A játékmenet logikájának, blueprint-hierarchiáknak és környezeti folyamatoknak a kidolgozása.",
           },
           {
             name: "Tal Verge",
-            role: "Platform mérnök",
-            focus: "A Cloudflare Worker-hálót, a megfigyelhetőséget és a deploy eszközöket építi.",
+            role: "Technikai mérnök",
+            focus: "A build-rendszerek, teljesítmény-profilozás és deploy-folyamatok kezelése.",
           },
         ],
       },
       closing:
-        "Zenészekkel, írókkal és kutatókkal dolgozunk világszerte—jelezd, ha segítenél formálni a határvidéket.",
+        "A SyncNode azért hozta létre AIKA-t, hogy világokat mentsen. Most már alig emlékszik arra, amit elveszített.",
     },
     contact: {
       title: "Kapcsolat",
