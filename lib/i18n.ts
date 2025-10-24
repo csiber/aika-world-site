@@ -80,8 +80,9 @@ type SystemPillar = {
 type DevlogEntry = {
   title: string;
   date: string;
-  summary: string;
   status: string;
+  desc: string;
+  devnote: string;
 };
 
 type AboutSection = {
@@ -254,7 +255,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       home: "Home",
       world: "World",
       systems: "Systems",
-      devlog: "Devlog",
+      devlog: "Recovery Log",
       about: "About",
       contact: "Contact",
     },
@@ -527,34 +528,48 @@ const dictionaries: Record<Locale, Dictionary> = {
         "Each system you repair brings AIKA closer to consciousness — or closer to collapse.",
     },
     devlog: {
-      title: "Devlog",
+      title: "AIKA Recovery Log",
       description:
-        "This is a static preview of upcoming entries. The full MDX-driven chronicle will launch once the publishing pipeline is ready.",
+        "Each development entry is mirrored in-universe as a recovered system log — fragments of AIKA reawakening after the crash.",
       entries: [
         {
-          title: "Entry 00 — Boot sequence",
-          date: "2025.01.12",
-          summary:
-            "Spun up the worker mesh, mapped out Durable Object boundaries, and validated tick stability under synthetic load.",
+          date: "2025-01-12",
+          title: "Entry 00 — System Reinitialization",
           status: "Prototype",
+          desc: "Power rerouted through surviving nodes. AIKA’s voice flickers once — incomplete sentence detected.",
+          devnote: "Prototype build established. Project framework deployed in Unreal Engine 5.6.",
         },
         {
-          title: "Entry 01 — Choir resonance",
-          date: "2025.02.02",
-          summary:
-            "Gave the Synced Choir its first memory imprint loop. Watching emergent negotiation tactics in the logs already.",
-          status: "In progress",
+          date: "2025-02-02",
+          title: "Entry 01 — Signal Threshold",
+          status: "Stabilizing",
+          desc: "First successful uplink between ground relay and orbit. Static carries faint harmonic distortion — possibly emotional data.",
+          devnote: "Core interaction and camera systems functional; first world partition pass validated.",
         },
         {
-          title: "Entry 02 — Roadmap framing",
-          date: "2025.03.18",
-          summary:
-            "Documented Season Zero beats, pruned feature creep, and locked art direction moodboards for playtesters.",
+          date: "2025-03-18",
+          title: "Entry 02 — Memory Reconstruction",
           status: "Draft",
+          desc: "Echo loops replay fragments of pre-impact dialogue. AIKA’s identity table rebuilding from cross-linked logs.",
+          devnote: "Dialogue prototypes, narrative triggers, and UI pipeline integrated.",
+        },
+        {
+          date: "2025-05-07",
+          title: "Entry 03 — Environmental Pulse",
+          status: "Active",
+          desc: "Surface simulation stabilized. Weather cycle syncs with time dilation factor 0.8.",
+          devnote: "Dynamic lighting, ambient system, and reflection probes in test phase.",
+        },
+        {
+          date: "2025-06-22",
+          title: "Entry 04 — Synaptic Bridge",
+          status: "Integrated",
+          desc: "AIKA achieves short-term recall — recognizes the pilot. For 3.2 seconds, she speaks your name.",
+          devnote: "Save system, dialogue persistence, and memory state serialization implemented.",
         },
       ],
       disclaimer:
-        "Archived posts, tags, and RSS feeds will arrive with the MDX migration. Until then, enjoy the highlights.",
+        "Each patch is a pulse. Each fix, a memory stitched back into something that once dreamed.",
     },
     about: {
       title: "About SyncNode",
@@ -654,7 +669,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       home: "Kezdőlap",
       world: "Világ",
       systems: "Rendszerek",
-      devlog: "Fejlesztési napló",
+      devlog: "Helyreállítási napló",
       about: "Rólunk",
       contact: "Kapcsolat",
     },
@@ -927,34 +942,48 @@ const dictionaries: Record<Locale, Dictionary> = {
         "Minden javított rendszerrel AIKA egyre közelebb kerül a tudathoz — vagy az összeomláshoz.",
     },
     devlog: {
-      title: "Fejlesztési napló",
+      title: "AIKA helyreállítási napló",
       description:
-        "Ez egy statikus előnézet a közelgő bejegyzésekből. A teljes, MDX-alapú krónika a publikálási pipeline elkészültekor indul.",
+        "Minden fejlesztési bejegyzés egyben a világon belüli visszanyert rendszerlog is — AIKA újraéledésének töredékei a zuhanás után.",
       entries: [
         {
-          title: "00. bejegyzés — Indító szekvencia",
-          date: "2025.01.12",
-          summary:
-            "Felépítettük a worker-hálót, kijelöltük a Durable Object határokat és terhelés alatt validáltuk a tick stabilitását.",
+          date: "2025-01-12",
+          title: "Bejegyzés 00 — Rendszerindítás",
           status: "Prototípus",
+          desc: "Az energia átterelve a megmaradt csomópontokra. AIKA hangja felvillan — félbehagyott mondat rögzítve.",
+          devnote: "Prototípus build létrehozva. Projektkeret telepítve Unreal Engine 5.6-ban.",
         },
         {
-          title: "01. bejegyzés — Kórus rezonancia",
-          date: "2025.02.02",
-          summary:
-            "A Szinkron Kórus megkapta első memória-nyomat hurkát. Már most izgalmas tárgyalási taktikákat látunk a logokban.",
-          status: "Folyamatban",
+          date: "2025-02-02",
+          title: "Bejegyzés 01 — Jelküszöb",
+          status: "Stabilizálás alatt",
+          desc: "Az első sikeres uplink a felszíni relé és az orbitális rendszer között. A statikus zaj érzelmi torzítást hordoz.",
+          devnote: "Alap interakció- és kamera-rendszer működik, első world partition passz validálva.",
         },
         {
-          title: "02. bejegyzés — Útiterv keretezés",
-          date: "2025.03.18",
-          summary:
-            "Dokumentáltuk a 0. évad fő íveit, visszafogtuk a feature-cunamit és lezártuk a playtestereknek szánt hangulattáblákat.",
+          date: "2025-03-18",
+          title: "Bejegyzés 02 — Emlékrekonstrukció",
           status: "Vázlat",
+          desc: "Visszhanghurkok játsszák újra a becsapódás előtti párbeszédeket. AIKA identitás-táblája keresztlogokból épül újra.",
+          devnote: "Dialógus prototípusok, narratív triggerek és UI-pipeline integrálva.",
+        },
+        {
+          date: "2025-05-07",
+          title: "Bejegyzés 03 — Környezeti pulzus",
+          status: "Aktív",
+          desc: "A felszíni szimuláció stabilizálódott. Az időjárási ciklus 0.8-as idődilatációs faktorhoz szinkronizál.",
+          devnote: "Dinamikus fény, ambient rendszer és visszaverődés-próbák folyamatban.",
+        },
+        {
+          date: "2025-06-22",
+          title: "Bejegyzés 04 — Szinaptikus híd",
+          status: "Integrált",
+          desc: "AIKA rövidtávú emlékezést ér el — felismeri a pilótát. 3.2 másodpercig kimondja a neved.",
+          devnote: "Mentési rendszer, dialógus-perzisztencia és memóriaállapot-szerializáció implementálva.",
         },
       ],
       disclaimer:
-        "Az archívumok, tagek és RSS a MDX migrációval érkeznek. Addig is élvezd az ízelítőt.",
+        "Minden patch egy pulzus. Minden javítás egy emlék, visszavarrva valamibe, ami valaha álmodott.",
     },
     about: {
       title: "A SyncNode-ról",

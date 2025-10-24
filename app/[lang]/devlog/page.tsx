@@ -54,7 +54,8 @@ export default async function DevlogPage({
                 <span>{entry.status}</span>
               </div>
               <h2 className="mt-4 text-2xl font-semibold">{entry.title}</h2>
-              <p className="mt-3 text-sm text-white/80">{entry.summary}</p>
+              <p className="mt-3 text-sm text-white/80">{entry.desc}</p>
+              <p className="mt-2 text-xs text-white/60 italic">{entry.devnote}</p>
             </li>
           ))}
         </ul>
