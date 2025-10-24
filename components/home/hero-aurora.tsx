@@ -2,11 +2,11 @@
 
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import { useEffect, useRef } from "react";
-import type { RefObject } from "react";
+import type { MutableRefObject, RefObject } from "react";
 import { cn } from "@/lib/utils";
 
 type HeroAuroraProps = {
-  containerRef: RefObject<HTMLElement>;
+  containerRef: RefObject<HTMLDivElement> | MutableRefObject<HTMLDivElement | null>;
 };
 
 type OrbDefinition = {
