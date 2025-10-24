@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { RevealSection } from "@/components/reveal-section";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { createPageMetadata, getRouteSegment } from "@/lib/seo";
@@ -18,7 +17,7 @@ export async function generateMetadata({
   return createPageMetadata({
     locale: lang,
     title: dictionary.world.title,
-    description: dictionary.world.description,
+    description: dictionary.world.subtitle,
     slug: getRouteSegment("world"),
   });
 }
@@ -40,26 +39,33 @@ export default async function WorldPage({
       <RevealSection className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-8 text-white">
         <span className="text-xs uppercase tracking-[0.4em] text-white/50">AIKA: World</span>
         <h1 className="text-4xl font-semibold leading-tight md:text-5xl">{world.title}</h1>
-        <p className="max-w-3xl text-base text-white/75 md:text-lg">{world.description}</p>
+        <p className="max-w-3xl text-base text-white/75 md:text-lg">{world.subtitle}</p>
       </RevealSection>
 
       <RevealSection className="rounded-3xl border border-white/10 bg-black/50 p-8 text-white">
-        <p className="text-base text-white/80 md:text-lg">{world.highlight}</p>
+        <p className="text-base text-white/80 md:text-lg">{world.disclaimer}</p>
       </RevealSection>
 
       <RevealSection className="space-y-8">
+        <div className="space-y-3 text-white">
+          <h2 className="text-3xl font-semibold">{world.regionsTitle}</h2>
+          <p className="max-w-3xl text-base text-white/75">{world.regionsIntro}</p>
+        </div>
         <div className="grid gap-6 md:grid-cols-2">
-          {world.cards.map((card) => (
+          {world.regions.map((region) => (
             <div
-              key={card.name}
+              key={region.id}
               className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 via-transparent to-black/60 p-6 text-white shadow-lg shadow-purple-500/10"
             >
-              <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-white/10 blur-3xl transition-transform duration-500 group-hover:scale-110" aria-hidden />
-              <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-white/50">
-                <span>{card.tone}</span>
+              <div
+                className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-white/10 blur-3xl transition-transform duration-500 group-hover:scale-110"
+                aria-hidden
+              />
+              <div className="text-xs uppercase tracking-[0.3em] text-white/50">
+                <span>{region.badge}</span>
               </div>
-              <h2 className="mt-4 text-2xl font-semibold">{card.name}</h2>
-              <p className="mt-3 text-sm text-white/80">{card.description}</p>
+              <h2 className="mt-4 text-2xl font-semibold">{region.name}</h2>
+              <p className="mt-3 text-sm text-white/80">{region.description}</p>
             </div>
           ))}
         </div>
@@ -67,34 +73,28 @@ export default async function WorldPage({
 
       <RevealSection className="space-y-8">
         <div className="space-y-3 text-white">
-          <h2 className="text-3xl font-semibold">{world.gallery.title}</h2>
-          <p className="max-w-3xl text-base text-white/75">{world.gallery.description}</p>
+          <h2 className="text-3xl font-semibold">{world.explorationsTitle}</h2>
+          <p className="max-w-3xl text-base text-white/75">{world.explorationsIntro}</p>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
-          {world.gallery.images.map((image) => (
-            <figure
-              key={image.src}
-              className="group overflow-hidden rounded-3xl border border-white/10 bg-black/40"
+          {world.explorations.map((exploration) => (
+            <div
+              key={exploration.id}
+              className="group relative flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-black/40 p-6 text-white shadow-inner shadow-purple-500/10"
             >
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <Image
-                  src={image.src}
-                  alt={image.alt}
-                  fill
-                  sizes="(min-width: 1024px) 320px, (min-width: 768px) 45vw, 90vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              </div>
-              <figcaption className="space-y-2 p-4 text-sm text-white/75">
-                <p className="font-medium text-white/90">{image.caption}</p>
-              </figcaption>
-            </figure>
+              <div
+                className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-white/10 blur-3xl transition-transform duration-500 group-hover:scale-110"
+                aria-hidden
+              />
+              <span className="text-xs uppercase tracking-[0.3em] text-white/50">{exploration.id}</span>
+              <p className="mt-4 text-sm text-white/80">{exploration.caption}</p>
+            </div>
           ))}
         </div>
       </RevealSection>
 
       <RevealSection className="rounded-3xl border border-white/10 bg-white/5 p-8 text-sm text-white/75">
-        {world.closing}
+        {world.footnote}
       </RevealSection>
     </div>
   );

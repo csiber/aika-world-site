@@ -54,15 +54,15 @@ type RoadmapItem = {
   text: string;
 };
 
-type WorldCard = {
+type WorldRegion = {
+  id: string;
+  badge: string;
   name: string;
-  tone: string;
   description: string;
 };
 
-type GalleryImage = {
-  src: string;
-  alt: string;
+type WorldExploration = {
+  id: string;
   caption: string;
 };
 
@@ -184,15 +184,15 @@ export type Dictionary = {
   };
   world: {
     title: string;
-    description: string;
-    highlight: string;
-    cards: WorldCard[];
-    gallery: {
-      title: string;
-      description: string;
-      images: GalleryImage[];
-    };
-    closing: string;
+    subtitle: string;
+    disclaimer: string;
+    regionsTitle: string;
+    regionsIntro: string;
+    regions: WorldRegion[];
+    explorationsTitle: string;
+    explorationsIntro: string;
+    explorations: WorldExploration[];
+    footnote: string;
   };
   systems: {
     title: string;
@@ -413,63 +413,66 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
     },
     world: {
-      title: "World overview",
-      description:
-        "Season Zero unfolds across a liminal megastructure floating above a ruined coastline. Each biome expresses a faction's influence.",
-      highlight: "Visual explorations help collaborators sketch mood, lighting, and rituals before assets lock.",
-      cards: [
+      title: "The Fallen World",
+      subtitle:
+        "AIKA: World begins after the fall — a fractured coast strewn with wreckage, silent signals, and the last echoes of orbit.",
+      disclaimer:
+        "Visual slices captured from a debug renderer. These are mood notes before assets lock.",
+      regionsTitle: "Regions",
+      regionsIntro:
+        "Each area holds a memory of descent. You’ll cross them while restoring comms and tracing who you are.",
+      regions: [
         {
-          name: "Singularity Basin",
-          tone: "Warm neon",
+          id: "crash_basin",
+          badge: "BASIN",
+          name: "Crash Basin",
           description:
-            "A submerged research vault now repurposed as the Synced Choir's resonance chamber. Glowing memory pools hum with voices.",
+            "Impact crater where the interceptor broke apart. Twisted hulls, burned glass sand, unstable power cells.",
         },
         {
-          name: "Azure Strata",
-          tone: "Skylit cyan",
+          id: "vault_line",
+          badge: "SUBSURFACE",
+          name: "Vault Line",
           description:
-            "Stacked platforms drifting through persistent storms. Frontier Architects weave safe passageways between lightning towers.",
+            "Collapsed corridors over dormant reactors. Access panels whisper, but most doors refuse to remember you.",
         },
         {
-          name: "Obsidian Veil",
-          tone: "Muted ember",
+          id: "echo_field",
+          badge: "SIGNAL",
+          name: "Echo Field",
           description:
-            "A scorched desert patrolled by the Warden Protocol. Fault lines reveal archived laws etched into basalt tablets.",
+            "A low plain where loops replay pre-impact voices. Some belong to you. Some don’t.",
         },
         {
-          name: "Aurora Relay",
-          tone: "Iridescent dusk",
+          id: "azure_relay",
+          badge: "ORBITAL",
+          name: "Azure Relay",
           description:
-            "An orbital listening post capturing Outlier Echo signals. Aurora flares distort comms but unlock rare synth blueprints.",
+            "A silent sky-mirror still transmitting ghost data. When it aligns, AIKA’s damaged voice breaks through.",
         },
       ],
-      gallery: {
-        title: "Season Zero explorations",
-        description:
-          "Concept slices captured from the simulation's debug renderer, hinting at lighting, scale, and activity density.",
-        images: [
-          {
-            src: "/images/world/frontier-camp.svg",
-            alt: "Frontier Architects skyport anchored above broken coastline",
-            caption:
-              "Frontier Architects skyport hovering over the Azure Strata while squads prepare expedition loadouts.",
-          },
-          {
-            src: "/images/world/choir-vault.svg",
-            alt: "Synced Choir resonance vault with holographic memory pools",
-            caption:
-              "The Synced Choir tending to luminous resonance pools inside the Singularity Basin vault.",
-          },
-          {
-            src: "/images/world/storm-run.svg",
-            alt: "Survivors racing through a storm-lit canyon toward a signal tower",
-            caption:
-              "Night raid through the Obsidian Veil, chasing an Outlier Echo distress signal between lightning towers.",
-          },
-        ],
-      },
-      closing:
-        "More districts unlock as we finish lighting passes and align narrative beats with the simulation's live telemetry.",
+      explorationsTitle: "Fragments of the fallen world",
+      explorationsIntro:
+        "Recovered frames from onboard simulation. Distorted, incomplete, but truthful enough to plan a route.",
+      explorations: [
+        {
+          id: "shot_a",
+          caption:
+            "Thermal bloom under the Basin ridge — likely the interceptor’s core vault.",
+        },
+        {
+          id: "shot_b",
+          caption:
+            "Harmonic pulse detected in the Vault Line. Doors react to a name you can’t recall.",
+        },
+        {
+          id: "shot_c",
+          caption:
+            "Beacon sweep over the Azure Relay. AIKA answers in fragments when the sky clears.",
+        },
+      ],
+      footnote:
+        "New districts unlock as lighting passes finish and narrative beats align with live sim telemetry.",
     },
     systems: {
       title: "Systems & scaffolding",
@@ -819,64 +822,66 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
     },
     world: {
-      title: "Világáttekintés",
-      description:
-        "A 0. évad egy romos partvonal fölött lebegő, liminális megastruktúrában játszódik. Minden biom egy frakció befolyását tükrözi.",
-      highlight:
-        "A vizuális kísérletek segítik a közreműködőket, hogy hangulatot, fényeket és rituálékat vázoljanak fel a véglegesítés előtt.",
-      cards: [
+      title: "Az Elbukott Világ",
+      subtitle:
+        "Az AIKA: World a zuhanás után kezdődik — megtört partvidék, roncsok, néma jelek és az orbitális múlt utolsó visszhangjai.",
+      disclaimer:
+        "Vizuális vázlatok a debug renderből. Hangulat-jegyzetek asset-zárás előtt.",
+      regionsTitle: "Területek",
+      regionsIntro:
+        "Minden régió egy darabot őriz a lezuhanásból. Átvágsz rajtuk, miközben helyreállítod a kapcsolatot és kideríted, ki vagy.",
+      regions: [
         {
-          name: "Szingularitás-medence",
-          tone: "Meleg neon",
+          id: "crash_basin",
+          badge: "MEDER",
+          name: "Zuhanási Meder",
           description:
-            "Egy elárasztott kutatóvörtekszoba, amely ma a Szinkron Kórus rezonancia-csarnoka. A fénylő emlékmedencék zengnek a hangoktól.",
+            "Becsapódási kráter, ahol az interceptor széttört. Csavart burkolatok, üvegesre égett homok, instabil energia-cellák.",
         },
         {
-          name: "Azúr Rétegek",
-          tone: "Égkék fény",
+          id: "vault_line",
+          badge: "FELSZÍN ALATT",
+          name: "Kazamata-Vonal",
           description:
-            "Halmozott platformok örök viharok között. A Határépítészek biztonságos átjárókat szőnek a villámtorony-labirintusban.",
+            "Beomlott folyosók alvó reaktorok felett. A paneleknél suttogás, de a legtöbb ajtó nem emlékszik rád.",
         },
         {
-          name: "Obszidián Fátyol",
-          tone: "Tompa parázs",
+          id: "echo_field",
+          badge: "JEL",
+          name: "Visszhang-mező",
           description:
-            "Kormos sivatag, amelyet a Felügyelő Protokoll járőröz. A törésvonalak bazalt táblákba vésett archivált törvényeket tárnak fel.",
+            "Lapos fennsík, ahol hurkok játsszák újra a becsapódás előtti hangokat. Némelyik a tiéd. Némelyik nem.",
         },
         {
-          name: "Auróra Relé",
-          tone: "Irideszkáló alkony",
+          id: "azure_relay",
+          badge: "ORBITÁLIS",
+          name: "Azúr Relé",
           description:
-            "Egy orbitális figyelőállomás, amely a Kívülálló Visszhangok jeleit gyűjti. Az aurórák torzítják a kommunikációt, de ritka terveket adnak.",
+            "Néma ég-tükör, amely még mindig kísértet-adatot sugároz. Igazodáskor AIKA sérült hangja áttör.",
         },
       ],
-      gallery: {
-        title: "0. évad látványtervek",
-        description:
-          "A szimuláció debug renderelőjéből exportált szeletek, amelyek a fényelést, a léptéket és a sűrűséget sugallják.",
-        images: [
-          {
-            src: "/images/world/frontier-camp.svg",
-            alt: "Határépítészek égikikötője a megtört partvonal felett",
-            caption:
-              "A Határépítészek égikikötője lebeg az Azúr Rétegek felett, miközben az osztagok expedíciós felszerelést készítenek.",
-          },
-          {
-            src: "/images/world/choir-vault.svg",
-            alt: "Szinkron Kórus rezonancia csarnoka holografikus emlékmedencékkel",
-            caption:
-              "A Szinkron Kórus a Szingularitás-medence kazamatájában ragyogó rezonancia medencéket gondoz.",
-          },
-          {
-            src: "/images/world/storm-run.svg",
-            alt: "Túlélők viharos kanyonban rohannak egy jeladó torony felé",
-            caption:
-              "Éjszakai rajtaütés az Obszidián Fátyolban, egy Kívülálló Visszhang vészjelet üldözve a villámtornyok között.",
-          },
-        ],
-      },
-      closing:
-        "További kerületek nyílnak meg, ahogy befejezzük a fényelést és összehangoljuk a narratív csomópontokat az élő telemetriával.",
+      explorationsTitle: "A világ töredékei",
+      explorationsIntro:
+        "Visszanyert képkockák a fedélzeti szimulációból. Torzak, hiányosak, de elég igazak egy útvonalhoz.",
+      explorations: [
+        {
+          id: "shot_a",
+          caption:
+            "Hőfolt a Meder pereme alatt — valószínűleg az interceptor mag-kazamatája.",
+        },
+        {
+          id: "shot_b",
+          caption:
+            "Harmonikus pulzus a Kazamata-Vonalban. Az ajtók egy névre reagálnak, ami nem jut eszedbe.",
+        },
+        {
+          id: "shot_c",
+          caption:
+            "Jel-seprés az Azúr Relé felett. AIKA darabokban felel, amikor kitisztul az ég.",
+        },
+      ],
+      footnote:
+        "Új körzetek akkor nyílnak, amikor a világítást lezárjuk és a narratív ütemek igazodnak a szimuláció telemetriájához.",
     },
     systems: {
       title: "Rendszerek és váz",
