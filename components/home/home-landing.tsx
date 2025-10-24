@@ -3,11 +3,13 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { RevealSection } from "@/components/reveal-section";
 import { TurnstileWidget } from "@/components/turnstile-widget";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { HeroAurora } from "./hero-aurora";
+import { LivePulse } from "./live-pulse";
 
 type HomeLandingProps = {
   locale: Locale;
@@ -52,6 +54,7 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
   const [newsletterFeedback, setNewsletterFeedback] = useState<string | null>(null);
   const [newsletterToken, setNewsletterToken] = useState("");
   const [newsletterReset, setNewsletterReset] = useState(0);
+  const heroRef = useRef<HTMLDivElement | null>(null);
 
   const newsletterEndpoint = process.env.NEXT_PUBLIC_NEWSLETTER_FORM_ENDPOINT;
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
@@ -112,13 +115,15 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
   return (
     <div className="space-y-24 py-12 md:space-y-32 md:py-16">
       <motion.section
+        ref={heroRef}
         className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-purple-700/30 via-indigo-900/40 to-gray-950 p-10 text-white shadow-[0_40px_120px_-60px_rgba(123,83,255,0.65)]"
         variants={heroVariants}
         initial="hidden"
         animate="visible"
       >
-        <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-purple-500/40 blur-3xl" aria-hidden />
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(240px,0.8fr)] lg:items-center">
+        <HeroAurora containerRef={heroRef} />
+        <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-purple-500/30 blur-3xl" aria-hidden />
+        <div className="relative z-10 grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(240px,0.8fr)] lg:items-center">
           <div>
             <motion.span variants={heroItem} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.3em]">
               {content.hero.eyebrow}
@@ -160,6 +165,33 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
             variants={heroItem}
             className="relative mx-auto max-w-sm overflow-hidden rounded-full border border-white/20 bg-black/50 p-6 shadow-[0_20px_60px_-40px_rgba(123,83,255,0.6)]"
           >
+            <motion.div
+              aria-hidden
+              className="absolute -inset-3 rounded-full border border-white/10"
+              animate={{ opacity: [0.4, 0.9, 0.4], rotate: [0, 3, -2, 0] }}
+              transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div
+              aria-hidden
+              className="absolute inset-6 rounded-full bg-gradient-to-br from-purple-500/20 via-indigo-500/10 to-cyan-400/10 blur-2xl"
+              animate={{ scale: [1, 1.08, 0.96, 1], opacity: [0.5, 0.9, 0.4, 0.5] }}
+              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div
+              aria-hidden
+              className="absolute inset-0"
+              animate={{ rotate: [0, 12, -8, 0] }}
+              transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
+            >
+              <svg viewBox="0 0 400 400" className="h-full w-full">
+                <g stroke="rgba(180,198,255,0.2)" strokeWidth="1" fill="none">
+                  <circle cx="200" cy="200" r="120" />
+                  <circle cx="200" cy="200" r="170" />
+                  <path d="M40 200 Q 200 40 360 200" />
+                  <path d="M40 200 Q 200 360 360 200" />
+                </g>
+              </svg>
+            </motion.div>
             <Image
               src="/images/hero/aika-hero-orb.svg"
               alt={content.hero.imageAlt}
@@ -167,7 +199,7 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
               height={600}
               priority
               sizes="(min-width: 1280px) 380px, (min-width: 768px) 320px, 240px"
-              className="h-auto w-full"
+              className="relative h-auto w-full"
             />
           </motion.figure>
         </div>
@@ -257,6 +289,14 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
             </motion.div>
           ))}
         </div>
+      </RevealSection>
+
+      <RevealSection className="space-y-8 rounded-3xl border border-white/10 bg-white/[0.05] p-10">
+        <div className="space-y-3">
+          <h2 className="text-3xl font-semibold text-white">{content.pulse.title}</h2>
+          <p className="max-w-2xl text-base text-white/80">{content.pulse.description}</p>
+        </div>
+        <LivePulse {...content.pulse} />
       </RevealSection>
 
       <RevealSection className="space-y-10 rounded-3xl border border-white/10 bg-white/[0.04] p-10">
