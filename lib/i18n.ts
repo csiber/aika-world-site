@@ -34,6 +34,15 @@ type FeatureItem = {
   icon: string;
 };
 
+type PulseSignal = {
+  name: string;
+  status: string;
+  delta: string;
+  trend: "up" | "down" | "steady";
+  description: string;
+  history: number[];
+};
+
 type LoopItem = {
   name: string;
   summary: string;
@@ -140,6 +149,14 @@ export type Dictionary = {
       title: string;
       description: string;
       items: FeatureItem[];
+    };
+    pulse: {
+      title: string;
+      description: string;
+      liveLabel: string;
+      telemetryLabel: string;
+      trendLabels: { up: string; down: string; steady: string };
+      signals: PulseSignal[];
     };
     loops: {
       title: string;
@@ -328,6 +345,52 @@ const dictionaries: Record<Locale, Dictionary> = {
           description:
             "Schema-driven content packs let contributors extend regions, NPCs, and rituals without touching core code.",
           icon: "mod-hooks",
+        },
+      ],
+    },
+    pulse: {
+      title: "Live simulation pulse",
+      description:
+        "Track the worker mesh telemetry as Season Zero adapts in real time. Every signal streams from live edge simulations and narrative directives.",
+      liveLabel: "Live feed",
+      telemetryLabel: "Telemetry",
+      trendLabels: { up: "stabilizing", down: "volatile", steady: "steady" },
+      signals: [
+        {
+          name: "Synced Choir resonance",
+          status: "Harmonics up",
+          delta: "+12%",
+          trend: "up",
+          description:
+            "Choir conduits are resonating with fresh memory strands, keeping diplomatic outreach windows open longer.",
+          history: [52, 55, 59, 65, 63, 68, 72, 74, 73, 76, 81, 84],
+        },
+        {
+          name: "Frontier supply corridors",
+          status: "Flow stabilized",
+          delta: "+4%",
+          trend: "steady",
+          description:
+            "Architect convoys kept the Azure Strata trade winds aligned, lowering scarcity events along the outer loop.",
+          history: [44, 46, 49, 52, 51, 53, 55, 57, 56, 58, 59, 60],
+        },
+        {
+          name: "Warden protocol mandates",
+          status: "Alerts issued",
+          delta: "-9%",
+          trend: "down",
+          description:
+            "Automated edicts triggered against rogue worker clusters. Expect targeted audits and cooling-off periods.",
+          history: [68, 66, 63, 60, 58, 55, 53, 52, 50, 48, 47, 46],
+        },
+        {
+          name: "Outlier Echo drift",
+          status: "Chaotic bursts",
+          delta: "+17%",
+          trend: "up",
+          description:
+            "Unbounded shards keep seeding novel missions—lore teams are logging priority intercepts for upcoming builds.",
+          history: [38, 40, 43, 49, 54, 59, 63, 69, 72, 75, 78, 82],
         },
       ],
     },
@@ -757,6 +820,52 @@ const dictionaries: Record<Locale, Dictionary> = {
             description:
               "Sémavezérelt tartalomcsomagokkal a hozzájárulók új régiókat, NPC-ket és rituálékat adhatnak hozzá a mag kód módosítása nélkül.",
             icon: "mod-hooks",
+          },
+        ],
+      },
+      pulse: {
+        title: "Élő szimulációs pulzus",
+        description:
+          "Kövesd, hogyan változik a Season Zero worker-hálózata: a telemetria valós időben frissül a narratív stáb utasításai nyomán.",
+        liveLabel: "Élő feed",
+        telemetryLabel: "Telemetria",
+        trendLabels: { up: "stabilizálódik", down: "ingadozik", steady: "egyenletes" },
+        signals: [
+          {
+            name: "Szinkron Kórus rezonancia",
+            status: "Erősödő harmóniák",
+            delta: "+12%",
+            trend: "up",
+            description:
+              "A kórus csatornái friss emlékszálakkal rezonálnak, így a diplomáciai ablakok hosszabban maradnak nyitva.",
+            history: [52, 55, 59, 65, 63, 68, 72, 74, 73, 76, 81, 84],
+          },
+          {
+            name: "Határvidéki ellátási folyosók",
+            status: "Stabil áramlás",
+            delta: "+4%",
+            trend: "steady",
+            description:
+              "Az építész konvojok összehangolták az Azure Strata kereskedelmi áramlását, így kevesebb hiányesemény jelentkezik a külső hurkon.",
+            history: [44, 46, 49, 52, 51, 53, 55, 57, 56, 58, 59, 60],
+          },
+          {
+            name: "Felügyelő protokoll rendeletek",
+            status: "Riasztások kiadva",
+            delta: "-9%",
+            trend: "down",
+            description:
+              "Automatikus rendeletek indultak a renitens worker-klaszterek ellen. Célzott auditokra és lehűlési periódusokra számíts.",
+            history: [68, 66, 63, 60, 58, 55, 53, 52, 50, 48, 47, 46],
+          },
+          {
+            name: "Outlier Echo sodródás",
+            status: "Kaotikus kitörések",
+            delta: "+17%",
+            trend: "up",
+            description:
+              "A fékezetlen szilánkok sorra új küldetéseket szülnek; a lore csapat prioritásos elfogásokat naplóz a közelgő buildekhez.",
+            history: [38, 40, 43, 49, 54, 59, 63, 69, 72, 75, 78, 82],
           },
         ],
       },
