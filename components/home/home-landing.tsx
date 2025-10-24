@@ -8,6 +8,8 @@ import { TurnstileWidget } from "@/components/turnstile-widget";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { HeroAurora } from "./hero-aurora";
+import { HeroSoundscape } from "./hero-soundscape";
+import { HeroStoryAnimation } from "./hero-story-animation";
 import { LivePulse } from "./live-pulse";
 
 type HomeLandingProps = {
@@ -23,6 +25,8 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
   const [signupToken, setSignupToken] = useState("");
   const [signupReset, setSignupReset] = useState(0);
   const heroRef = useRef<HTMLDivElement | null>(null);
+  const primaryCtaRef = useRef<HTMLAnchorElement | null>(null);
+  const secondaryCtaRef = useRef<HTMLAnchorElement | null>(null);
 
   const signupEndpoint = process.env.NEXT_PUBLIC_NEWSLETTER_FORM_ENDPOINT;
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
@@ -102,18 +106,24 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
             <p className="max-w-2xl text-lg text-white/80 md:text-xl">{content.hero.subtitle}</p>
             <div className="mt-2 flex flex-col gap-3 sm:flex-row">
               <Link
+                ref={primaryCtaRef}
                 href={`/${locale}/${content.hero.primaryCta.href === "home" ? "" : content.hero.primaryCta.href}`.replace(/\/$/, "")}
                 className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-indigo-950 shadow-lg shadow-indigo-500/30 transition-transform hover:-translate-y-0.5 hover:shadow-indigo-500/50"
               >
                 {content.hero.primaryCta.label}
               </Link>
               <Link
+                ref={secondaryCtaRef}
                 href={`/${locale}/${content.hero.secondaryCta.href === "home" ? "" : content.hero.secondaryCta.href}`.replace(/\/$/, "")}
                 className="inline-flex items-center justify-center rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 hover:border-white/60"
               >
                 {content.hero.secondaryCta.label}
               </Link>
             </div>
+            <HeroSoundscape
+              heroRef={heroRef}
+              targets={[primaryCtaRef, secondaryCtaRef]}
+            />
             <p className="text-xs uppercase tracking-[0.25em] text-white/60">{content.hero.note}</p>
           </div>
           <figure className="relative mx-auto max-w-sm overflow-hidden rounded-full border border-white/20 bg-black/50 p-6 shadow-[0_20px_60px_-40px_rgba(123,83,255,0.6)]">
@@ -134,15 +144,18 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
                 </g>
               </svg>
             </div>
-            <Image
-              src="/images/hero/aika-hero-orb.svg"
-              alt={content.hero.imageAlt}
-              width={600}
-              height={600}
-              priority
-              sizes="(min-width: 1280px) 380px, (min-width: 768px) 320px, 240px"
-              className="relative h-auto w-full"
-            />
+            <div className="relative h-auto w-full">
+              <HeroStoryAnimation className="pointer-events-none" />
+              <Image
+                src="/images/hero/aika-hero-orb.svg"
+                alt={content.hero.imageAlt}
+                width={600}
+                height={600}
+                priority
+                sizes="(min-width: 1280px) 380px, (min-width: 768px) 320px, 240px"
+                className="relative h-auto w-full"
+              />
+            </div>
           </figure>
         </div>
       </section>
