@@ -17,7 +17,7 @@ export async function generateMetadata({
   return createPageMetadata({
     locale: lang,
     title: dictionary.home.hero.title,
-    description: dictionary.home.whatIs.subtitle,
+    description: dictionary.home.what.description,
     slug: getRouteSegment("home"),
   });
 }
