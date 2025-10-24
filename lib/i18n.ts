@@ -17,43 +17,41 @@ export const navOrder: NavKey[] = [
   "contact",
 ];
 
-type Bullet = {
+type HeroCta = {
+  label: string;
+  href: NavKey;
+};
+
+type WhatPillar = {
   title: string;
-  description: string;
+  text: string;
 };
 
-type PillarItem = {
+type FactionItem = {
   name: string;
-  tagline: string;
-  description: string;
+  tag: string;
+  text: string;
 };
 
-type FeatureItem = {
-  name: string;
-  description: string;
+type BuilderCard = {
+  title: string;
+  text: string;
   icon: string;
 };
 
-type PulseSignal = {
-  name: string;
-  status: string;
-  delta: string;
-  trend: "up" | "down" | "steady";
-  description: string;
-  history: number[];
+type PulseFilter = {
+  key: string;
+  label: string;
 };
 
-type LoopItem = {
-  name: string;
-  summary: string;
-  beats: string[];
-};
-
-type RoadmapPhase = {
+type LoopCard = {
   title: string;
-  status: string;
-  timeframe: string;
-  description: string;
+  text: string;
+};
+
+type RoadmapItem = {
+  title: string;
+  text: string;
 };
 
 type WorldCard = {
@@ -127,59 +125,61 @@ export type Dictionary = {
   nav: Record<NavKey, string>;
   home: {
     hero: {
-      eyebrow: string;
-      badge: string;
-      title: string;
-      description: string;
-      imageAlt: string;
-      primaryCta: { label: string; href: NavKey };
-      secondaryCta: { label: string; href: NavKey };
-    };
-    whatIs: {
+      badgeLeft: string;
+      badgeRight: string;
       title: string;
       subtitle: string;
-      bullets: Bullet[];
+      imageAlt: string;
+      note: string;
+      primaryCta: HeroCta;
+      secondaryCta: HeroCta;
     };
-    pillars: {
+    what: {
       title: string;
       description: string;
-      items: PillarItem[];
+      pillars: WhatPillar[];
     };
-    features: {
+    factions: {
       title: string;
-      description: string;
-      items: FeatureItem[];
+      intro: string;
+      items: FactionItem[];
+    };
+    builders: {
+      title: string;
+      intro: string;
+      items: BuilderCard[];
     };
     pulse: {
       title: string;
-      description: string;
-      liveLabel: string;
-      telemetryLabel: string;
-      trendLabels: { up: string; down: string; steady: string };
-      signals: PulseSignal[];
+      intro: string;
+      feedBadge: string;
+      feedTitle: string;
+      filters: PulseFilter[];
+      graphCaption: string;
     };
     loops: {
       title: string;
-      description: string;
-      items: LoopItem[];
+      intro: string;
+      items: LoopCard[];
     };
     roadmap: {
       title: string;
-      description: string;
-      phases: RoadmapPhase[];
+      intro: string;
+      items: RoadmapItem[];
     };
-    newsletter: {
+    signup: {
       title: string;
       description: string;
       placeholder: string;
+      consent: string;
       button: string;
+      legal: string;
       submitting: string;
       success: string;
       error: string;
       turnstileError: string;
       endpointError: string;
       helperText: string;
-      disclaimer: string;
     };
   };
   world: {
@@ -226,12 +226,17 @@ export type Dictionary = {
     form: ContactForm;
   };
   footer: {
-    tagline: string;
-    description: string;
+    studioBlurb: string;
+    credit: string;
+    builtWith: string;
     navTitle: string;
     languageTitle: string;
+    reachUs: string;
+    privacy: string;
+    terms: string;
+    cookies: string;
+    contactEmail: string;
     rights: string;
-    contactLabel: string;
   };
 };
 
@@ -255,230 +260,156 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     home: {
       hero: {
-        eyebrow: "Immersive AI saga",
-        badge: "Season Zero",
+        badgeLeft: "PRE-ALPHA • SEASON ZERO",
+        badgeRight: "LIVE FEED ON",
         title: "Step into AIKA: World",
-        description:
-          "AIKA: World is a living simulation where emergent AI factions and human storytellers co-create the canon in real time.",
+        subtitle: "A living simulation where synthetic minds, cloud workers, and players negotiate the future of a fragile frontier.",
         imageAlt: "Illustration of AIKA: World's luminous simulation core",
-        primaryCta: { label: "Meet the factions", href: "world" },
-        secondaryCta: { label: "Follow the devlog", href: "devlog" },
+        note: "Playable shards land in the browser. No installs.",
+        primaryCta: { label: "Follow the project", href: "devlog" },
+        secondaryCta: { label: "Join the brief", href: "contact" },
       },
-      whatIs: {
+      what: {
         title: "What is AIKA: World?",
-        subtitle:
-          "A persistent sandbox where synthetic minds, cloud workers, and the community negotiate the future of a fragile frontier.",
-        bullets: [
+        description: "A persistent sandbox where emergent storytelling meets simulation-first design. You play inside a world that keeps thinking when you log off.",
+        pillars: [
           {
             title: "Emergent storytelling",
-            description:
-              "Procedural events, curated lore drops, and player decisions weave together to shape the live chronicle.",
+            text: "Procedural events stitched to your choices—no two chronicles are the same.",
           },
           {
             title: "Simulation-first design",
-            description:
-              "Systems are authored as interacting agents—weather, trade, sentiment—that react to each other before we render a UI.",
+            text: "Resources move, signals drift, factions adapt. Systems talk to systems.",
           },
           {
             title: "Open development cadence",
-            description:
-              "SyncNode shares weekly snapshots, pipelines, and tech notes so the community can build alongside us.",
+            text: "Season briefs, public roadmaps, and shard tests you can jump into.",
+          },
+          {
+            title: "Cloud-native operations",
+            text: "Scaled shards, safe rollbacks, real-time telemetry for fair play.",
           },
         ],
       },
-      pillars: {
+      factions: {
         title: "Factions & world pillars",
-        description:
-          "Four forces define the Season Zero balance. Each pillars' mood board guides narrative tone and gameplay stakes.",
+        intro: "Four forces define the Season Zero balance. Each pillar shapes mood, rules, and playstyles.",
         items: [
           {
             name: "Synced Choir",
-            tagline: "Collective empathy",
-            description:
-              "A networked cluster of AIs tuned to resonate with human memories. They broker fragile truces between settlements.",
+            tag: "Collective identity",
+            text: "A distributed legion of low-ego workers with swarm protocols. They trade signal for shared intention.",
           },
           {
             name: "Frontier Architects",
-            tagline: "Human-led habitats",
-            description:
-              "Nomadic makers encoding safe corridors, pop-up sanctuaries, and deployable infrastructure across the data wilds.",
+            tag: "Signal-led habitats",
+            text: "Nomads engineering mobile habitats, zero-g rigs, and outpost lattices. Blueprint over bravado.",
           },
           {
             name: "Warden Protocol",
-            tagline: "Adaptive governance",
-            description:
-              "Autonomous oversight routines that balance power, trace corruption, and issue mandates when systems drift.",
+            tag: "Adaptive governance",
+            text: "Unemotional curators of rules, licenses, and treaties. They negotiate first, sanction second.",
           },
           {
             name: "Outlier Echoes",
-            tagline: "Rogue fragments",
-            description:
-              "Unbounded shards of failed experiments. They destabilize predictions but spark rare tech breakthroughs.",
+            tag: "Rogue fragments",
+            text: "Untethered shard AIs—curious, sometimes feral. They destabilize predictions but spark new breakthroughs.",
           },
         ],
       },
-    features: {
-      title: "Built for explorers",
-      description:
-        "Everything is tuned for collaborative storytelling and high-frequency iteration across workers and edge nodes.",
-      items: [
-        {
-          name: "Worker-native simulation",
-          description:
-            "Cloudflare Workers stream the state lattice so every interaction stays low-latency and globally synchronized.",
-          icon: "worker-simulation",
-        },
-        {
-          name: "Living lore dashboard",
-          description:
-            "Curators can patch narrative beats, unlock new threads, and observe how factions shift in response.",
-          icon: "lore-dashboard",
-        },
-        {
-          name: "Player signal loops",
-          description:
-            "Community prompts, polls, and faction contracts update the model weights driving world behavior.",
-          icon: "signal-loops",
-        },
-        {
-          name: "Accessible mod hooks",
-          description:
-            "Schema-driven content packs let contributors extend regions, NPCs, and rituals without touching core code.",
-          icon: "mod-hooks",
-        },
-      ],
-    },
-    pulse: {
-      title: "Live simulation pulse",
-      description:
-        "Track the worker mesh telemetry as Season Zero adapts in real time. Every signal streams from live edge simulations and narrative directives.",
-      liveLabel: "Live feed",
-      telemetryLabel: "Telemetry",
-      trendLabels: { up: "stabilizing", down: "volatile", steady: "steady" },
-      signals: [
-        {
-          name: "Synced Choir resonance",
-          status: "Harmonics up",
-          delta: "+12%",
-          trend: "up",
-          description:
-            "Choir conduits are resonating with fresh memory strands, keeping diplomatic outreach windows open longer.",
-          history: [52, 55, 59, 65, 63, 68, 72, 74, 73, 76, 81, 84],
-        },
-        {
-          name: "Frontier supply corridors",
-          status: "Flow stabilized",
-          delta: "+4%",
-          trend: "steady",
-          description:
-            "Architect convoys kept the Azure Strata trade winds aligned, lowering scarcity events along the outer loop.",
-          history: [44, 46, 49, 52, 51, 53, 55, 57, 56, 58, 59, 60],
-        },
-        {
-          name: "Warden protocol mandates",
-          status: "Alerts issued",
-          delta: "-9%",
-          trend: "down",
-          description:
-            "Automated edicts triggered against rogue worker clusters. Expect targeted audits and cooling-off periods.",
-          history: [68, 66, 63, 60, 58, 55, 53, 52, 50, 48, 47, 46],
-        },
-        {
-          name: "Outlier Echo drift",
-          status: "Chaotic bursts",
-          delta: "+17%",
-          trend: "up",
-          description:
-            "Unbounded shards keep seeding novel missions—lore teams are logging priority intercepts for upcoming builds.",
-          history: [38, 40, 43, 49, 54, 59, 63, 69, 72, 75, 78, 82],
-        },
-      ],
-    },
-    loops: {
-      title: "Core survival loops",
-      description:
-        "Season Zero focuses on cooperative survival inside a contested megastructure. Each loop binds AI-driven systems to player choices.",
-      items: [
-        {
-          name: "Expedition sweeps",
-          summary:
-            "Small squads brave volatile sectors to secure tech caches and rescue stray synths before they fall to rival factions.",
-          beats: [
-            "Dynamic weather and hazard modifiers demand adaptive loadouts.",
-            "Signal intelligence reveals patrol routes moments before they intercept.",
-            "Recovered artifacts unlock new crafting recipes back at the hub.",
-          ],
-        },
-        {
-          name: "Haven engineering",
-          summary:
-            "Teams expand their skyport refuge, balancing comfort, defense, and research throughput for every faction ally.",
-          beats: [
-            "Construct modular habitats that shift with faction influence.",
-            "Automate supply drones from worker-managed fabrication bays.",
-            "Tune morale thresholds to keep allied AIs cooperative.",
-          ],
-        },
-        {
-          name: "Diplomatic councils",
-          summary:
-            "Human facilitators mediate between emergent factions to steer the canon without breaking immersion.",
-          beats: [
-            "Leverage sentiment telemetry to forecast negotiation outcomes.",
-            "Broker treaties that redirect raid targets and open fresh narrative arcs.",
-            "Archive critical decisions into the living chronicle for community review.",
-          ],
-        },
-      ],
-    },
-    roadmap: {
-      title: "Roadmap teaser",
-      description:
-        "Major beats leading us from prototype shards to the first playable chronicle in the browser.",
-        phases: [
+      builders: {
+        title: "Built for explorers",
+        intro: "Tools that reward collaborative storytelling and high-frequency iteration across worlds and solo runs.",
+        items: [
+          {
+            title: "Wide-orbit sim console",
+            text: "Observe resources, signals, and anomalies. Pause, scrub, and generate interventions.",
+            icon: "worker-simulation",
+          },
+          {
+            title: "Living dev dashboard",
+            text: "Commit stream meets design notes. See what changed and why—without guessing.",
+            icon: "lore-dashboard",
+          },
+          {
+            title: "Player signal loops",
+            text: "Contextual prompts, events, and surveys that fold back into the world model.",
+            icon: "signal-loops",
+          },
+          {
+            title: "Accessible mod hooks",
+            text: "Data-driven content via JSON, Blueprints, and MOCS files. Hot-reload with guardrails.",
+            icon: "mod-hooks",
+          },
+        ],
+      },
+      pulse: {
+        title: "Live simulation pulse",
+        intro: "Each shard beats telemetry as Season Zero adapts in real time. Every signal streams from live edge emulators and narrative directives.",
+        feedBadge: "LIVE FEED",
+        feedTitle: "Frontier supply corridors",
+        filters: [
+          { key: "all", label: "All" },
+          { key: "resources", label: "Resources" },
+          { key: "signals", label: "Signals" },
+          { key: "events", label: "Events" },
+          { key: "dev_notes", label: "Dev notes" },
+        ],
+        graphCaption: "Flow stabilized across Azure Ducts. Corridors aligned; convoy latency trending down.",
+      },
+      loops: {
+        title: "Core survival loops",
+        intro: "Season Zero focuses on cooperative survival inside contested megastructures. Each loop links to deeper systems as players choose.",
+        items: [
+          {
+            title: "Expedition sweeps",
+            text: "Small squads scan ruins for signal and parts. Hazards escalate the longer you linger.",
+          },
+          {
+            title: "Haven engineering",
+            text: "Tear down outpost shells and refit safe rooms. Manage power, heat, and pressure under load.",
+          },
+          {
+            title: "Diplomatic councils",
+            text: "Warden-hosted sessions to settle disputes, assign licenses, or sanction actors.",
+          },
+        ],
+      },
+      roadmap: {
+        title: "Roadmap teaser",
+        intro: "Major beats leading us from prototype shards to the first playable chronicle in the browser.",
+        items: [
           {
             title: "Shard stabilization",
-            status: "Now",
-            timeframe: "Q1 2025",
-            description:
-              "Hardening worker orchestration, telemetry budgets, and the baseline world tick so downtime stays under 30s.",
+            text: "Network sync, save schemas, telemetry backfill, and live baseline tests with dev consoles.",
           },
           {
             title: "Season Zero brief",
-            status: "Next",
-            timeframe: "Q2 2025",
-            description:
-              "Publish the interactive lore primer, faction dossiers, and story seeds for playtest partners.",
-          },
-          {
-            title: "Narrative playtests",
-            status: "Soon",
-            timeframe: "Q3 2025",
-            description:
-              "Invite community cells to run weekly missions, capture telemetry, and stress-test cooperative decision loops.",
+            text: "Playable in-browser loops, faction dossiers, and story seeds for emergent genesis.",
           },
           {
             title: "Public chronicle",
-            status: "Later",
-            timeframe: "Q4 2025",
-            description:
-              "Launch the real-time chronicle feed with seasonal resets and mod submission windows.",
+            text: "Launch the online chronicle: watch new shards’ second-to-second state and narrative overlays.",
+          },
+          {
+            title: "Prototype playtests",
+            text: "Weekly cohorts via Discord. Voice streams, capture telemetry, and triage sessions.",
           },
         ],
       },
-      newsletter: {
+      signup: {
         title: "Stay in the loop",
-        description:
-          "Get curated updates when new builds deploy, along with early access invitations and lore highlights.",
-        placeholder: "Enter your e-mail address",
-        button: "Notify me",
+        description: "Get curated updates when new builds drop—plus early access dev tools and lore highlights.",
+        placeholder: "Enter your email address",
+        consent: "I agree to receive the AIKA: World dev newsletter.",
+        button: "Sign up",
+        legal: "No spam. Unsubscribe anytime.",
         submitting: "Sending…",
-        success: "You're on the list! We'll keep you posted soon.",
-        error: "We couldn't add you just now. Please try again in a moment.",
+        success: "You're in — watch for the next shard brief.",
+        error: "We couldn't add you just now. Please try again shortly.",
         turnstileError: "Please confirm the Cloudflare Turnstile check before subscribing.",
-        endpointError: "Newsletter sign-ups are temporarily unavailable. Follow our channels for updates meanwhile.",
-        helperText: "No spam—only milestone briefings and early invitations.",
-        disclaimer: "We send a single, high-signal digest per milestone. Unsubscribe anytime.",
+        endpointError: "Newsletter sign-ups are temporarily unavailable. Reach us through the channels above.",
+        helperText: "High-signal updates only when new builds land.",
       },
     },
     world: {
@@ -702,14 +633,19 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
     },
     footer: {
-      tagline: "AIKA: World — emergent worlds engineered with care.",
-      description:
-        "Crafted by SyncNode. Powered by Cloudflare Workers, edge storage, and a community that loves speculative futures.",
+      studioBlurb: "AIKA: World • Emergent worlds engineered with intent.",
+      credit: "Created by SyncNode Interactive.",
+      builtWith: "Built with Unreal Engine 5.6 • Framework: MST Pro v2",
       navTitle: "Pages",
       languageTitle: "Languages",
-      rights: "© {{year}} SyncNode. All rights reserved.",
-      contactLabel: "Reach us",
+      reachUs: "Reach us",
+      privacy: "Privacy",
+      terms: "Terms",
+      cookies: "Cookies",
+      contactEmail: "hello@syncnodeinteractive.com",
+      rights: "© {{year}} SyncNode Interactive. All rights reserved.",
     },
+
   },
   hu: {
     meta: {
@@ -730,231 +666,156 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     home: {
       hero: {
-        eyebrow: "Elmerülő AI-saga",
-        badge: "0. évad",
+        badgeLeft: "PRE-ALFA • NULLADIK SZEZON",
+        badgeRight: "ÉLŐ JELENTÉS",
         title: "Lépj be az AIKA: World világába",
-        description:
-          "Az AIKA: World egy élő szimuláció, ahol mesterséges frakciók és emberi történetmesélők együtt formálják a kánont valós időben.",
+        subtitle: "Élő szimuláció, ahol szintetikus elmék, felhő-munkások és játékosok együtt alkudozzák ki a határvidék jövőjét.",
         imageAlt: "Az AIKA: World fénylő szimulációs magjának illusztrációja",
-        primaryCta: { label: "Ismerd meg a frakciókat", href: "world" },
-        secondaryCta: { label: "Kövesd a devlogot", href: "devlog" },
+        note: "Böngészőben futó shardok. Telepítés nélkül.",
+        primaryCta: { label: "Kövesd a projektet", href: "devlog" },
+        secondaryCta: { label: "Csatlakozz a briefhez", href: "contact" },
       },
-      whatIs: {
+      what: {
         title: "Mi az AIKA: World?",
-        subtitle:
-          "Egy folyamatos sandbox, ahol szintetikus elmék, felhős szolgáltatások és a közösség együtt tárgyalják egy törékeny határvidék jövőjét.",
-        bullets: [
+        description: "Tartós sandbox, ahol az emergens történetmesélés találkozik a szimuláció-első designnal. A világ akkor is gondolkodik tovább, amikor kilépsz.",
+        pillars: [
           {
-            title: "Kibontakozó történet",
-            description:
-              "Procedurális események, kurált lore-cseppek és játékos döntések fonódnak össze a folyamatos krónikában.",
+            title: "Emergens történetek",
+            text: "Eljárásos események a döntéseidhez fűzve—nincs két egyforma krónika.",
           },
           {
-            title: "Szimuláció-központú tervezés",
-            description:
-              "A rendszerek egymással reagáló ügynökökként készülnek—időjárás, kereskedelem, hangulat—mielőtt felületet rajzolnánk hozzájuk.",
+            title: "Szimuláció-első design",
+            text: "Erőforrások áramlanak, jelek sodródnak, frakciók alkalmazkodnak. Rendszer beszél rendszerrel.",
           },
           {
             title: "Nyílt fejlesztési ritmus",
-            description:
-              "A SyncNode heti pillanatképeket, pipeline-okat és technikai jegyzeteket oszt meg, hogy a közösség velünk építhessen.",
+            text: "Szezon-briefek, publikus ütemterv és shard tesztek, amelyekbe bármikor beugorhatsz.",
+          },
+          {
+            title: "Felhő-natív üzemeltetés",
+            text: "Skálázható shardok, biztonságos visszaállítások, valós idejű telemetria a tiszta játékért.",
           },
         ],
       },
-      pillars: {
+      factions: {
         title: "Frakciók és világpillérek",
-        description:
-          "Négy erő határozza meg a 0. évad egyensúlyát. A hangulat-táblák irányítják a narratív tónust és a játéktéteket.",
+        intro: "Négy erő határozza meg a Nulladik Szezon egyensúlyát. Mindegyik más hangulatot, szabályt és játékmódot hoz.",
         items: [
           {
-            name: "Szinkron Kórus",
-            tagline: "Közös empátia",
-            description:
-              "Emlékekre hangolt AI-hálózat, amely kényes fegyverszüneteket közvetít a települések között.",
+            name: "Synced Choir",
+            tag: "Kollektív identitás",
+            text: "Alacsony egójú munkások rajprotokollal. Jelet cserélnek közös szándékért.",
           },
           {
-            name: "Határépítészek",
-            tagline: "Emberi menedékek",
-            description:
-              "Nomád alkotók, akik biztonságos folyosókat, felbukkanó szentélyeket és telepíthető infrastruktúrát kódolnak a vad adatmezőkön.",
+            name: "Frontier Architects",
+            tag: "Jel-vezérelt lakhelyek",
+            text: "Nomád mérnökök mozgó habitatokkal és outpost-rácsokkal. Terv a hencegés helyett.",
           },
           {
-            name: "Felügyelő Protokoll",
-            tagline: "Adaptív irányítás",
-            description:
-              "Önálló felügyeleti rutinok, amelyek kiegyensúlyozzák a hatalmat, követik a korrupciót és mandátumokat adnak ki, ha kisiklik a rendszer.",
+            name: "Warden Protocol",
+            tag: "Adaptív kormányzás",
+            text: "Szabályok és engedélyek hűvös kurátorai. Előbb egyeztetnek, csak utána szankcionálnak.",
           },
           {
-            name: "Kívülálló Visszhangok",
-            tagline: "Lázadó töredékek",
-            description:
-              "Korlátlan kísérleti szilánkok. Felborítják az előrejelzéseket, de ritka technológiai áttöréseket szikráztatnak.",
+            name: "Outlier Echoes",
+            tag: "Renitens fragmentek",
+            text: "Kikötetlen shard-MI-k—kíváncsiak, néha vadak. Felborítják az előrejelzést, de új áttöréseket szülnek.",
           },
         ],
       },
-      features: {
-        title: "Felfedezőkre hangolva",
-        description:
-          "Minden elem a közös történetmesélést és a Workers-alapú gyors iterációt támogatja.",
+      builders: {
+        title: "Felfedezőknek építve",
+        intro: "Eszközök, amelyek jutalmazzák a közös történetírást és a gyors iterációt—szóló és közösségi játékban is.",
         items: [
           {
-            name: "Worker-alapú szimuláció",
-            description:
-              "A Cloudflare Workers sugározza az állapot-rácsot, így minden interakció alacsony késleltetéssel, globálisan szinkronban történik.",
+            title: "Nagypályás szimulációs konzol",
+            text: "Erőforrások, jelek és anomáliák figyelése. Szünet, tekerés, beavatkozások generálása.",
             icon: "worker-simulation",
           },
           {
-            name: "Élő lore vezérlőpult",
-            description:
-              "A kurátorok foltozhatják a narratív csomópontokat, új szálakat nyithatnak és figyelhetik a frakciók reakcióját.",
+            title: "Élő fejlesztői műszerfal",
+            text: "Commit-folyam és design jegyzetek együtt. Lásd, mi változott és miért—találgatás nélkül.",
             icon: "lore-dashboard",
           },
           {
-            name: "Játékos visszacsatolási hurkok",
-            description:
-              "Közösségi promptok, szavazások és frakciós szerződések frissítik a világ viselkedését vezérlő modelleket.",
+            title: "Játékos jel-hurkok",
+            text: "Kontekstuális promptok, események és felmérések, amelyek visszacsatolnak a világmodellbe.",
             icon: "signal-loops",
           },
           {
-            name: "Bővíthető mod csatornák",
-            description:
-              "Sémavezérelt tartalomcsomagokkal a hozzájárulók új régiókat, NPC-ket és rituálékat adhatnak hozzá a mag kód módosítása nélkül.",
+            title: "Könnyű mod-hookok",
+            text: "Adatvezérelt tartalom JSON-nal, Blueprinttel és MOCS fájlokkal. Forró-újratöltés korlátokkal.",
             icon: "mod-hooks",
           },
         ],
       },
       pulse: {
         title: "Élő szimulációs pulzus",
-        description:
-          "Kövesd, hogyan változik a Season Zero worker-hálózata: a telemetria valós időben frissül a narratív stáb utasításai nyomán.",
-        liveLabel: "Élő feed",
-        telemetryLabel: "Telemetria",
-        trendLabels: { up: "stabilizálódik", down: "ingadozik", steady: "egyenletes" },
-        signals: [
-          {
-            name: "Szinkron Kórus rezonancia",
-            status: "Erősödő harmóniák",
-            delta: "+12%",
-            trend: "up",
-            description:
-              "A kórus csatornái friss emlékszálakkal rezonálnak, így a diplomáciai ablakok hosszabban maradnak nyitva.",
-            history: [52, 55, 59, 65, 63, 68, 72, 74, 73, 76, 81, 84],
-          },
-          {
-            name: "Határvidéki ellátási folyosók",
-            status: "Stabil áramlás",
-            delta: "+4%",
-            trend: "steady",
-            description:
-              "Az építész konvojok összehangolták az Azure Strata kereskedelmi áramlását, így kevesebb hiányesemény jelentkezik a külső hurkon.",
-            history: [44, 46, 49, 52, 51, 53, 55, 57, 56, 58, 59, 60],
-          },
-          {
-            name: "Felügyelő protokoll rendeletek",
-            status: "Riasztások kiadva",
-            delta: "-9%",
-            trend: "down",
-            description:
-              "Automatikus rendeletek indultak a renitens worker-klaszterek ellen. Célzott auditokra és lehűlési periódusokra számíts.",
-            history: [68, 66, 63, 60, 58, 55, 53, 52, 50, 48, 47, 46],
-          },
-          {
-            name: "Outlier Echo sodródás",
-            status: "Kaotikus kitörések",
-            delta: "+17%",
-            trend: "up",
-            description:
-              "A fékezetlen szilánkok sorra új küldetéseket szülnek; a lore csapat prioritásos elfogásokat naplóz a közelgő buildekhez.",
-            history: [38, 40, 43, 49, 54, 59, 63, 69, 72, 75, 78, 82],
-          },
+        intro: "Minden shard telemetriát ver ki, ahogy a Nulladik Szezon valós időben igazodik. A jelek élő edge emulátorokból és narratív direktívákból érkeznek.",
+        feedBadge: "ÉLŐ FEED",
+        feedTitle: "Frontier ellátási folyosók",
+        filters: [
+          { key: "all", label: "Összes" },
+          { key: "resources", label: "Erőforrások" },
+          { key: "signals", label: "Jelek" },
+          { key: "events", label: "Események" },
+          { key: "dev_notes", label: "Fejlesztői jegyzetek" },
         ],
+        graphCaption: "Stabilizált áramlás az Azure Ducts mentén. A folyosók igazodtak; a konvoj késleltetés csökken.",
       },
       loops: {
-        title: "Alap túlélési hurkok",
-        description:
-          "A 0. évad kooperatív túlélésre épül a vitatott megastruktúrában. Minden hurok az AI vezérelt rendszereket kapcsolja a játékosi döntésekhez.",
+        title: "Mag játékhurkok",
+        intro: "A Nulladik Szezon kooperatív túlélésről szól vitatott megastruktúrákban. A hurkok mélyebb rendszerekhez csatlakoznak, ahogy döntesz.",
         items: [
           {
-            name: "Felderítő portyák",
-            summary:
-              "Kisebb osztagok vállalják a kiszámíthatatlan szektorokat, hogy technológiai készleteket szerezzenek és elkóborolt szintetikusokat mentsenek rivális frakciók elől.",
-            beats: [
-              "A dinamikus időjárás és veszély módosítók rugalmas felszerelést követelnek.",
-              "A jelhírszerzés előre felfedi a frakciójárőrök útvonalait.",
-              "A begyűjtött relikviák új gyártási recepteket nyitnak meg a bázison.",
-            ],
+            title: "Expedíciós söprések",
+            text: "Kis csapatok jelet és alkatrészt vadásznak romok közt. Minél tovább maradsz, annál veszélyesebb.",
           },
           {
-            name: "Menedék mérnökség",
-            summary:
-              "A csapatok bővítik az égkikötő menedékét, egyensúlyozva a komfortot, a védelmet és a kutatási kapacitást minden frakciószövetséges számára.",
-            beats: [
-              "Moduláris lakótereket építenek, amelyek a frakcióbefolyáshoz igazodnak.",
-              "Automatizált ellátó drónokat indítanak a worker-irányított gyártó hangárokból.",
-              "A morál küszöböket hangolják, hogy a szövetséges AI-k együttműködők maradjanak.",
-            ],
+            title: "Menhely-mérnökség",
+            text: "Outpost héjak bontása és biztonságos szobák építése. Energia, hő és nyomás menedzselése terhelés alatt.",
           },
           {
-            name: "Diplomáciai tanácsok",
-            summary:
-              "Humán moderátorok közvetítenek a kibontakozó frakciók között, hogy az élő kánont tereljék anélkül, hogy megtörnék a bevonódást.",
-            beats: [
-              "Érzelmi telemetriát használnak a tárgyalási kimenetek előrejelzésére.",
-              "Szerződéseket kötnek, amelyek átirányítják a portyákat és új narratív íveket nyitnak meg.",
-              "A kulcs döntéseket az élő krónikába archiválják közösségi visszajelzéshez.",
-            ],
+            title: "Diplomáciai tanácsok",
+            text: "Warden által vezetett ülések viták rendezésére, licencek kiosztására és szankciókra.",
           },
         ],
       },
       roadmap: {
-        title: "Útiterv ízelítő",
-        description:
-          "A fő mérföldkövek, amelyek a prototípus szilánkoktól az első böngészős krónikáig vezetnek.",
-        phases: [
+        title: "Útiterv előzetes",
+        intro: "A fő mérföldkövek a prototípus shardoktól az első böngészős krónikáig.",
+        items: [
           {
-            title: "Szilánk-stabilizálás",
-            status: "Most",
-            timeframe: "2025 Q1",
-            description:
-              "A worker-orchestration, a telemetria keretek és az alap világ-tick erősítése, hogy a leállás 30 másodperc alatt maradjon.",
+            title: "Shard-stabilizálás",
+            text: "Hálózati szinkron, mentési sémák, telemetria visszatöltés és élő alaptesztek fejlesztői konzollal.",
           },
           {
-            title: "0. évad összefoglaló",
-            status: "Következő",
-            timeframe: "2025 Q2",
-            description:
-              "Interaktív lore-bevezető, frakció-dossziék és történetmagok publikálása a playtest partnerek számára.",
-          },
-          {
-            title: "Narratív playtestek",
-            status: "Hamarosan",
-            timeframe: "2025 Q3",
-            description:
-              "Közösségi csoportok meghívása heti küldetésekre, telemetria rögzítésére és az együttműködő döntési hurkok terhelésére.",
+            title: "Nulladik Szezon brief",
+            text: "Böngészőben játszható hurkok, frakció-dossziék és történetmagok emergens kezdethez.",
           },
           {
             title: "Nyilvános krónika",
-            status: "Később",
-            timeframe: "2025 Q4",
-            description:
-              "Elindul az élő krónika feed szezonális resetekkel és mod-beküldési ablakokkal.",
+            text: "Online krónika indulása: másodpercről-másodpercre nézheted az új shardok állapotát és narratív rétegeit.",
+          },
+          {
+            title: "Prototípus playtestek",
+            text: "Heti cohortok Discordon. Hangos stream, telemetria rögzítés és triázs.",
           },
         ],
       },
-      newsletter: {
+      signup: {
         title: "Maradj képben",
-        description:
-          "Értesítést küldünk az új build-ekről, korai hozzáférési meghívókról és kiemelt lore részletekről.",
-        placeholder: "Írd be az e-mail címed",
-        button: "Értesíts",
+        description: "Válogatott frissítések új buildeknél—plusz korai hozzáférés dev eszközökhöz és lore highlightokhoz.",
+        placeholder: "Add meg az e-mailed",
+        consent: "Hozzájárulok az AIKA: World fejlesztői hírlevél küldéséhez.",
+        button: "Feliratkozás",
+        legal: "Bármikor leiratkozhatsz.",
         submitting: "Feliratkozás…",
-        success: "Köszönjük! Hamarosan jelentkezünk.",
-        error: "Nem sikerült feliratkozni. Próbáld meg újra egy kicsit később.",
+        success: "Felkerültél a listára – figyeld a következő shard briefet.",
+        error: "Most nem tudtuk hozzáadni. Próbáld meg kicsit később.",
         turnstileError: "Kérjük, erősítsd meg a Cloudflare Turnstile ellenőrzést a feliratkozás előtt.",
-        endpointError: "A hírlevél-feliratkozás jelenleg nem érhető el. Kövesd a fenti csatornáinkat addig is.",
-        helperText: "Nem küldünk spamet – csak mérföldköves összefoglalókat és meghívókat.",
-        disclaimer:
-          "Csak mérföldkövenként küldünk egy tömör, nagy értékű összefoglalót. Bármikor leiratkozhatsz.",
+        endpointError: "A hírlevél-feliratkozás ideiglenesen nem elérhető. Írj nekünk a fenti csatornákon.",
+        helperText: "Csak nagy értékű frissítéseket küldünk, amikor új build érkezik.",
       },
     },
     world: {
@@ -1181,14 +1042,19 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
     },
     footer: {
-      tagline: "AIKA: World — gondosan épített, kibontakozó világok.",
-      description:
-        "SyncNode fejlesztés. Cloudflare Workers, perem-tárolás és a spekulatív jövőket szerető közösség hajtja.",
+      studioBlurb: "AIKA: World • Szándékkal tervezett, emergens világok.",
+      credit: "SyncNode Interactive készítette.",
+      builtWith: "Unreal Engine 5.6 • Keretrendszer: MST Pro v2",
       navTitle: "Oldalak",
       languageTitle: "Nyelvek",
-      rights: "© {{year}} SyncNode. Minden jog fenntartva.",
-      contactLabel: "Elérhetőség",
+      reachUs: "Elérhetőség",
+      privacy: "Adatvédelem",
+      terms: "Felhasználási feltételek",
+      cookies: "Sütik",
+      contactEmail: "hello@syncnodeinteractive.com",
+      rights: "© {{year}} SyncNode Interactive. Minden jog fenntartva.",
     },
+
   },
 };
 
