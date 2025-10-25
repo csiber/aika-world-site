@@ -142,6 +142,39 @@ type DataLinkMiniGame = {
   hints: string[];
 };
 
+type PlatformBattleControl = {
+  key: string;
+  action: string;
+};
+
+type PlatformBattleMiniGame = {
+  title: string;
+  intro: string;
+  objective: string;
+  controlsTitle: string;
+  controls: PlatformBattleControl[];
+  statusLabel: string;
+  status: {
+    idle: string;
+    running: string;
+    victory: string;
+    defeat: string;
+  };
+  startLabel: string;
+  resetLabel: string;
+  attackLabel: string;
+  attemptsLabel: string;
+  droneLabel: string;
+  shieldLabel: string;
+  logsTitle: string;
+  logAttackHit: string;
+  logAttackMiss: string;
+  logPlayerHit: string;
+  logCooldown: string;
+  hintTitle: string;
+  hints: string[];
+};
+
 type SystemModule = {
   name: string;
   badge: string;
@@ -282,6 +315,7 @@ export type Dictionary = {
     syncPulse: WorldMiniGame;
     orbitalDrift: OrbitalDriftMiniGame;
     dataLink: DataLinkMiniGame;
+    platformBattle: PlatformBattleMiniGame;
     closing: string;
   };
   systems: {
@@ -721,6 +755,45 @@ const dictionaries: Record<Locale, Dictionary> = {
         "Start with the highest nodes—AIKA rarely assigns tiny values together.",
         "If you overshoot, swap out the largest number in your pair first.",
         "Remember that each reset generates a new corridor drawn from lore locations.",
+      ],
+    },
+    platformBattle: {
+      title: "VOID PLATFORM SKIRMISH",
+      intro:
+        "AIKA drops a Sentinel drone onto a maintenance lattice so you can rehearse pulse-coil combat without wasting ammunition.",
+      objective:
+        "Dodge the return fire, jump between decks, and land pulse strikes until the drone powers down.",
+      controlsTitle: "Control hints",
+      controls: [
+        { key: "A / ←", action: "Strafe left across the lower deck." },
+        { key: "D / →", action: "Strafe right across the lower deck." },
+        { key: "W / Space", action: "Jump between maintenance platforms." },
+        { key: "F / K", action: "Trigger a pulse strike once you are in range." },
+        { key: "Strike button", action: "Tap the on-screen control if you are playing without a keyboard." },
+      ],
+      statusLabel: "Round state",
+      status: {
+        idle: "Awaiting launch",
+        running: "Engagement live",
+        victory: "Sentinel disabled",
+        defeat: "Shields collapsed",
+      },
+      startLabel: "Start skirmish",
+      resetLabel: "Hard reset",
+      attackLabel: "Pulse strike",
+      attemptsLabel: "Rounds",
+      droneLabel: "Sentinel integrity",
+      shieldLabel: "Pilot shields",
+      logsTitle: "Combat log",
+      logAttackHit: "Pulse strike connected. Sentinel integrity {{value}}%.",
+      logAttackMiss: "Strike missed — the drone slipped behind the gantries.",
+      logPlayerHit: "Laser scatter clipped you. Shields at {{value}}%.",
+      logCooldown: "Coil venting. Wait a moment before striking again.",
+      hintTitle: "Battlefield tips",
+      hints: [
+        "Close the distance before striking—the pulse only arcs a short span.",
+        "Jump to the upper platform when the Sentinel hovers high to keep the line of sight clear.",
+        "If you take a hit, fall back to reset the drone’s aim before re-engaging.",
       ],
     },
     closing:
@@ -1320,6 +1393,45 @@ const dictionaries: Record<Locale, Dictionary> = {
         "A legnagyobb értékekkel kezdd – AIKA ritkán párosít két apró számot.",
         "Ha túlléped a célt, először a legnagyobb számot cseréld le.",
         "Minden újraindítás új lore-helyszínekhez kötött folyosót ad.",
+      ],
+    },
+    platformBattle: {
+      title: "ŰRPLATFORM ÖSSZECSAPÁS",
+      intro:
+        "AIKA egy Őrszem drónt enged le a karbantartó rácsra, hogy lőszerpazarlás nélkül gyakorold a pulzus-fegyvert.",
+      objective:
+        "Kerüld a viszonttüzet, ugrálj a szintek között, és közelről mért pulzuscsapásokkal kapcsold le a drónt.",
+      controlsTitle: "Irányítási súgó",
+      controls: [
+        { key: "A / ←", action: "Balra lépkedsz az alsó fedélzeten." },
+        { key: "D / →", action: "Jobbra lépkedsz az alsó fedélzeten." },
+        { key: "W / Space", action: "Ugrás a karbantartó platformok között." },
+        { key: "F / K", action: "Pulzuscsapás indítása, ha elég közel kerülsz." },
+        { key: "Csapás gomb", action: "Érintsd meg a képernyőn lévő gombot, ha nincs billentyűzeted." },
+      ],
+      statusLabel: "Menet állapota",
+      status: {
+        idle: "Rajtra vár",
+        running: "Harci kapcsolat aktív",
+        victory: "Őrszem lekapcsolva",
+        defeat: "Pajzs összeomlott",
+      },
+      startLabel: "Menet indítása",
+      resetLabel: "Teljes reset",
+      attackLabel: "Pulzuscsapás",
+      attemptsLabel: "Menetek",
+      droneLabel: "Őrszem integritás",
+      shieldLabel: "Pilóta pajzs",
+      logsTitle: "Harci napló",
+      logAttackHit: "Találat! Az őrszem integritása {{value}}%.",
+      logAttackMiss: "A csapás célt tévesztett – a drón a rács mögé bukott.",
+      logPlayerHit: "A lézer megkarcolt. Pajzs {{value}}%.",
+      logCooldown: "A tekercs szellőzik. Várj egy pillanatot az újabb csapás előtt.",
+      hintTitle: "Csatamező tippek",
+      hints: [
+        "Közelről üss: a pulzus csak rövid íven terjed.",
+        "Ugorj fel a felső platformra, ha az őrszem magasra emelkedik, hogy megmaradjon a rálátás.",
+        "Ha találat ér, húzódj vissza pár lépést, így a drón elveszíti a célzást, mielőtt visszatámadsz.",
       ],
     },
     closing:
