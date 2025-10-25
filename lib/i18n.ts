@@ -94,83 +94,28 @@ type WorldMiniGame = {
   successDescription: string;
 };
 
-type OrbitalAxisHint = {
-  id: string;
-  label: string;
-  lowHint: string;
-  highHint: string;
-};
-
-type OrbitalDriftMiniGame = {
-  title: string;
-  intro: string;
-  objective: string;
-  axesTitle: string;
-  axesDescription: string;
-  attemptsLabel: string;
-  calibrateLabel: string;
-  resetLabel: string;
-  statusAdjust: string;
-  successTitle: string;
-  successDescription: string;
-  logTitle: string;
-  hintTitle: string;
-  hints: string[];
-  axes: OrbitalAxisHint[];
-};
-
-type DataLinkMiniGame = {
-  title: string;
-  intro: string;
-  objective: string;
-  targetLabel: string;
-  selectionLabel: string;
-  attemptsLabel: string;
-  nodeAriaLabel: string;
-  confirmLabel: string;
-  resetLabel: string;
-  statuses: {
-    low: string;
-    high: string;
-    incomplete: string;
-    success: string;
-  };
-  successTitle: string;
-  successDescription: string;
-  historyTitle: string;
-  hintTitle: string;
-  hints: string[];
-};
-
-type PlatformBattleControl = {
+type SpaceBattleControl = {
   key: string;
   action: string;
 };
 
-type PlatformBattleMiniGame = {
+type SpaceBattleMiniGame = {
   title: string;
   intro: string;
   objective: string;
   controlsTitle: string;
-  controls: PlatformBattleControl[];
-  statusLabel: string;
-  status: {
-    idle: string;
-    running: string;
-    victory: string;
-    defeat: string;
+  controls: SpaceBattleControl[];
+  statusLabels: {
+    score: string;
+    shield: string;
+    wave: string;
   };
   startLabel: string;
-  resetLabel: string;
-  attackLabel: string;
-  attemptsLabel: string;
-  droneLabel: string;
-  shieldLabel: string;
-  logsTitle: string;
-  logAttackHit: string;
-  logAttackMiss: string;
-  logPlayerHit: string;
-  logCooldown: string;
+  restartLabel: string;
+  victoryTitle: string;
+  victoryDescription: string;
+  defeatTitle: string;
+  defeatDescription: string;
   hintTitle: string;
   hints: string[];
 };
@@ -306,18 +251,15 @@ export type Dictionary = {
     miniGame: WorldMiniGame;
   };
     miniGames: {
-    badge: string;
-    title: string;
-    subtitle: string;
-    description: string;
-    insightsTitle: string;
-    insights: { title: string; text: string }[];
-    syncPulse: WorldMiniGame;
-    orbitalDrift: OrbitalDriftMiniGame;
-    dataLink: DataLinkMiniGame;
-    platformBattle: PlatformBattleMiniGame;
-    closing: string;
-  };
+      badge: string;
+      title: string;
+      subtitle: string;
+      description: string;
+      insightsTitle: string;
+      insights: { title: string; text: string }[];
+      spaceBattle: SpaceBattleMiniGame;
+      closing: string;
+    };
   systems: {
     title: string;
     subtitle: string;
@@ -637,167 +579,62 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
   },
     miniGames: {
-    badge: "FIELD TRAINING",
-    title: "Mini games from the AIKA survival stack",
-    subtitle:
-      "Calibrate the systems that keep the crash survivor alive while you wait for the full campaign build.",
-    description:
-      "Each drill runs inside the fiction of the AIKA: World crash basin. Finish them to understand how the AI watches, reacts, and rewards your decisions.",
-    insightsTitle: "What these browser drills deliver",
-    insights: [
-      {
-        title: "Lore-anchored mechanics",
-        text: "Every interaction references factions, technology, and tensions from the in-world recovery log so the exercises feed SEO and immersion at once.",
-      },
-      {
-        title: "Repeatable skill loops",
-        text: "The mini games remix real modules from the Unreal build into quick puzzles with measurable outcomes, ideal for sharing and improving session length.",
-      },
-      {
-        title: "Playable while you wait",
-        text: "All drills run instantly in the browser on desktop or mobile, giving the community something to master while the main slice downloads.",
-      },
-    ],
-    syncPulse: {
-      title: "SYNC PULSE CALIBRATION",
-      intro:
-        "AIKA’s uplink drifts whenever the crash storms flare. Manual tuning keeps the signal focused on your survival tasks.",
-      objective:
-        "Dial the carrier frequency until the pulse locks into the safe corridor.",
-      sliderLabel: "Manual frequency dial",
-      sliderDescription: "Drag to sweep the transmission band between 0–100 Hz.",
-      buttonLabel: "Send pulse",
-      resetLabel: "Reset signal",
-      attemptsLabel: "Attempts",
-      feedback: {
-        low: "The beam is still diffuse. Increase output and try again.",
-        high: "The carrier destabilised the uplink. Ease the frequency down.",
-        success: "Signal captured. AIKA routes extra telemetry through the relay.",
-      },
-      hintTitle: "Calibration hints",
-      hints: [
-        "Hover around the mid band first, then narrow by smaller shifts.",
-        "A three point swing is usually enough to cross the sweet spot.",
-        "Resetting reboots the storm pattern if you want a fresh challenge.",
-      ],
-      successTitle: "Pulse stabilised",
-      successDescription:
-        "AIKA acknowledges the alignment and unlocks additional orbital scans for your waiting session.",
-    },
-    orbitalDrift: {
-      title: "ORBITAL DRIFT ALIGNMENT",
-      intro:
-        "The crash left your interceptor’s stabilisers in manual override. Keep the craft steady so AIKA will approve the next drop window.",
-      objective:
-        "Match the pitch, yaw, and roll indicators before fuel reserves fall into the red.",
-      axesTitle: "Manual thruster controls",
-      axesDescription:
-        "Slide each axis until the readout matches AIKA’s target corridor. Precise burns mean safer patrols once the full game unlocks.",
-      attemptsLabel: "Calibration cycles",
-      calibrateLabel: "Stabilise drift",
-      resetLabel: "Spin up new drift",
-      statusAdjust: "Adjust the highlighted thrusters to settle the craft.",
-      successTitle: "Orbit locked",
-      successDescription:
-        "With every axis aligned, AIKA clears your dropship for longer patrols around the crash basin.",
-      logTitle: "Telemetry log",
-      hintTitle: "Flight computer tips",
-      hints: [
-        "Small corrections stack quickly—nudge, test, then commit.",
-        "If two axes are stable, focus burns on the outlier before rechecking.",
-        "Refreshing the drift profile provides a tougher pattern once you master the basics.",
-      ],
-      axes: [
+      badge: "FIELD TRAINING",
+      title: "Stellar Run: the AIKA basin combat trial",
+      subtitle:
+        "Pilot a scout craft across a fortified 2D platform gauntlet carved into the crash site.",
+      description:
+        "This singular sandbox fuses traversal, dodging, and weapons management into one extended browser encounter while the full Unreal slice loads.",
+      insightsTitle: "Why this mega-sim matters",
+      insights: [
         {
-          id: "pitch",
-          label: "Pitch",
-          lowHint: "Pitch thrusters need more burn to lift the nose.",
-          highHint: "Pitch is overshooting—bleed power until the nose settles.",
+          title: "Campaign-authentic handling",
+          text: "The interceptor inherits its thrust curves, shield tuning, and projectile timing directly from the Unreal module so browser pilots train on the real thing.",
         },
         {
-          id: "yaw",
-          label: "Yaw",
-          lowHint: "Yaw thrusters are underperforming. Push harder starboard.",
-          highHint: "Yaw drifted too far. Counter-thrust port side.",
+          title: "Escalating wave cadence",
+          text: "Three combat waves stack platforming pressure with smarter drone routes, mirroring how the crash basin will pace open-world assaults.",
         },
         {
-          id: "roll",
-          label: "Roll",
-          lowHint: "Roll stabilisers require extra torque to level the wings.",
-          highHint: "Roll is overcompensating—ease the stabilisers.",
+          title: "Instant community proving ground",
+          text: "No downloads, no launcher—just load the page, grab the arrow keys, and feed AIKA telemetry that keeps the newsletter and SEO heartbeat alive.",
         },
       ],
-    },
-    dataLink: {
-      title: "SUPPLY RELAY ROUTE",
-      intro:
-        "Ground teams request drones to deliver supplies between the crash shelters. AIKA needs you to validate the energy budget first.",
-      objective:
-        "Select exactly two relay nodes whose combined bandwidth matches the requested corridor.",
-      targetLabel: "Target corridor",
-      selectionLabel: "Current sum",
-      attemptsLabel: "Attempts",
-      nodeAriaLabel: "Toggle relay node {{id}}",
-      confirmLabel: "Lock route",
-      resetLabel: "New route",
-      statuses: {
-        low: "Your chosen nodes undershoot the corridor by {{difference}} units.",
-        high: "Your chosen nodes overshoot the corridor by {{difference}} units.",
-        incomplete: "Select two relay nodes to chart a viable route.",
-        success: "Bandwidth confirmed. Supply drones depart immediately.",
+      spaceBattle: {
+        title: "STELLAR RUN • PLATFORM GAUNTLET",
+        intro:
+          "AIKA excavated a training trench beneath the crash canopy. Your job: keep the scout interceptor airworthy while swatting drones from the ledges.",
+        objective:
+          "Survive three escalating drone waves without letting hull integrity fall to zero.",
+        controlsTitle: "Flight controls",
+        controls: [
+          { key: "← → / A D", action: "Lateral thrusters across the platforms" },
+          { key: "↑ / W", action: "Feather the lift jets to gain altitude" },
+          { key: "Space", action: "Fire the forward plasma lance" },
+          { key: "R", action: "Reboot the simulation whenever you crash" },
+        ],
+        statusLabels: {
+          score: "Score",
+          shield: "Hull integrity",
+          wave: "Wave",
+        },
+        startLabel: "Launch simulation",
+        restartLabel: "Restart run",
+        victoryTitle: "Training cleared",
+        victoryDescription:
+          "Every drone splintered and the interceptor never broke. AIKA approves orbital support for your next sortie.",
+        defeatTitle: "Hull compromised",
+        defeatDescription:
+          "The drones cored the ship. Reset, watch their firing arcs, and own the high platforms.",
+        hintTitle: "Tactical hints",
+        hints: [
+          "Break line of sight by ducking beneath platforms before you pop up to fire.",
+          "Short, rhythmic lift bursts keep the ship steady enough to land clean hits.",
+          "Red-marked wingmen strafe faster—delete them first so the blues cannot pin you down.",
+        ],
       },
-      successTitle: "Route confirmed",
-      successDescription:
-        "Your accuracy convinces AIKA to fast-track additional community requests while you await the main release.",
-      historyTitle: "Route attempts",
-      hintTitle: "Logistics insight",
-      hints: [
-        "Start with the highest nodes—AIKA rarely assigns tiny values together.",
-        "If you overshoot, swap out the largest number in your pair first.",
-        "Remember that each reset generates a new corridor drawn from lore locations.",
-      ],
-    },
-    platformBattle: {
-      title: "VOID PLATFORM SKIRMISH",
-      intro:
-        "AIKA drops a Sentinel drone onto a maintenance lattice so you can rehearse pulse-coil combat without wasting ammunition.",
-      objective:
-        "Dodge the return fire, jump between decks, and land pulse strikes until the drone powers down.",
-      controlsTitle: "Control hints",
-      controls: [
-        { key: "A / ←", action: "Strafe left across the lower deck." },
-        { key: "D / →", action: "Strafe right across the lower deck." },
-        { key: "W / Space", action: "Jump between maintenance platforms." },
-        { key: "F / K", action: "Trigger a pulse strike once you are in range." },
-        { key: "Strike button", action: "Tap the on-screen control if you are playing without a keyboard." },
-      ],
-      statusLabel: "Round state",
-      status: {
-        idle: "Awaiting launch",
-        running: "Engagement live",
-        victory: "Sentinel disabled",
-        defeat: "Shields collapsed",
-      },
-      startLabel: "Start skirmish",
-      resetLabel: "Hard reset",
-      attackLabel: "Pulse strike",
-      attemptsLabel: "Rounds",
-      droneLabel: "Sentinel integrity",
-      shieldLabel: "Pilot shields",
-      logsTitle: "Combat log",
-      logAttackHit: "Pulse strike connected. Sentinel integrity {{value}}%.",
-      logAttackMiss: "Strike missed — the drone slipped behind the gantries.",
-      logPlayerHit: "Laser scatter clipped you. Shields at {{value}}%.",
-      logCooldown: "Coil venting. Wait a moment before striking again.",
-      hintTitle: "Battlefield tips",
-      hints: [
-        "Close the distance before striking—the pulse only arcs a short span.",
-        "Jump to the upper platform when the Sentinel hovers high to keep the line of sight clear.",
-        "If you take a hit, fall back to reset the drone’s aim before re-engaging.",
-      ],
-    },
-    closing:
-      "These drills seed the SEO index with living lore while giving players a reason to linger. Share your best scores when you ping us for the full build.",
+      closing:
+        "Log your best score in the community hub—AIKA tallies every drone you vaporise while we finish the full campaign slice.",
     },
     systems: {
       title: "Survival systems overview",
@@ -1275,167 +1112,62 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
   },
     miniGames: {
-    badge: "GYAKORLÓ MODULOK",
-    title: "Mini játékok az AIKA túlélőközpontból",
-    subtitle:
-      "Kalibráld azokat a rendszereket, amelyek életben tartják a pilótát, miközben a fő kampányra vársz.",
-    description:
-      "Minden böngészős kihívás az AIKA: World lezuhant bázisának történetébe illeszkedik. Végezd el őket, hogy jobban megértsd, hogyan figyel és reagál a mesterséges felügyelet.",
-    insightsTitle: "Mit adnak ezek a böngészős kihívások",
-    insights: [
-      {
-        title: "Történetbe kötött mechanikák",
-        text: "Minden interakció frakciókra, technológiára és a helyreállítási napló feszültségeire utal, így egyszerre építik az SEO-t és az élményt.",
-      },
-      {
-        title: "Ismételhető készségciklusok",
-        text: "A mini játékok az Unreal build moduljait keverik gyors rejtvényekké, mérhető eredményekkel – ideálisak a megosztásokhoz és a hosszabb oldalon töltött időhöz.",
-      },
-      {
-        title: "Várakozás közben is játszható",
-        text: "Az összes kihívás azonnal fut böngészőben, desktopon és mobilon is, így a közösség addig is gyakorolhat, amíg letöltődik a fő szelet.",
-      },
-    ],
-    syncPulse: {
-      title: "SZINKRON PULZUS KALIBRÁCIÓ",
-      intro:
-        "AIKA uplinkje minden viharrobbanásnál elcsúszik. A kézi hangolás biztosítja, hogy a jel a túlélési feladatokra fókuszáljon.",
-      objective:
-        "Állítsd be a vivőfrekvenciát, amíg a pulzus be nem zár a biztonságos folyosóra.",
-      sliderLabel: "Kézi frekvencia szabályzó",
-      sliderDescription: "Húzd a csúszkát 0–100 Hz között, hogy megtaláld a stabil tartományt.",
-      buttonLabel: "Pulzus küldése",
-      resetLabel: "Jel újraindítása",
-      attemptsLabel: "Próbálkozások",
-      feedback: {
-        low: "A nyaláb még szórt. Emeld az intenzitást, majd próbáld újra.",
-        high: "A vivő túlvezérelte a kapcsolatot. Csökkentsd a frekvenciát.",
-        success: "A jel beélesedett. AIKA extra telemetriát küld a relén keresztül.",
-      },
-      hintTitle: "Kalibrációs tippek",
-      hints: [
-        "Először a középső sávban keresgélj, majd egyre kisebb lépésekkel szűkíts.",
-        "Három egységnyi finomítás gyakran elég a találathoz.",
-        "Ha új kihívást szeretnél, indítsd újra a viharmintát.",
-      ],
-      successTitle: "Stabil pulzus",
-      successDescription:
-        "AIKA visszaigazolja az igazítást, és plusz orbitális felderítést engedélyez a várakozás idejére.",
-    },
-    orbitalDrift: {
-      title: "ORBITÁLIS SODRÓDÁS KIEGYENLÍTÉSE",
-      intro:
-        "A lezuhanás után az elfogó stabilizátorai kézi üzemmódba ragadtak. Tartsd nyugodtan a gépet, hogy AIKA jóváhagyja a következő ledobási ablakot.",
-      objective:
-        "Hangold össze a pitch, yaw és roll kijelzőket, mielőtt a készletek veszélyesen lefogynának.",
-      axesTitle: "Kézi hajtóművezérlés",
-      axesDescription:
-        "Csúsztasd minden tengelyt AIKA célfolyosójához. A pontos kiégés biztonságosabb járőrözést jelent, amikor megnyílik a teljes játék.",
-      attemptsLabel: "Kalibrációs ciklusok",
-      calibrateLabel: "Sodródás stabilizálása",
-      resetLabel: "Új sodródás generálása",
-      statusAdjust: "Igazítsd a kiemelt hajtóműveket, hogy lenyugtasd a gépet.",
-      successTitle: "Pálya rögzítve",
-      successDescription:
-        "Ha minden tengely a helyén van, AIKA hosszabb bevetéseket engedélyez a lezuhanási medence körül.",
-      logTitle: "Telemetria napló",
-      hintTitle: "Repülésvezérlő tippek",
-      hints: [
-        "A kis korrekciók gyorsan összeadódnak – finomíts, tesztelj, majd erősíts rá.",
-        "Ha két tengely stabil, előbb az eltérőt hozd helyre, utána ellenőrizz újra.",
-        "Az új sodródási profil nehezebb mintát ad, ha már magabiztos vagy.",
-      ],
-      axes: [
+      badge: "SZIMULÁCIÓS TEREP",
+      title: "Stellar Run: AIKA medence platformcsata",
+      subtitle:
+        "Irányíts egy felderítő űrhajót a lezuhanási medence megerősített 2D pályáján.",
+      description:
+        "Ez az egyetlen sandbox egyetlen hosszú böngészős futamba sűríti a mozgás-, kitérés- és fegyvermodulokat, amíg a teljes Unreal szelet betölt.",
+      insightsTitle: "Miért fontos ez a mega-szimuláció",
+      insights: [
         {
-          id: "pitch",
-          label: "Pitch",
-          lowHint: "A pitch hajtóműveknek több tolóerő kell, hogy az orr megemelkedjen.",
-          highHint: "A pitch túllőtt – engedd el a teljesítményt, amíg az orr lenyugszik.",
+          title: "Kampányhű kezelhetőség",
+          text: "Az elfogó ugyanazokat a tolóerő-görbéket, pajzsbeállításokat és lövési időzítést használja, mint az Unreal modul, így a böngészős gyakorlás is éles.",
         },
         {
-          id: "yaw",
-          label: "Yaw",
-          lowHint: "A yaw hajtóművek lusták. Növeld a jobb oldali tolóerőt.",
-          highHint: "A yaw túlfordult. Adj ellenirányú tolóerőt balról.",
+          title: "Hullám-alapú ritmus",
+          text: "Három harci hullám egymásra pakolja a platformnyomást és a kifinomult drón útvonalakat – ugyanúgy, ahogy a teljes kampány tempója épül.",
         },
         {
-          id: "roll",
-          label: "Roll",
-          lowHint: "A roll stabilizátoroknak extra nyomaték kell a szárnyak kiegyenlítéséhez.",
-          highHint: "A roll túlkompenzál. Finoman csökkentsd a stabilizátorok erejét.",
+          title: "Azonnali közösségi próbatétel",
+          text: "Nincs letöltés, nincs launcher – csak nyisd meg az oldalt, fogd a nyilakat, és küldd az AIKA felé a telemetriát, ami ébren tartja a közösséget.",
         },
       ],
-    },
-    dataLink: {
-      title: "ELLÁTÓ RELÉ ÚTVONAL",
-      intro:
-        "A felszíni csapatok drónokkal kérnek utánpótlást a menedékek között. AIKA előbb az energiamérleget akarja hitelesíteni.",
-      objective:
-        "Válassz ki pontosan két relécsomópontot, amelyek összege megegyezik a kért sávszélességgel.",
-      targetLabel: "Cél folyosó",
-      selectionLabel: "Jelenlegi összeg",
-      attemptsLabel: "Próbálkozások",
-      nodeAriaLabel: "Relécsomópont ki- és bekapcsolása {{id}}",
-      confirmLabel: "Útvonal zárolása",
-      resetLabel: "Új útvonal",
-      statuses: {
-        low: "A választott csomópontok {{difference}} egységgel alatta maradnak a folyosónak.",
-        high: "A választott csomópontok {{difference}} egységgel túllépik a folyosót.",
-        incomplete: "Válassz két relécsomópontot, hogy megpróbálhass egy útvonalat.",
-        success: "A sávszélesség rendben. Az ellátó drónok azonnal indulnak.",
+      spaceBattle: {
+        title: "STELLAR RUN • PLATFORM GAUNTLET",
+        intro:
+          "AIKA gyakorlóárkot vájt a lezuhanási lombkorona alá. A feladat: tartsd repképesen a felderítőt, miközben ledobálod a ledzsákon kúszó drónokat.",
+        objective:
+          "Éld túl a három erősödő drónhullámot úgy, hogy a burkolat épsége nem esik nullára.",
+        controlsTitle: "Irányítás",
+        controls: [
+          { key: "← → / A D", action: "Oldalirányú tolóerő a platformok között" },
+          { key: "↑ / W", action: "Finom emelőimpulzusok a magasságért" },
+          { key: "Space", action: "Előre tüzelő plazmafegyver" },
+          { key: "R", action: "Szimuláció újraindítása, ha lezuhantál" },
+        ],
+        statusLabels: {
+          score: "Pontszám",
+          shield: "Burkolat épsége",
+          wave: "Hullám",
+        },
+        startLabel: "Szimuláció indítása",
+        restartLabel: "Újrakezdés",
+        victoryTitle: "Teljesített kiképzés",
+        victoryDescription:
+          "Minden drón szilánkokra hullott, a gép végig bírta. AIKA orbitális támogatást engedélyez a következő bevetéshez.",
+        defeatTitle: "Burkolat átszakadt",
+        defeatDescription:
+          "A drónok kilyuggatták a hajót. Indítsd újra, figyeld a tüzelési íveket, és urald a felső platformokat.",
+        hintTitle: "Taktikai tippek",
+        hints: [
+          "Törd meg a látóvonalat: bújj platform alá, mielőtt visszalépsz tüzelni.",
+          "Rövid, ritmikus emelőimpulzusokkal stabil marad a gép, így pontosabban lő.",
+          "A piros szárnyasok gyorsabban strafelnek – szedd le őket először, hogy a kékek ne zárhassanak körbe.",
+        ],
       },
-      successTitle: "Útvonal jóváhagyva",
-      successDescription:
-        "A pontosságod miatt AIKA további közösségi kéréseket enged el, amíg a fő buildre vártok.",
-      historyTitle: "Útvonal próbálkozások",
-      hintTitle: "Logisztikai tanács",
-      hints: [
-        "A legnagyobb értékekkel kezdd – AIKA ritkán párosít két apró számot.",
-        "Ha túlléped a célt, először a legnagyobb számot cseréld le.",
-        "Minden újraindítás új lore-helyszínekhez kötött folyosót ad.",
-      ],
-    },
-    platformBattle: {
-      title: "ŰRPLATFORM ÖSSZECSAPÁS",
-      intro:
-        "AIKA egy Őrszem drónt enged le a karbantartó rácsra, hogy lőszerpazarlás nélkül gyakorold a pulzus-fegyvert.",
-      objective:
-        "Kerüld a viszonttüzet, ugrálj a szintek között, és közelről mért pulzuscsapásokkal kapcsold le a drónt.",
-      controlsTitle: "Irányítási súgó",
-      controls: [
-        { key: "A / ←", action: "Balra lépkedsz az alsó fedélzeten." },
-        { key: "D / →", action: "Jobbra lépkedsz az alsó fedélzeten." },
-        { key: "W / Space", action: "Ugrás a karbantartó platformok között." },
-        { key: "F / K", action: "Pulzuscsapás indítása, ha elég közel kerülsz." },
-        { key: "Csapás gomb", action: "Érintsd meg a képernyőn lévő gombot, ha nincs billentyűzeted." },
-      ],
-      statusLabel: "Menet állapota",
-      status: {
-        idle: "Rajtra vár",
-        running: "Harci kapcsolat aktív",
-        victory: "Őrszem lekapcsolva",
-        defeat: "Pajzs összeomlott",
-      },
-      startLabel: "Menet indítása",
-      resetLabel: "Teljes reset",
-      attackLabel: "Pulzuscsapás",
-      attemptsLabel: "Menetek",
-      droneLabel: "Őrszem integritás",
-      shieldLabel: "Pilóta pajzs",
-      logsTitle: "Harci napló",
-      logAttackHit: "Találat! Az őrszem integritása {{value}}%.",
-      logAttackMiss: "A csapás célt tévesztett – a drón a rács mögé bukott.",
-      logPlayerHit: "A lézer megkarcolt. Pajzs {{value}}%.",
-      logCooldown: "A tekercs szellőzik. Várj egy pillanatot az újabb csapás előtt.",
-      hintTitle: "Csatamező tippek",
-      hints: [
-        "Közelről üss: a pulzus csak rövid íven terjed.",
-        "Ugorj fel a felső platformra, ha az őrszem magasra emelkedik, hogy megmaradjon a rálátás.",
-        "Ha találat ér, húzódj vissza pár lépést, így a drón elveszíti a célzást, mielőtt visszatámadsz.",
-      ],
-    },
-    closing:
-      "Ezek a modulok élő történetet és SEO-jeleket adnak, miközben okot adnak a maradásra. Oszd meg a rekordokat, amikor felveszed velünk a kapcsolatot a teljes build miatt.",
+      closing:
+        "Jegyezd fel a legjobb pontszámod a közösségi hubban – AIKA számolja a kilőtt drónokat, amíg befejezzük a kampány szeletét.",
     },
     systems: {
       title: "Túlélőrendszer áttekintés",
