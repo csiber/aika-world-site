@@ -481,8 +481,8 @@ export function SpaceBattleGame({ dictionary }: SpaceBattleGameProps) {
   const initialState = useMemo(() => createInitialState(), []);
   const [gameState, setGameState] = useState<GameState>(initialState);
   const inputRef = useRef<InputState>({ left: false, right: false, up: false, fire: false });
-  const frameRef = useRef<number>();
-  const lastTimeRef = useRef<number>();
+  const frameRef = useRef<number | undefined>(undefined);
+  const lastTimeRef = useRef<number | undefined>(undefined);
   const audioContextRef = useRef<AudioContext | null>(null);
 
   const ensureAudioContext = useCallback(() => {
