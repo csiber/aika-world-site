@@ -201,7 +201,7 @@ function stepGame(state: GameState, input: InputState, delta: number): { state: 
   let nextEnemyId = state.nextEnemyId;
   let wave = state.wave;
   let score = state.score;
-  let status = state.status;
+  let status: GameStatus = state.status;
 
   player.fireCooldown = Math.max(0, player.fireCooldown - delta);
   player.invulnerability = Math.max(0, player.invulnerability - delta);
