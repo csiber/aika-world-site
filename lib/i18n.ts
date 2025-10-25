@@ -6,11 +6,19 @@ export function isLocale(value: string): value is Locale {
   return locales.includes(value as Locale);
 }
 
-export type NavKey = "home" | "world" | "systems" | "devlog" | "about" | "contact";
+export type NavKey =
+  | "home"
+  | "world"
+  | "mini-games"
+  | "systems"
+  | "devlog"
+  | "about"
+  | "contact";
 
 export const navOrder: NavKey[] = [
   "home",
   "world",
+  "mini-games",
   "systems",
   "devlog",
   "about",
@@ -84,6 +92,54 @@ type WorldMiniGame = {
   hints: string[];
   successTitle: string;
   successDescription: string;
+};
+
+type OrbitalAxisHint = {
+  id: string;
+  label: string;
+  lowHint: string;
+  highHint: string;
+};
+
+type OrbitalDriftMiniGame = {
+  title: string;
+  intro: string;
+  objective: string;
+  axesTitle: string;
+  axesDescription: string;
+  attemptsLabel: string;
+  calibrateLabel: string;
+  resetLabel: string;
+  statusAdjust: string;
+  successTitle: string;
+  successDescription: string;
+  logTitle: string;
+  hintTitle: string;
+  hints: string[];
+  axes: OrbitalAxisHint[];
+};
+
+type DataLinkMiniGame = {
+  title: string;
+  intro: string;
+  objective: string;
+  targetLabel: string;
+  selectionLabel: string;
+  attemptsLabel: string;
+  nodeAriaLabel: string;
+  confirmLabel: string;
+  resetLabel: string;
+  statuses: {
+    low: string;
+    high: string;
+    incomplete: string;
+    success: string;
+  };
+  successTitle: string;
+  successDescription: string;
+  historyTitle: string;
+  hintTitle: string;
+  hints: string[];
 };
 
 type SystemModule = {
@@ -216,6 +272,18 @@ export type Dictionary = {
     footnote: string;
     miniGame: WorldMiniGame;
   };
+    miniGames: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    description: string;
+    insightsTitle: string;
+    insights: { title: string; text: string }[];
+    syncPulse: WorldMiniGame;
+    orbitalDrift: OrbitalDriftMiniGame;
+    dataLink: DataLinkMiniGame;
+    closing: string;
+  };
   systems: {
     title: string;
     subtitle: string;
@@ -275,6 +343,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     nav: {
       home: "Home",
       world: "World",
+      "mini-games": "Mini games",
       systems: "Systems",
       devlog: "Recovery Log",
       about: "About",
@@ -529,9 +598,133 @@ const dictionaries: Record<Locale, Dictionary> = {
           "If the uplink keeps slipping, push slightly beyond your last highest pulse.",
         ],
         successTitle: "Uplink stabilised",
-        successDescription:
-          "Telemetry syncs with the Zenith Array. Expect new coordinates in the next field packet.",
+      successDescription:
+        "Telemetry syncs with the Zenith Array. Expect new coordinates in the next field packet.",
+    },
+  },
+    miniGames: {
+    badge: "FIELD TRAINING",
+    title: "Mini games from the AIKA survival stack",
+    subtitle:
+      "Calibrate the systems that keep the crash survivor alive while you wait for the full campaign build.",
+    description:
+      "Each drill runs inside the fiction of the AIKA: World crash basin. Finish them to understand how the AI watches, reacts, and rewards your decisions.",
+    insightsTitle: "What these browser drills deliver",
+    insights: [
+      {
+        title: "Lore-anchored mechanics",
+        text: "Every interaction references factions, technology, and tensions from the in-world recovery log so the exercises feed SEO and immersion at once.",
       },
+      {
+        title: "Repeatable skill loops",
+        text: "The mini games remix real modules from the Unreal build into quick puzzles with measurable outcomes, ideal for sharing and improving session length.",
+      },
+      {
+        title: "Playable while you wait",
+        text: "All drills run instantly in the browser on desktop or mobile, giving the community something to master while the main slice downloads.",
+      },
+    ],
+    syncPulse: {
+      title: "SYNC PULSE CALIBRATION",
+      intro:
+        "AIKA’s uplink drifts whenever the crash storms flare. Manual tuning keeps the signal focused on your survival tasks.",
+      objective:
+        "Dial the carrier frequency until the pulse locks into the safe corridor.",
+      sliderLabel: "Manual frequency dial",
+      sliderDescription: "Drag to sweep the transmission band between 0–100 Hz.",
+      buttonLabel: "Send pulse",
+      resetLabel: "Reset signal",
+      attemptsLabel: "Attempts",
+      feedback: {
+        low: "The beam is still diffuse. Increase output and try again.",
+        high: "The carrier destabilised the uplink. Ease the frequency down.",
+        success: "Signal captured. AIKA routes extra telemetry through the relay.",
+      },
+      hintTitle: "Calibration hints",
+      hints: [
+        "Hover around the mid band first, then narrow by smaller shifts.",
+        "A three point swing is usually enough to cross the sweet spot.",
+        "Resetting reboots the storm pattern if you want a fresh challenge.",
+      ],
+      successTitle: "Pulse stabilised",
+      successDescription:
+        "AIKA acknowledges the alignment and unlocks additional orbital scans for your waiting session.",
+    },
+    orbitalDrift: {
+      title: "ORBITAL DRIFT ALIGNMENT",
+      intro:
+        "The crash left your interceptor’s stabilisers in manual override. Keep the craft steady so AIKA will approve the next drop window.",
+      objective:
+        "Match the pitch, yaw, and roll indicators before fuel reserves fall into the red.",
+      axesTitle: "Manual thruster controls",
+      axesDescription:
+        "Slide each axis until the readout matches AIKA’s target corridor. Precise burns mean safer patrols once the full game unlocks.",
+      attemptsLabel: "Calibration cycles",
+      calibrateLabel: "Stabilise drift",
+      resetLabel: "Spin up new drift",
+      statusAdjust: "Adjust the highlighted thrusters to settle the craft.",
+      successTitle: "Orbit locked",
+      successDescription:
+        "With every axis aligned, AIKA clears your dropship for longer patrols around the crash basin.",
+      logTitle: "Telemetry log",
+      hintTitle: "Flight computer tips",
+      hints: [
+        "Small corrections stack quickly—nudge, test, then commit.",
+        "If two axes are stable, focus burns on the outlier before rechecking.",
+        "Refreshing the drift profile provides a tougher pattern once you master the basics.",
+      ],
+      axes: [
+        {
+          id: "pitch",
+          label: "Pitch",
+          lowHint: "Pitch thrusters need more burn to lift the nose.",
+          highHint: "Pitch is overshooting—bleed power until the nose settles.",
+        },
+        {
+          id: "yaw",
+          label: "Yaw",
+          lowHint: "Yaw thrusters are underperforming. Push harder starboard.",
+          highHint: "Yaw drifted too far. Counter-thrust port side.",
+        },
+        {
+          id: "roll",
+          label: "Roll",
+          lowHint: "Roll stabilisers require extra torque to level the wings.",
+          highHint: "Roll is overcompensating—ease the stabilisers.",
+        },
+      ],
+    },
+    dataLink: {
+      title: "SUPPLY RELAY ROUTE",
+      intro:
+        "Ground teams request drones to deliver supplies between the crash shelters. AIKA needs you to validate the energy budget first.",
+      objective:
+        "Select exactly two relay nodes whose combined bandwidth matches the requested corridor.",
+      targetLabel: "Target corridor",
+      selectionLabel: "Current sum",
+      attemptsLabel: "Attempts",
+      nodeAriaLabel: "Toggle relay node {{id}}",
+      confirmLabel: "Lock route",
+      resetLabel: "New route",
+      statuses: {
+        low: "Your chosen nodes undershoot the corridor by {{difference}} units.",
+        high: "Your chosen nodes overshoot the corridor by {{difference}} units.",
+        incomplete: "Select two relay nodes to chart a viable route.",
+        success: "Bandwidth confirmed. Supply drones depart immediately.",
+      },
+      successTitle: "Route confirmed",
+      successDescription:
+        "Your accuracy convinces AIKA to fast-track additional community requests while you await the main release.",
+      historyTitle: "Route attempts",
+      hintTitle: "Logistics insight",
+      hints: [
+        "Start with the highest nodes—AIKA rarely assigns tiny values together.",
+        "If you overshoot, swap out the largest number in your pair first.",
+        "Remember that each reset generates a new corridor drawn from lore locations.",
+      ],
+    },
+    closing:
+      "These drills seed the SEO index with living lore while giving players a reason to linger. Share your best scores when you ping us for the full build.",
     },
     systems: {
       title: "Survival systems overview",
@@ -737,7 +930,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       rights: "© {{year}} SyncNode Interactive. All rights reserved.",
     },
 
-  },
+    },
   hu: {
     meta: {
       description:
@@ -750,6 +943,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     nav: {
       home: "Kezdőlap",
       world: "Világ",
+      "mini-games": "Mini játékok",
       systems: "Rendszerek",
       devlog: "Helyreállítási napló",
       about: "Rólunk",
@@ -1003,9 +1197,133 @@ const dictionaries: Record<Locale, Dictionary> = {
           "Ha a kapcsolat kicsúszik, lépj egy kicsit a korábbi legmagasabb pulzus fölé.",
         ],
         successTitle: "Uplink stabilizálva",
-        successDescription:
-          "A telemetria szinkronba kerül a Zenit-Ráccsal. A következő csomag új koordinátákat hoz.",
+      successDescription:
+        "A telemetria szinkronba kerül a Zenit-Ráccsal. A következő csomag új koordinátákat hoz.",
+    },
+  },
+    miniGames: {
+    badge: "GYAKORLÓ MODULOK",
+    title: "Mini játékok az AIKA túlélőközpontból",
+    subtitle:
+      "Kalibráld azokat a rendszereket, amelyek életben tartják a pilótát, miközben a fő kampányra vársz.",
+    description:
+      "Minden böngészős kihívás az AIKA: World lezuhant bázisának történetébe illeszkedik. Végezd el őket, hogy jobban megértsd, hogyan figyel és reagál a mesterséges felügyelet.",
+    insightsTitle: "Mit adnak ezek a böngészős kihívások",
+    insights: [
+      {
+        title: "Történetbe kötött mechanikák",
+        text: "Minden interakció frakciókra, technológiára és a helyreállítási napló feszültségeire utal, így egyszerre építik az SEO-t és az élményt.",
       },
+      {
+        title: "Ismételhető készségciklusok",
+        text: "A mini játékok az Unreal build moduljait keverik gyors rejtvényekké, mérhető eredményekkel – ideálisak a megosztásokhoz és a hosszabb oldalon töltött időhöz.",
+      },
+      {
+        title: "Várakozás közben is játszható",
+        text: "Az összes kihívás azonnal fut böngészőben, desktopon és mobilon is, így a közösség addig is gyakorolhat, amíg letöltődik a fő szelet.",
+      },
+    ],
+    syncPulse: {
+      title: "SZINKRON PULZUS KALIBRÁCIÓ",
+      intro:
+        "AIKA uplinkje minden viharrobbanásnál elcsúszik. A kézi hangolás biztosítja, hogy a jel a túlélési feladatokra fókuszáljon.",
+      objective:
+        "Állítsd be a vivőfrekvenciát, amíg a pulzus be nem zár a biztonságos folyosóra.",
+      sliderLabel: "Kézi frekvencia szabályzó",
+      sliderDescription: "Húzd a csúszkát 0–100 Hz között, hogy megtaláld a stabil tartományt.",
+      buttonLabel: "Pulzus küldése",
+      resetLabel: "Jel újraindítása",
+      attemptsLabel: "Próbálkozások",
+      feedback: {
+        low: "A nyaláb még szórt. Emeld az intenzitást, majd próbáld újra.",
+        high: "A vivő túlvezérelte a kapcsolatot. Csökkentsd a frekvenciát.",
+        success: "A jel beélesedett. AIKA extra telemetriát küld a relén keresztül.",
+      },
+      hintTitle: "Kalibrációs tippek",
+      hints: [
+        "Először a középső sávban keresgélj, majd egyre kisebb lépésekkel szűkíts.",
+        "Három egységnyi finomítás gyakran elég a találathoz.",
+        "Ha új kihívást szeretnél, indítsd újra a viharmintát.",
+      ],
+      successTitle: "Stabil pulzus",
+      successDescription:
+        "AIKA visszaigazolja az igazítást, és plusz orbitális felderítést engedélyez a várakozás idejére.",
+    },
+    orbitalDrift: {
+      title: "ORBITÁLIS SODRÓDÁS KIEGYENLÍTÉSE",
+      intro:
+        "A lezuhanás után az elfogó stabilizátorai kézi üzemmódba ragadtak. Tartsd nyugodtan a gépet, hogy AIKA jóváhagyja a következő ledobási ablakot.",
+      objective:
+        "Hangold össze a pitch, yaw és roll kijelzőket, mielőtt a készletek veszélyesen lefogynának.",
+      axesTitle: "Kézi hajtóművezérlés",
+      axesDescription:
+        "Csúsztasd minden tengelyt AIKA célfolyosójához. A pontos kiégés biztonságosabb járőrözést jelent, amikor megnyílik a teljes játék.",
+      attemptsLabel: "Kalibrációs ciklusok",
+      calibrateLabel: "Sodródás stabilizálása",
+      resetLabel: "Új sodródás generálása",
+      statusAdjust: "Igazítsd a kiemelt hajtóműveket, hogy lenyugtasd a gépet.",
+      successTitle: "Pálya rögzítve",
+      successDescription:
+        "Ha minden tengely a helyén van, AIKA hosszabb bevetéseket engedélyez a lezuhanási medence körül.",
+      logTitle: "Telemetria napló",
+      hintTitle: "Repülésvezérlő tippek",
+      hints: [
+        "A kis korrekciók gyorsan összeadódnak – finomíts, tesztelj, majd erősíts rá.",
+        "Ha két tengely stabil, előbb az eltérőt hozd helyre, utána ellenőrizz újra.",
+        "Az új sodródási profil nehezebb mintát ad, ha már magabiztos vagy.",
+      ],
+      axes: [
+        {
+          id: "pitch",
+          label: "Pitch",
+          lowHint: "A pitch hajtóműveknek több tolóerő kell, hogy az orr megemelkedjen.",
+          highHint: "A pitch túllőtt – engedd el a teljesítményt, amíg az orr lenyugszik.",
+        },
+        {
+          id: "yaw",
+          label: "Yaw",
+          lowHint: "A yaw hajtóművek lusták. Növeld a jobb oldali tolóerőt.",
+          highHint: "A yaw túlfordult. Adj ellenirányú tolóerőt balról.",
+        },
+        {
+          id: "roll",
+          label: "Roll",
+          lowHint: "A roll stabilizátoroknak extra nyomaték kell a szárnyak kiegyenlítéséhez.",
+          highHint: "A roll túlkompenzál. Finoman csökkentsd a stabilizátorok erejét.",
+        },
+      ],
+    },
+    dataLink: {
+      title: "ELLÁTÓ RELÉ ÚTVONAL",
+      intro:
+        "A felszíni csapatok drónokkal kérnek utánpótlást a menedékek között. AIKA előbb az energiamérleget akarja hitelesíteni.",
+      objective:
+        "Válassz ki pontosan két relécsomópontot, amelyek összege megegyezik a kért sávszélességgel.",
+      targetLabel: "Cél folyosó",
+      selectionLabel: "Jelenlegi összeg",
+      attemptsLabel: "Próbálkozások",
+      nodeAriaLabel: "Relécsomópont ki- és bekapcsolása {{id}}",
+      confirmLabel: "Útvonal zárolása",
+      resetLabel: "Új útvonal",
+      statuses: {
+        low: "A választott csomópontok {{difference}} egységgel alatta maradnak a folyosónak.",
+        high: "A választott csomópontok {{difference}} egységgel túllépik a folyosót.",
+        incomplete: "Válassz két relécsomópontot, hogy megpróbálhass egy útvonalat.",
+        success: "A sávszélesség rendben. Az ellátó drónok azonnal indulnak.",
+      },
+      successTitle: "Útvonal jóváhagyva",
+      successDescription:
+        "A pontosságod miatt AIKA további közösségi kéréseket enged el, amíg a fő buildre vártok.",
+      historyTitle: "Útvonal próbálkozások",
+      hintTitle: "Logisztikai tanács",
+      hints: [
+        "A legnagyobb értékekkel kezdd – AIKA ritkán párosít két apró számot.",
+        "Ha túlléped a célt, először a legnagyobb számot cseréld le.",
+        "Minden újraindítás új lore-helyszínekhez kötött folyosót ad.",
+      ],
+    },
+    closing:
+      "Ezek a modulok élő történetet és SEO-jeleket adnak, miközben okot adnak a maradásra. Oszd meg a rekordokat, amikor felveszed velünk a kapcsolatot a teljes build miatt.",
     },
     systems: {
       title: "Túlélőrendszer áttekintés",
