@@ -96,19 +96,6 @@ type WorldMiniGame = {
   resetLabel: string;
   hintTitle: string;
   hints: string[];
-  soundTitle: string;
-  soundDescription: string;
-  soundToggle: { on: string; off: string };
-  npcsTitle: string;
-  npcsIntro: string;
-  npcInteractionHint: string;
-  npcs: {
-    id: string;
-    name: string;
-    role: string;
-    biography: string;
-    dialogues: string[];
-  }[];
 };
 
 type SpaceBattleControl = {
@@ -569,89 +556,41 @@ const dictionaries: Record<Locale, Dictionary> = {
       footnote:
         "Future seasons expand deeper into the hemisphere once SYNCNODE’s weather engines come back online.",
       miniGame: {
-        title: "CRASH SITE • HOLOGRAPHIC BRIEFING",
+        title: "CRASH SITE ORIENTATION",
         intro:
-          "Stride across the expanded reconnaissance grid that sets the mood for the opening RPG sequence.",
+          "Step onto the 2D recon map used to brief new pilots before the full simulation boots.",
         objective:
-          "Locate the cabin, quantum lake, shuttle dock, beacon tower, and monolith to anchor your landing zone.",
-        controlsTitle: "Movement & interaction",
+          "Explore the cabin, crater lake, and docked shuttle to feel the prologue before the real build loads.",
+        controlsTitle: "Movement",
         controls: [
-          { key: "← → / A D", action: "Strafe across the basin's deck plating" },
-          { key: "↑ ↓ / W S", action: "Advance or retreat between terrain layers" },
-          { key: "Space / Enter", action: "Progress dialogue when a survivor hails you" },
-          { key: "R", action: "Snap back to the crash marker" },
+          { key: "← → / A D", action: "Strafe across the crash basin" },
+          { key: "↑ ↓ / W S", action: "Walk toward or away from the lake" },
+          { key: "R", action: "Snap back to the campfire" },
         ],
         legendTitle: "Points of interest",
         legendItems: [
           {
             id: "cabin",
             name: "Field Cabin",
-            description: "Upgraded command shelter with telescoping solar vanes and holo-terminals.",
+            description: "Makeshift command post welded from the interceptor's hull.",
           },
           {
             id: "lake",
-            name: "Quantum Lake",
-            description: "Iridescent reservoir channeling coolant vapour through the basin vents.",
+            name: "Mirror Lake",
+            description: "Storm-fed water that hides coolant lines beneath the ice.",
           },
           {
             id: "ship",
             name: "Scout Shuttle",
-            description: "Refit interceptor with modular thrusters waiting for clearance.",
-          },
-          {
-            id: "beacon",
-            name: "Signal Beacon",
-            description: "AIKA uplink spire bathing the crash zone in guided telemetry.",
-          },
-          {
-            id: "monolith",
-            name: "Obsidian Monolith",
-            description: "Ancient slab humming with dormant glyphs—anomalous yet stable.",
+            description: "Compact starship staged beside the shore for launch prep.",
           },
         ],
-        resetLabel: "Re-center to the landing site",
+        resetLabel: "Re-center position",
         hintTitle: "Intel",
         hints: [
-          "Walk close to any structure to highlight it inside the dossier.",
-          "NPCs emit a glow—step inside to trigger their dialogue pulses.",
-          "Tap Space or Enter to cycle through the survivor briefings.",
-          "Enable the soundscape to hear ambience, footsteps, and interaction chimes.",
-        ],
-        soundTitle: "Procedural audio",
-        soundDescription:
-          "Synth pads, telemetry hum, and magnetic footsteps are generated live. Toggle them whenever you want extra immersion.",
-        soundToggle: {
-          on: "Soundscape active",
-          off: "Enable soundscape",
-        },
-        npcsTitle: "Survivor roster",
-        npcsIntro: "Glowing silhouettes mark the crew—step inside to open comms.",
-        npcInteractionHint: "Press Space or Enter to continue transmissions.",
-        npcs: [
-          {
-            id: "mentor",
-            name: "Captain Nara Ives",
-            role: "Mission mentor",
-            biography:
-              "Veteran pilot who keeps the crash site briefing grounded in real tactics and calm breathing.",
-            dialogues: [
-              "You made it in one piece—good. This holo-map mirrors the real basin's choke points.",
-              "Mark the monolith and beacon; they anchor navigation when the storm rolls in.",
-              "Once you're synchronised, meet me by the shuttle and we'll start the live deployment.",
-            ],
-          },
-          {
-            id: "mechanic",
-            name: "Synth Tech Aki",
-            role: "Dropship mechanic",
-            biography:
-              "Hybrid engineer coaxing plasma engines and shielded hull plates back from a hard landing.",
-            dialogues: [
-              "Hear that shimmer? The lake coolant is flowing again—means the shuttle can drink.",
-              "I rerouted power to the beacon. Step into its glow if you need a signal boost.",
-              "Bring me any scrap near the cabin. I'll turn it into gear before AIKA wakes.",
-            ],
-          },
+          "Step close to a landmark to light it up in the legend.",
+          "Diagonal movement helps you cross the basin faster.",
+          "Tap R whenever you want to return to the staging point.",
         ],
       },
   },
@@ -1163,89 +1102,41 @@ const dictionaries: Record<Locale, Dictionary> = {
       footnote:
         "A következő szezonok a féltekét bővítik, amint a SYNCNODE időjárás-motorjai újra életre kelnek.",
       miniGame: {
-        title: "ZUHANÁSI ZÓNA • HOLOGRAFIKUS BEJÁRÁS",
+        title: "ZUHANÁSI ZÓNA FELDERÍTÉS",
         intro:
-          "Lépj rá a kibővített felderítő rácsra, ami felvezeti az RPG nyitány atmoszféráját.",
+          "Lépj be abba a 2D-s felderítő térképbe, amivel a pilótákat brífeljük, mielőtt betölt a teljes build.",
         objective:
-          "Kövesd végig a kabint, a kvantumtavat, a dokkolt hajót, a jelzőtornyot és a monolitot, hogy rögzítsd a leszállóövet.",
-        controlsTitle: "Mozgás és interakció",
+          "Sétáld körbe a faházat, a tópartot és a partra csúszott űrhajót, hogy érezd a nyitójelenet hangulatát.",
+        controlsTitle: "Irányítás",
         controls: [
-          { key: "← → / A D", action: "Oldalazás a medence páncélburkolatán" },
-          { key: "↑ ↓ / W S", action: "Közelítés vagy távolodás a terepszintek között" },
-          { key: "Szóköz / Enter", action: "Párbeszéd folytatása, ha túlélő szólít" },
-          { key: "R", action: "Visszaugrás a becsapódási jelzőhöz" },
+          { key: "← → / A D", action: "Oldalazás a lezuhanási medencében" },
+          { key: "↑ ↓ / W S", action: "Fel és le mozgás a tó mentén" },
+          { key: "R", action: "Visszaugrás a tábortűzhöz" },
         ],
         legendTitle: "Érdekes pontok",
         legendItems: [
           {
             id: "cabin",
-            name: "Feldolgozó kabin",
-            description: "Felpimpelt parancsnoki menedék teleszkópos napelemekkel és holo-konzolokkal.",
+            name: "Tábori faház",
+            description: "Az elfogó burkolatából hegesztett rögtönzött irányítóközpont.",
           },
           {
             id: "lake",
-            name: "Kvantumtó",
-            description: "Színjátszó víztükör, amely hűtőgőzt keringtet a medence szellőzőin át.",
+            name: "Tükör-tó",
+            description: "Viharból táplálkozó víztükör, a jég alatt hűtővezetékek futnak.",
           },
           {
             id: "ship",
-            name: "Felderítő sikló",
-            description: "Újrahuzalozott elfogóhajó moduláris hajtóművekkel, indulási engedélyre várva.",
-          },
-          {
-            id: "beacon",
-            name: "Jelzőtorony",
-            description: "AIKA uplink spire, amely irányított telemetriával fürdeti a zuhanási zónát.",
-          },
-          {
-            id: "monolith",
-            name: "Obszidián monolit",
-            description: "Ősi tömb lüktető glifákkal – anomália, de stabil.",
+            name: "Felderítő űrhajó",
+            description: "Kisméretű shuttle, javításra várva a parton induláskészen.",
           },
         ],
-        resetLabel: "Pozíció visszaállítása a leszállópontra",
-        hintTitle: "Hírszerzés",
+        resetLabel: "Pozíció visszaállítása",
+        hintTitle: "Tereptippek",
         hints: [
-          "Menj közel bármelyik struktúrához, hogy kiemelődjön a dossziéban.",
-          "Az aurával ragyogó alak túlélőt jelez – lépj be, és indul a párbeszéd.",
-          "Szóköz vagy Enter megnyomásával léptetheted a túlélők üzeneteit.",
-          "Kapcsold be a hangképet, ha hallani akarod az ambience-t, lépéseket és csilingelést.",
-        ],
-        soundTitle: "Procedurális hangkép",
-        soundDescription:
-          "Élőben generált szintipárna, telemetriazúgás és mágneses léptek – kapcsold, amikor teljes elmerülésre vágysz.",
-        soundToggle: {
-          on: "Hangkép aktív",
-          off: "Hangkép bekapcsolása",
-        },
-        npcsTitle: "Túlélőlista",
-        npcsIntro: "A fénygömbök jelzik a legénységet – lépj be a sávjukba a kommunikációhoz.",
-        npcInteractionHint: "Szóköz / Enter – következő adás.",
-        npcs: [
-          {
-            id: "mentor",
-            name: "Nara Ives kapitány",
-            role: "Küldetésmentor",
-            biography:
-              "Veterán pilóta, aki egyszerre hangolja a felszerelést és a légzést, hogy ne ess pánikba.",
-            dialogues: [
-              "Egyben érkeztél – jó jel. Ez a holo-térkép a valódi meder szűk átjáróit mutatja.",
-              "Jegyezd meg a monolitot és a jelzőtornyot; viharban ezek adják a tájolást.",
-              "Ha szinkronban vagy, találkozunk a siklónál, és indul a valós telepítés.",
-            ],
-          },
-          {
-            id: "mechanic",
-            name: "Aki szintetikus technikus",
-            role: "Sikló-mechanikus",
-            biography:
-              "Hibrid mérnök, aki plazmahajtóműveket és páncéllemezeket éleszt újra egy roncshalomból.",
-            dialogues: [
-              "Hallod a csilingelést? A tó hűtőköre újra kering – a hajó végre tankolhat.",
-              "Átvezettem az áramot a jelzőtoronyba. Ha erősebb jelet akarsz, állj a fényébe.",
-              "Hozz minden törmeléket a kabin mellől; felszerelést kovácsolok belőle, mielőtt AIKA felébred.",
-            ],
-          },
+          "Lépj egészen közel a tereptárgyhoz, hogy felragyogjon a legendában.",
+          "Átlós mozgással gyorsabban átszeled a medencét.",
+          "Ha elvesznél, nyomd meg az R billentyűt a visszahelyezéshez.",
         ],
       },
   },
