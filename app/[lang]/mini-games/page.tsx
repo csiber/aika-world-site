@@ -1,10 +1,7 @@
 import { notFound } from "next/navigation";
 
-import { OrbitalDriftGame } from "@/components/mini-games/orbital-drift-game";
-import { PlatformBattleGame } from "@/components/mini-games/platform-battle-game";
-import { SupplyRouteGame } from "@/components/mini-games/supply-route-game";
+import { SpaceBattleGame } from "@/components/mini-games/space-battle-game";
 import { RevealSection } from "@/components/reveal-section";
-import { SyncPulseGame } from "@/components/world/sync-pulse-game";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { createPageMetadata, getRouteSegment } from "@/lib/seo";
 
@@ -64,19 +61,7 @@ export default async function MiniGamesPage({
       </RevealSection>
 
       <RevealSection>
-        <SyncPulseGame dictionary={content.syncPulse} />
-      </RevealSection>
-
-      <RevealSection>
-        <OrbitalDriftGame dictionary={content.orbitalDrift} />
-      </RevealSection>
-
-      <RevealSection>
-        <SupplyRouteGame dictionary={content.dataLink} />
-      </RevealSection>
-
-      <RevealSection>
-        <PlatformBattleGame dictionary={content.platformBattle} />
+        <SpaceBattleGame dictionary={content.spaceBattle} />
       </RevealSection>
 
       <RevealSection className="rounded-3xl border border-white/10 bg-white/5 p-8 text-sm text-white/70">
