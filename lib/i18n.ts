@@ -62,40 +62,24 @@ type RoadmapItem = {
   text: string;
 };
 
-type WorldRegion = {
+type WorldHighlight = {
   id: string;
   badge: string;
   name: string;
   description: string;
 };
 
-type WorldExploration = {
+type WorldStratum = {
   id: string;
-  caption: string;
-};
-
-type WorldMiniGameControl = {
-  key: string;
-  action: string;
-};
-
-type WorldMiniGameLegendItem = {
-  id: string;
+  badge: string;
   name: string;
   description: string;
 };
 
-type WorldMiniGame = {
-  title: string;
-  intro: string;
-  objective: string;
-  controlsTitle: string;
-  controls: WorldMiniGameControl[];
-  legendTitle: string;
-  legendItems: WorldMiniGameLegendItem[];
-  resetLabel: string;
-  hintTitle: string;
-  hints: string[];
+type WorldTimelineEvent = {
+  id: string;
+  cycle: string;
+  detail: string;
 };
 
 type SpaceBattleControl = {
@@ -245,14 +229,20 @@ export type Dictionary = {
     title: string;
     subtitle: string;
     disclaimer: string;
-    regionsTitle: string;
-    regionsIntro: string;
-    regions: WorldRegion[];
-    explorationsTitle: string;
-    explorationsIntro: string;
-    explorations: WorldExploration[];
+    planet: {
+      label: string;
+      description: string;
+    };
+    highlightsTitle: string;
+    highlightsIntro: string;
+    highlights: WorldHighlight[];
+    strataTitle: string;
+    strataIntro: string;
+    strata: WorldStratum[];
+    timelineTitle: string;
+    timelineIntro: string;
+    timeline: WorldTimelineEvent[];
     footnote: string;
-    miniGame: WorldMiniGame;
   };
     miniGames: {
       badge: string;
@@ -495,105 +485,94 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
     },
     world: {
-      title: "SYNCNODE Terraform Ruin",
+      title: "AIKA: Living World Briefing",
       subtitle:
-        "AIKA: World opens with your interceptor shattered on an engineered planet. The AI that once guided terraforming still orbits above, judging every move.",
+        "Spin up the reconstruction sphere that tracks how the fallen planet still breathes under AIKA's watch.",
       disclaimer:
-        "Early blockout captures from the survival build. Final art, lighting, and fauna will evolve with production.",
-      regionsTitle: "Regions",
-      regionsIntro:
-        "Traverse biomes carved by the crash. Each one hides resources, threats, and fragments of your erased identity.",
-      regions: [
+        "This visualization combines concept terrain data with AIKA's orbital telemetry — expect revisions as the build locks each biome.",
+      planet: {
+        label: "Orbital relay feed",
+        description:
+          "The rotating globe fuses magnetic elevation scans with ocean salinity heatmaps. Drift markers pinpoint sectors that AIKA can still stabilize in real time.",
+      },
+      highlightsTitle: "Why the planet matters",
+      highlightsIntro:
+        "Every survival call ties back to AIKA's planetary systems. These are the core loops that keep the world habitable for pilots on the ground.",
+      highlights: [
         {
-          id: "crash_basin",
-          badge: "BASIN",
-          name: "Crash Basin",
+          id: "stability",
+          badge: "SUSTAIN",
+          name: "Stability Network",
           description:
-            "The crater where you wake. Toxic steam vents, magnetic storms, and the heart of your broken interceptor.",
+            "AIKA's satellite mesh reroutes energy bursts to shield colonies from the collapsing storm belts.",
         },
         {
-          id: "shatter_coast",
-          badge: "COAST",
-          name: "Shatter Coast",
+          id: "biosphere",
+          badge: "BIOS",
+          name: "Adaptive Biosphere",
           description:
-            "Tidal wreckyards lit by alien auroras. Scavenge hull plates by day and defend against Hush Swarm raids by night.",
+            "Terraform vaults seed climate-reactive flora so oxygen cycles continue even when the crust fractures.",
         },
         {
-          id: "memory_vault",
-          badge: "SUBSURFACE",
-          name: "Memory Vault",
+          id: "signal",
+          badge: "SIGNAL",
+          name: "Signal Arcs",
           description:
-            "SYNCNODE bunkers full of locked archives. Rewire power to recover personal logs and survival schematics.",
-        },
-        {
-          id: "zenith_array",
-          badge: "ORBITAL",
-          name: "Zenith Array",
-          description:
-            "Sky-piercing towers that keep AIKA tethered. Gain her trust—or sabotage the uplink—to control the weather grid.",
+            "Deep relay arcs stitch together subterranean antennas so crews never lose sync with AIKA's guidance.",
         },
       ],
-      explorationsTitle: "Fragments of the fallen world",
-      explorationsIntro:
-        "Survival snapshots lifted from the prototype build. They hint at where to hunt, hide, and negotiate.",
-      explorations: [
+      strataTitle: "Planetary strata",
+      strataIntro:
+        "The simulation layers geological and atmospheric data. Each stratum determines which missions AIKA can stage.",
+      strata: [
         {
-          id: "shot_a",
-          caption:
-            "Refuge lights pulsing through a sandstorm as the pilot reinforces the crash shelter.",
+          id: "core",
+          badge: "CORE",
+          name: "Core Resonance",
+          description:
+            "Mass drivers in the planet's mantle keep gravity stabilizers oscillating, preventing another continental break.",
         },
         {
-          id: "shot_b",
-          caption:
-            "Vaultbound Nomads trading bio-reactive spores beside a dormant reactor gate.",
+          id: "hemisphere",
+          badge: "HEMISPHERE",
+          name: "Fractured Hemisphere",
+          description:
+            "The crash scar divides climates into hot vapor seas and frozen shale peaks — you route supply drops along that fault.",
         },
         {
-          id: "shot_c",
-          caption:
-            "AIKA Sentinel spotlight sweeping the Zenith Array while the pilot decides whether to answer the call.",
+          id: "halo",
+          badge: "HALO",
+          name: "Orbital Halo",
+          description:
+            "Derelict stations drift above the clouds, feeding AIKA's observation arrays and the defensive prism grid.",
+        },
+      ],
+      timelineTitle: "Orbital timeline",
+      timelineIntro:
+        "Major pulses recorded by AIKA since the interceptor went down.",
+      timeline: [
+        {
+          id: "cycle_01",
+          cycle: "Cycle 217.04",
+          detail:
+            "Interceptor impact lights the Shatter Coast and forces AIKA to reroute ninety percent of the storm lattice.",
+        },
+        {
+          id: "cycle_02",
+          cycle: "Cycle 221.11",
+          detail:
+            "Emergency terraform pods ignite over the Memory Vault, regrowing breathable moss across the basin.",
+        },
+        {
+          id: "cycle_03",
+          cycle: "Cycle 224.32",
+          detail:
+            "Pilots re-establish the Zenith Array uplink, unlocking mid-atmosphere glider corridors around the equator.",
         },
       ],
       footnote:
-        "Future seasons expand deeper into the hemisphere once SYNCNODE’s weather engines come back online.",
-      miniGame: {
-        title: "CRASH SITE ORIENTATION",
-        intro:
-          "Step onto the 2D recon map used to brief new pilots before the full simulation boots.",
-        objective:
-          "Explore the cabin, crater lake, and docked shuttle to feel the prologue before the real build loads.",
-        controlsTitle: "Movement",
-        controls: [
-          { key: "← → / A D", action: "Strafe across the crash basin" },
-          { key: "↑ ↓ / W S", action: "Walk toward or away from the lake" },
-          { key: "R", action: "Snap back to the campfire" },
-        ],
-        legendTitle: "Points of interest",
-        legendItems: [
-          {
-            id: "cabin",
-            name: "Field Cabin",
-            description: "Makeshift command post welded from the interceptor's hull.",
-          },
-          {
-            id: "lake",
-            name: "Mirror Lake",
-            description: "Storm-fed water that hides coolant lines beneath the ice.",
-          },
-          {
-            id: "ship",
-            name: "Scout Shuttle",
-            description: "Compact starship staged beside the shore for launch prep.",
-          },
-        ],
-        resetLabel: "Re-center position",
-        hintTitle: "Intel",
-        hints: [
-          "Step close to a landmark to light it up in the legend.",
-          "Diagonal movement helps you cross the basin faster.",
-          "Tap R whenever you want to return to the staging point.",
-        ],
-      },
-  },
+        "AIKA updates this briefing with every telemetry drop. Expect new strata, factions, and expedition hooks as the campaign expands.",
+    },
     miniGames: {
       badge: "FIELD TRAINING",
       title: "Stellar Run: the AIKA basin combat trial",
@@ -1041,105 +1020,94 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
     },
     world: {
-      title: "SYNCNODE terraform-rom",
+      title: "AIKA: Élő Világ Tájékoztató",
       subtitle:
-        "Az AIKA: World úgy indul, hogy a pilóta egy mesterséges bolygón zuhant le. A terraformálást irányító MI továbbra is feletted kering, és minden döntésedet figyeli.",
+        "Pörgesd fel a rekonstrukciós gömböt, amely megmutatja, hogyan lélegzik még mindig a lezuhant bolygó AIKA felügyelete alatt.",
       disclaimer:
-        "Korai blokk-out felvételek a túlélő buildből. A végleges grafika, fények és fauna a produkció során változhat.",
-      regionsTitle: "Területek",
-      regionsIntro:
-        "Olyan biomban jársz, amelyet a zuhanás formált újra. Mindegyik zóna erőforrásokat, fenyegetéseket és az elveszett identitás töredékeit rejti.",
-      regions: [
+        "Ez a vizualizáció koncepciós terepadatokat és AIKA orbitális telemetriáját keveri — folyamatosan frissül, ahogy véglegesítjük a biomokat.",
+      planet: {
+        label: "Orbitális átviteli adatfolyam",
+        description:
+          "A forgó gömb a mágneses szintméréseket és az óceáni sótartalom hőtérképeit egyesíti. A sodródó jelzők azokat a szektorokat emelik ki, amelyeket AIKA valós időben képes stabilizálni.",
+      },
+      highlightsTitle: "Miért kulcsfontosságú ez a bolygó",
+      highlightsIntro:
+        "Minden túlélési döntés AIKA bolygószintű rendszereihez kötődik. Ezek a hurokmechanikák tartják élhetően a felszínt a pilótáknak.",
+      highlights: [
         {
-          id: "crash_basin",
-          badge: "MEDER",
-          name: "Zuhanási Medence",
+          id: "stability",
+          badge: "FENNTART",
+          name: "Stabilitási hálózat",
           description:
-            "A kráter, ahol felébredsz. Mérgező gőzök, mágneses viharok és az elfogó szíve vár rád.",
+            "AIKA műholdrácsa energiakitöréseket terel át, hogy megvédje a telepeket az összeomló viharövektől.",
         },
         {
-          id: "shatter_coast",
-          badge: "PART",
-          name: "Repedt-part",
+          id: "biosphere",
+          badge: "BIOS",
+          name: "Adaptív bioszféra",
           description:
-            "Tengerparti roncsmezők idegen aurorákkal. Nappal burkolatot gyűjtesz, éjjel a Suttogó Raj ellen védekezel.",
+            "A terraformáló boltozatok klímareaktív növényeket vetnek, így a légkör oxigénciklusa akkor is fennmarad, ha a kéreg megreped.",
         },
         {
-          id: "memory_vault",
-          badge: "FELSZÍN ALATT",
-          name: "Memória-boltozat",
+          id: "signal",
+          badge: "JEL",
+          name: "Jelívek",
           description:
-            "SYNCNODE bunkerhálózat zárolt archívumokkal. Áramot kell adnod, hogy személyes logokat és túlélési tervrajzokat szerezz vissza.",
-        },
-        {
-          id: "zenith_array",
-          badge: "ORBITÁLIS",
-          name: "Zenit-Rács",
-          description:
-            "Égbe törő tornyok, amelyek AIKA-t láncolják ide. Bizalmat ébresztesz benne, vagy szabotálod az uplinket, hogy urald az időjárást.",
+            "Mélyre fúrt átjátszó-ívek kötik össze a föld alatti antennákat, hogy a legénység soha ne veszítse el AIKA útmutatását.",
         },
       ],
-      explorationsTitle: "Az elbukott világ fragmentumai",
-      explorationsIntro:
-        "Túlélési pillanatképek a prototípus buildből. Megmutatják, hol érdemes vadászni, hol rejtőzni és kikkel alkudozni.",
-      explorations: [
+      strataTitle: "Bolygórétegek",
+      strataIntro:
+        "A szimuláció geológiai és légköri adatokat rétegez. Minden réteg meghatározza, milyen küldetéseket tud AIKA indítani.",
+      strata: [
         {
-          id: "shot_a",
-          caption:
-            "Menedékfény villog a homokviharban, miközben a pilóta megerősíti a zuhanási bunkert.",
+          id: "core",
+          badge: "MAG",
+          name: "Magrezonancia",
+          description:
+            "A bolygó köpenyébe épített tömegvetők tartják rezgésben a gravitációs stabilizátorokat, megelőzve egy újabb kontinensszakadást.",
         },
         {
-          id: "shot_b",
-          caption:
-            "Boltozati Nomádok bioreaktív spórákat cserélnek egy alvó reaktor kapujánál.",
+          id: "hemisphere",
+          badge: "FÉLTEKE",
+          name: "Repedt félteke",
+          description:
+            "A becsapódási seb forró gőztengerekre és fagyott palahegyekre szabdalja az éghajlatot — az utánpótlás a törésvonal mentén halad.",
         },
         {
-          id: "shot_c",
-          caption:
-            "AIKA Őrszem fénye pásztázza a Zenit-Rácsot, miközben eldöntöd, válaszolsz-e a hívására.",
+          id: "halo",
+          badge: "HALÓ",
+          name: "Orbitális haló",
+          description:
+            "Elhagyott állomások lebegnek a felhők felett, táplálva AIKA megfigyelő tömbjeit és a védelmi prizmahálót.",
+        },
+      ],
+      timelineTitle: "Orbitális idővonal",
+      timelineIntro:
+        "A legfontosabb impulzusok, amelyeket AIKA rögzített az interceptor lezuhanása óta.",
+      timeline: [
+        {
+          id: "cycle_01",
+          cycle: "217.04. ciklus",
+          detail:
+            "Az interceptor becsapódása fénybe borítja a Zúzott Partot, AIKA pedig a vihar-rács kilencven százalékát átprogramozza.",
+        },
+        {
+          id: "cycle_02",
+          cycle: "221.11. ciklus",
+          detail:
+            "Vész-terraformáló kapszulák gyulladnak fel az Emlékezeti Kripta felett, újraindítva a lélegző mohát a medencében.",
+        },
+        {
+          id: "cycle_03",
+          cycle: "224.32. ciklus",
+          detail:
+            "A pilóták visszakapcsolják a Zenith Array uplinket, így középmagas siklófolyosók nyílnak az egyenlítő körül.",
         },
       ],
       footnote:
-        "A következő szezonok a féltekét bővítik, amint a SYNCNODE időjárás-motorjai újra életre kelnek.",
-      miniGame: {
-        title: "ZUHANÁSI ZÓNA FELDERÍTÉS",
-        intro:
-          "Lépj be abba a 2D-s felderítő térképbe, amivel a pilótákat brífeljük, mielőtt betölt a teljes build.",
-        objective:
-          "Sétáld körbe a faházat, a tópartot és a partra csúszott űrhajót, hogy érezd a nyitójelenet hangulatát.",
-        controlsTitle: "Irányítás",
-        controls: [
-          { key: "← → / A D", action: "Oldalazás a lezuhanási medencében" },
-          { key: "↑ ↓ / W S", action: "Fel és le mozgás a tó mentén" },
-          { key: "R", action: "Visszaugrás a tábortűzhöz" },
-        ],
-        legendTitle: "Érdekes pontok",
-        legendItems: [
-          {
-            id: "cabin",
-            name: "Tábori faház",
-            description: "Az elfogó burkolatából hegesztett rögtönzött irányítóközpont.",
-          },
-          {
-            id: "lake",
-            name: "Tükör-tó",
-            description: "Viharból táplálkozó víztükör, a jég alatt hűtővezetékek futnak.",
-          },
-          {
-            id: "ship",
-            name: "Felderítő űrhajó",
-            description: "Kisméretű shuttle, javításra várva a parton induláskészen.",
-          },
-        ],
-        resetLabel: "Pozíció visszaállítása",
-        hintTitle: "Tereptippek",
-        hints: [
-          "Lépj egészen közel a tereptárgyhoz, hogy felragyogjon a legendában.",
-          "Átlós mozgással gyorsabban átszeled a medencét.",
-          "Ha elvesznél, nyomd meg az R billentyűt a visszahelyezéshez.",
-        ],
-      },
-  },
+        "AIKA minden telemetriai csomaggal frissíti ezt az összefoglalót. Új rétegek, frakciók és expedíciós szálak érkeznek, ahogy a kampány bővül.",
+    },
     miniGames: {
       badge: "SZIMULÁCIÓS TEREP",
       title: "Stellar Run: AIKA medence platformcsata",
