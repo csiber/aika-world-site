@@ -74,24 +74,41 @@ type WorldExploration = {
   caption: string;
 };
 
+type WorldMiniGameControl = {
+  key: string;
+  action: string;
+};
+
+type WorldMiniGameLegendItem = {
+  id: string;
+  name: string;
+  description: string;
+};
+
 type WorldMiniGame = {
   title: string;
   intro: string;
   objective: string;
-  sliderLabel: string;
-  sliderDescription: string;
-  buttonLabel: string;
+  controlsTitle: string;
+  controls: WorldMiniGameControl[];
+  legendTitle: string;
+  legendItems: WorldMiniGameLegendItem[];
   resetLabel: string;
-  attemptsLabel: string;
-  feedback: {
-    low: string;
-    high: string;
-    success: string;
-  };
   hintTitle: string;
   hints: string[];
-  successTitle: string;
-  successDescription: string;
+  soundTitle: string;
+  soundDescription: string;
+  soundToggle: { on: string; off: string };
+  npcsTitle: string;
+  npcsIntro: string;
+  npcInteractionHint: string;
+  npcs: {
+    id: string;
+    name: string;
+    role: string;
+    biography: string;
+    dialogues: string[];
+  }[];
 };
 
 type SpaceBattleControl = {
@@ -552,31 +569,91 @@ const dictionaries: Record<Locale, Dictionary> = {
       footnote:
         "Future seasons expand deeper into the hemisphere once SYNCNODE’s weather engines come back online.",
       miniGame: {
-        title: "SYNC PULSE CALIBRATION",
+        title: "CRASH SITE • HOLOGRAPHIC BRIEFING",
         intro:
-          "AIKA’s uplink drifts every time the crash storms flare. Manual tuning keeps the signal focused on your survival tasks.",
+          "Stride across the expanded reconnaissance grid that sets the mood for the opening RPG sequence.",
         objective:
-          "Dial the carrier frequency until the pulse locks into the safe corridor.",
-        sliderLabel: "Manual frequency dial",
-        sliderDescription: "Drag to sweep the transmission band between 0–100 Hz.",
-        buttonLabel: "Send pulse",
-        resetLabel: "Reset signal",
-        attemptsLabel: "Attempts",
-        feedback: {
-          low: "Signal under the sync window. Increase the frequency and fire again.",
-          high: "Signal over the sync window. Ease the dial down before pulsing.",
-          success: "Carrier lock achieved. AIKA hears you across the wreckage.",
-        },
-        hintTitle: "Field notes",
-        hints: [
-          "Chart every pulse. The readout trail shows whether you’re climbing or falling.",
-          "Storm harmonics rarely stabilise at the extremes—hover in the mid bands.",
-          "If the uplink keeps slipping, push slightly beyond your last highest pulse.",
+          "Locate the cabin, quantum lake, shuttle dock, beacon tower, and monolith to anchor your landing zone.",
+        controlsTitle: "Movement & interaction",
+        controls: [
+          { key: "← → / A D", action: "Strafe across the basin's deck plating" },
+          { key: "↑ ↓ / W S", action: "Advance or retreat between terrain layers" },
+          { key: "Space / Enter", action: "Progress dialogue when a survivor hails you" },
+          { key: "R", action: "Snap back to the crash marker" },
         ],
-        successTitle: "Uplink stabilised",
-      successDescription:
-        "Telemetry syncs with the Zenith Array. Expect new coordinates in the next field packet.",
-    },
+        legendTitle: "Points of interest",
+        legendItems: [
+          {
+            id: "cabin",
+            name: "Field Cabin",
+            description: "Upgraded command shelter with telescoping solar vanes and holo-terminals.",
+          },
+          {
+            id: "lake",
+            name: "Quantum Lake",
+            description: "Iridescent reservoir channeling coolant vapour through the basin vents.",
+          },
+          {
+            id: "ship",
+            name: "Scout Shuttle",
+            description: "Refit interceptor with modular thrusters waiting for clearance.",
+          },
+          {
+            id: "beacon",
+            name: "Signal Beacon",
+            description: "AIKA uplink spire bathing the crash zone in guided telemetry.",
+          },
+          {
+            id: "monolith",
+            name: "Obsidian Monolith",
+            description: "Ancient slab humming with dormant glyphs—anomalous yet stable.",
+          },
+        ],
+        resetLabel: "Re-center to the landing site",
+        hintTitle: "Intel",
+        hints: [
+          "Walk close to any structure to highlight it inside the dossier.",
+          "NPCs emit a glow—step inside to trigger their dialogue pulses.",
+          "Tap Space or Enter to cycle through the survivor briefings.",
+          "Enable the soundscape to hear ambience, footsteps, and interaction chimes.",
+        ],
+        soundTitle: "Procedural audio",
+        soundDescription:
+          "Synth pads, telemetry hum, and magnetic footsteps are generated live. Toggle them whenever you want extra immersion.",
+        soundToggle: {
+          on: "Soundscape active",
+          off: "Enable soundscape",
+        },
+        npcsTitle: "Survivor roster",
+        npcsIntro: "Glowing silhouettes mark the crew—step inside to open comms.",
+        npcInteractionHint: "Press Space or Enter to continue transmissions.",
+        npcs: [
+          {
+            id: "mentor",
+            name: "Captain Nara Ives",
+            role: "Mission mentor",
+            biography:
+              "Veteran pilot who keeps the crash site briefing grounded in real tactics and calm breathing.",
+            dialogues: [
+              "You made it in one piece—good. This holo-map mirrors the real basin's choke points.",
+              "Mark the monolith and beacon; they anchor navigation when the storm rolls in.",
+              "Once you're synchronised, meet me by the shuttle and we'll start the live deployment.",
+            ],
+          },
+          {
+            id: "mechanic",
+            name: "Synth Tech Aki",
+            role: "Dropship mechanic",
+            biography:
+              "Hybrid engineer coaxing plasma engines and shielded hull plates back from a hard landing.",
+            dialogues: [
+              "Hear that shimmer? The lake coolant is flowing again—means the shuttle can drink.",
+              "I rerouted power to the beacon. Step into its glow if you need a signal boost.",
+              "Bring me any scrap near the cabin. I'll turn it into gear before AIKA wakes.",
+            ],
+          },
+        ],
+      },
   },
     miniGames: {
       badge: "FIELD TRAINING",
@@ -1086,30 +1163,91 @@ const dictionaries: Record<Locale, Dictionary> = {
       footnote:
         "A következő szezonok a féltekét bővítik, amint a SYNCNODE időjárás-motorjai újra életre kelnek.",
       miniGame: {
-        title: "SZINKRONIMPULZUS HANGOLÁS",
+        title: "ZUHANÁSI ZÓNA • HOLOGRAFIKUS BEJÁRÁS",
         intro:
-          "AIKA uplinkje minden vihar után elcsúszik. A kézi hangolás tartja fókuszban a túléléshez szükséges jelet.",
-        objective: "Állítsd be a vivő frekvenciáját, amíg az impulzus a biztonságos sávba nem zár.",
-        sliderLabel: "Kézi frekvencia-szabályzó",
-        sliderDescription: "Húzd végig a 0–100 Hz közötti sávon.",
-        buttonLabel: "Impulzus küldése",
-        resetLabel: "Jel újraindítása",
-        attemptsLabel: "Próbálkozások",
-        feedback: {
-          low: "A jel a szinkron sáv alatt van. Emeld a frekvenciát és lőj újra.",
-          high: "A jel a szinkron sáv felett jár. Vedd vissza a szabályzót.",
-          success: "Vivőzár elérve. AIKA meghallja a hívást a roncsmezőn át.",
-        },
-        hintTitle: "Terepjegyzet",
-        hints: [
-          "Jegyezd fel minden impulzust: a napló megmutatja, emelkedsz-e vagy süllyedsz.",
-          "A viharharmóniák ritkán stabilak a széleken – maradj a középső sávokban.",
-          "Ha a kapcsolat kicsúszik, lépj egy kicsit a korábbi legmagasabb pulzus fölé.",
+          "Lépj rá a kibővített felderítő rácsra, ami felvezeti az RPG nyitány atmoszféráját.",
+        objective:
+          "Kövesd végig a kabint, a kvantumtavat, a dokkolt hajót, a jelzőtornyot és a monolitot, hogy rögzítsd a leszállóövet.",
+        controlsTitle: "Mozgás és interakció",
+        controls: [
+          { key: "← → / A D", action: "Oldalazás a medence páncélburkolatán" },
+          { key: "↑ ↓ / W S", action: "Közelítés vagy távolodás a terepszintek között" },
+          { key: "Szóköz / Enter", action: "Párbeszéd folytatása, ha túlélő szólít" },
+          { key: "R", action: "Visszaugrás a becsapódási jelzőhöz" },
         ],
-        successTitle: "Uplink stabilizálva",
-      successDescription:
-        "A telemetria szinkronba kerül a Zenit-Ráccsal. A következő csomag új koordinátákat hoz.",
-    },
+        legendTitle: "Érdekes pontok",
+        legendItems: [
+          {
+            id: "cabin",
+            name: "Feldolgozó kabin",
+            description: "Felpimpelt parancsnoki menedék teleszkópos napelemekkel és holo-konzolokkal.",
+          },
+          {
+            id: "lake",
+            name: "Kvantumtó",
+            description: "Színjátszó víztükör, amely hűtőgőzt keringtet a medence szellőzőin át.",
+          },
+          {
+            id: "ship",
+            name: "Felderítő sikló",
+            description: "Újrahuzalozott elfogóhajó moduláris hajtóművekkel, indulási engedélyre várva.",
+          },
+          {
+            id: "beacon",
+            name: "Jelzőtorony",
+            description: "AIKA uplink spire, amely irányított telemetriával fürdeti a zuhanási zónát.",
+          },
+          {
+            id: "monolith",
+            name: "Obszidián monolit",
+            description: "Ősi tömb lüktető glifákkal – anomália, de stabil.",
+          },
+        ],
+        resetLabel: "Pozíció visszaállítása a leszállópontra",
+        hintTitle: "Hírszerzés",
+        hints: [
+          "Menj közel bármelyik struktúrához, hogy kiemelődjön a dossziéban.",
+          "Az aurával ragyogó alak túlélőt jelez – lépj be, és indul a párbeszéd.",
+          "Szóköz vagy Enter megnyomásával léptetheted a túlélők üzeneteit.",
+          "Kapcsold be a hangképet, ha hallani akarod az ambience-t, lépéseket és csilingelést.",
+        ],
+        soundTitle: "Procedurális hangkép",
+        soundDescription:
+          "Élőben generált szintipárna, telemetriazúgás és mágneses léptek – kapcsold, amikor teljes elmerülésre vágysz.",
+        soundToggle: {
+          on: "Hangkép aktív",
+          off: "Hangkép bekapcsolása",
+        },
+        npcsTitle: "Túlélőlista",
+        npcsIntro: "A fénygömbök jelzik a legénységet – lépj be a sávjukba a kommunikációhoz.",
+        npcInteractionHint: "Szóköz / Enter – következő adás.",
+        npcs: [
+          {
+            id: "mentor",
+            name: "Nara Ives kapitány",
+            role: "Küldetésmentor",
+            biography:
+              "Veterán pilóta, aki egyszerre hangolja a felszerelést és a légzést, hogy ne ess pánikba.",
+            dialogues: [
+              "Egyben érkeztél – jó jel. Ez a holo-térkép a valódi meder szűk átjáróit mutatja.",
+              "Jegyezd meg a monolitot és a jelzőtornyot; viharban ezek adják a tájolást.",
+              "Ha szinkronban vagy, találkozunk a siklónál, és indul a valós telepítés.",
+            ],
+          },
+          {
+            id: "mechanic",
+            name: "Aki szintetikus technikus",
+            role: "Sikló-mechanikus",
+            biography:
+              "Hibrid mérnök, aki plazmahajtóműveket és páncéllemezeket éleszt újra egy roncshalomból.",
+            dialogues: [
+              "Hallod a csilingelést? A tó hűtőköre újra kering – a hajó végre tankolhat.",
+              "Átvezettem az áramot a jelzőtoronyba. Ha erősebb jelet akarsz, állj a fényébe.",
+              "Hozz minden törmeléket a kabin mellől; felszerelést kovácsolok belőle, mielőtt AIKA felébred.",
+            ],
+          },
+        ],
+      },
   },
     miniGames: {
       badge: "SZIMULÁCIÓS TEREP",
