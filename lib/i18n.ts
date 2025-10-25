@@ -74,24 +74,28 @@ type WorldExploration = {
   caption: string;
 };
 
+type WorldMiniGameControl = {
+  key: string;
+  action: string;
+};
+
+type WorldMiniGameLegendItem = {
+  id: string;
+  name: string;
+  description: string;
+};
+
 type WorldMiniGame = {
   title: string;
   intro: string;
   objective: string;
-  sliderLabel: string;
-  sliderDescription: string;
-  buttonLabel: string;
+  controlsTitle: string;
+  controls: WorldMiniGameControl[];
+  legendTitle: string;
+  legendItems: WorldMiniGameLegendItem[];
   resetLabel: string;
-  attemptsLabel: string;
-  feedback: {
-    low: string;
-    high: string;
-    success: string;
-  };
   hintTitle: string;
   hints: string[];
-  successTitle: string;
-  successDescription: string;
 };
 
 type SpaceBattleControl = {
@@ -552,31 +556,43 @@ const dictionaries: Record<Locale, Dictionary> = {
       footnote:
         "Future seasons expand deeper into the hemisphere once SYNCNODE’s weather engines come back online.",
       miniGame: {
-        title: "SYNC PULSE CALIBRATION",
+        title: "CRASH SITE ORIENTATION",
         intro:
-          "AIKA’s uplink drifts every time the crash storms flare. Manual tuning keeps the signal focused on your survival tasks.",
+          "Step onto the 2D recon map used to brief new pilots before the full simulation boots.",
         objective:
-          "Dial the carrier frequency until the pulse locks into the safe corridor.",
-        sliderLabel: "Manual frequency dial",
-        sliderDescription: "Drag to sweep the transmission band between 0–100 Hz.",
-        buttonLabel: "Send pulse",
-        resetLabel: "Reset signal",
-        attemptsLabel: "Attempts",
-        feedback: {
-          low: "Signal under the sync window. Increase the frequency and fire again.",
-          high: "Signal over the sync window. Ease the dial down before pulsing.",
-          success: "Carrier lock achieved. AIKA hears you across the wreckage.",
-        },
-        hintTitle: "Field notes",
-        hints: [
-          "Chart every pulse. The readout trail shows whether you’re climbing or falling.",
-          "Storm harmonics rarely stabilise at the extremes—hover in the mid bands.",
-          "If the uplink keeps slipping, push slightly beyond your last highest pulse.",
+          "Explore the cabin, crater lake, and docked shuttle to feel the prologue before the real build loads.",
+        controlsTitle: "Movement",
+        controls: [
+          { key: "← → / A D", action: "Strafe across the crash basin" },
+          { key: "↑ ↓ / W S", action: "Walk toward or away from the lake" },
+          { key: "R", action: "Snap back to the campfire" },
         ],
-        successTitle: "Uplink stabilised",
-      successDescription:
-        "Telemetry syncs with the Zenith Array. Expect new coordinates in the next field packet.",
-    },
+        legendTitle: "Points of interest",
+        legendItems: [
+          {
+            id: "cabin",
+            name: "Field Cabin",
+            description: "Makeshift command post welded from the interceptor's hull.",
+          },
+          {
+            id: "lake",
+            name: "Mirror Lake",
+            description: "Storm-fed water that hides coolant lines beneath the ice.",
+          },
+          {
+            id: "ship",
+            name: "Scout Shuttle",
+            description: "Compact starship staged beside the shore for launch prep.",
+          },
+        ],
+        resetLabel: "Re-center position",
+        hintTitle: "Intel",
+        hints: [
+          "Step close to a landmark to light it up in the legend.",
+          "Diagonal movement helps you cross the basin faster.",
+          "Tap R whenever you want to return to the staging point.",
+        ],
+      },
   },
     miniGames: {
       badge: "FIELD TRAINING",
@@ -1086,30 +1102,43 @@ const dictionaries: Record<Locale, Dictionary> = {
       footnote:
         "A következő szezonok a féltekét bővítik, amint a SYNCNODE időjárás-motorjai újra életre kelnek.",
       miniGame: {
-        title: "SZINKRONIMPULZUS HANGOLÁS",
+        title: "ZUHANÁSI ZÓNA FELDERÍTÉS",
         intro:
-          "AIKA uplinkje minden vihar után elcsúszik. A kézi hangolás tartja fókuszban a túléléshez szükséges jelet.",
-        objective: "Állítsd be a vivő frekvenciáját, amíg az impulzus a biztonságos sávba nem zár.",
-        sliderLabel: "Kézi frekvencia-szabályzó",
-        sliderDescription: "Húzd végig a 0–100 Hz közötti sávon.",
-        buttonLabel: "Impulzus küldése",
-        resetLabel: "Jel újraindítása",
-        attemptsLabel: "Próbálkozások",
-        feedback: {
-          low: "A jel a szinkron sáv alatt van. Emeld a frekvenciát és lőj újra.",
-          high: "A jel a szinkron sáv felett jár. Vedd vissza a szabályzót.",
-          success: "Vivőzár elérve. AIKA meghallja a hívást a roncsmezőn át.",
-        },
-        hintTitle: "Terepjegyzet",
-        hints: [
-          "Jegyezd fel minden impulzust: a napló megmutatja, emelkedsz-e vagy süllyedsz.",
-          "A viharharmóniák ritkán stabilak a széleken – maradj a középső sávokban.",
-          "Ha a kapcsolat kicsúszik, lépj egy kicsit a korábbi legmagasabb pulzus fölé.",
+          "Lépj be abba a 2D-s felderítő térképbe, amivel a pilótákat brífeljük, mielőtt betölt a teljes build.",
+        objective:
+          "Sétáld körbe a faházat, a tópartot és a partra csúszott űrhajót, hogy érezd a nyitójelenet hangulatát.",
+        controlsTitle: "Irányítás",
+        controls: [
+          { key: "← → / A D", action: "Oldalazás a lezuhanási medencében" },
+          { key: "↑ ↓ / W S", action: "Fel és le mozgás a tó mentén" },
+          { key: "R", action: "Visszaugrás a tábortűzhöz" },
         ],
-        successTitle: "Uplink stabilizálva",
-      successDescription:
-        "A telemetria szinkronba kerül a Zenit-Ráccsal. A következő csomag új koordinátákat hoz.",
-    },
+        legendTitle: "Érdekes pontok",
+        legendItems: [
+          {
+            id: "cabin",
+            name: "Tábori faház",
+            description: "Az elfogó burkolatából hegesztett rögtönzött irányítóközpont.",
+          },
+          {
+            id: "lake",
+            name: "Tükör-tó",
+            description: "Viharból táplálkozó víztükör, a jég alatt hűtővezetékek futnak.",
+          },
+          {
+            id: "ship",
+            name: "Felderítő űrhajó",
+            description: "Kisméretű shuttle, javításra várva a parton induláskészen.",
+          },
+        ],
+        resetLabel: "Pozíció visszaállítása",
+        hintTitle: "Tereptippek",
+        hints: [
+          "Lépj egészen közel a tereptárgyhoz, hogy felragyogjon a legendában.",
+          "Átlós mozgással gyorsabban átszeled a medencét.",
+          "Ha elvesznél, nyomd meg az R billentyűt a visszahelyezéshez.",
+        ],
+      },
   },
     miniGames: {
       badge: "SZIMULÁCIÓS TEREP",

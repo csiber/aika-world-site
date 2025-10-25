@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { RevealSection } from "@/components/reveal-section";
-import { SyncPulseGame } from "@/components/world/sync-pulse-game";
+import { CrashSiteExplorer } from "@/components/world/crash-site-explorer";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { createPageMetadata, getRouteSegment } from "@/lib/seo";
 
@@ -48,7 +48,7 @@ export default async function WorldPage({
       </RevealSection>
 
       <RevealSection>
-        <SyncPulseGame dictionary={world.miniGame} />
+        <CrashSiteExplorer dictionary={world.miniGame} />
       </RevealSection>
 
       <RevealSection className="space-y-8">
