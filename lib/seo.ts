@@ -23,6 +23,7 @@ export const siteConfig = {
 export const routeSegments: Record<NavKey, string> = {
   home: "",
   world: "world",
+  "mini-games": "mini-games",
   systems: "systems",
   devlog: "devlog",
   about: "about",
