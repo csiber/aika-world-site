@@ -105,8 +105,8 @@ export function PlatformBattleGame({ dictionary }: PlatformBattleGameProps) {
   const initialState = useMemo(() => createInitialState(), []);
   const [visualState, setVisualState] = useState<VisualState>(() => initialState);
   const [logs, setLogs] = useState<string[]>([]);
-  const requestRef = useRef<number>();
-  const lastTimeRef = useRef<number>();
+  const requestRef = useRef<number | undefined>(undefined);
+  const lastTimeRef = useRef<number | undefined>(undefined);
   const attackCooldownRef = useRef(0);
   const attackTimerRef = useRef(0);
   const droneCooldownRef = useRef(1500);
