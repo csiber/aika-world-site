@@ -26,7 +26,7 @@ export function NavigationBar({ items, locale }: NavigationBarProps) {
   }, [pathname]);
 
   return (
-    <div className="relative flex items-center">
+    <div className="relative flex items-center" data-snow-accumulate="navigation">
       <button
         type="button"
         className="flex items-center gap-3 rounded-full border border-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white transition-colors hover:border-white/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 md:hidden"
