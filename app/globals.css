@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #030014;
-  --foreground: #f4f4f7;
+  --background: #020b1f;
+  --foreground: #f8fafc;
 }
 
 @theme inline {
@@ -20,7 +20,11 @@
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
+  background-image: radial-gradient(circle at top left, rgba(148, 197, 255, 0.16), transparent 55%),
+    radial-gradient(circle at 80% 0%, rgba(14, 165, 233, 0.12), transparent 60%),
+    linear-gradient(180deg, #020617 0%, #0b1d33 45%, #102a43 100%);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-geist-sans), "Inter", system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
@@ -32,8 +36,38 @@ a {
 }
 
 ::selection {
-  background: rgba(121, 80, 255, 0.35);
+  background: rgba(125, 211, 252, 0.45);
   color: inherit;
+}
+
+.snowfall::after {
+  content: "";
+  position: absolute;
+  inset: -10% 0 auto;
+  height: 320px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0) 65%);
+  filter: blur(60px);
+  opacity: 0.35;
+}
+
+.snowflake {
+  position: absolute;
+  top: -12%;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
+  box-shadow: 0 0 12px rgba(148, 197, 255, 0.3);
+  filter: drop-shadow(0 8px 12px rgba(14, 116, 144, 0.2));
+  animation-name: snow-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  transform: translate3d(var(--snow-offset, 0px), -12%, 0) scale(var(--snow-scale, 1));
+  will-change: transform, opacity;
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(148, 197, 255, 0.12), rgba(15, 118, 188, 0.05));
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .animate-spin-slow {
@@ -159,5 +193,20 @@ a {
   50% {
     opacity: 0.7;
     transform: scale(1.1);
+  }
+}
+
+@keyframes snow-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--snow-offset, 0px), -12%, 0) scale(var(--snow-scale, 1));
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(var(--snow-offset, 0px) + var(--snow-drift, 0px)), 112%, 0)
+      scale(calc(var(--snow-scale, 1) * 1.1));
   }
 }
