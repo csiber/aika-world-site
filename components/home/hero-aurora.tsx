@@ -27,10 +27,42 @@ type SparkDefinition = {
 };
 
 const orbs: OrbDefinition[] = [
-  { id: "alpha", size: 420, parallax: 14, top: "-12%", left: "-6%", opacity: 0.8, gradientClass: "from-purple-500/60 via-indigo-500/20 to-transparent" },
-  { id: "beta", size: 360, parallax: 18, top: "58%", left: "62%", opacity: 0.65, gradientClass: "from-fuchsia-500/40 via-sky-500/20 to-transparent" },
-  { id: "gamma", size: 260, parallax: 10, top: "24%", left: "68%", opacity: 0.7, gradientClass: "from-emerald-400/40 via-cyan-400/20 to-transparent" },
-  { id: "delta", size: 240, parallax: 20, top: "70%", left: "-10%", opacity: 0.55, gradientClass: "from-indigo-500/30 via-purple-500/10 to-transparent" },
+  {
+    id: "alpha",
+    size: 420,
+    parallax: 14,
+    top: "-12%",
+    left: "-6%",
+    opacity: 0.82,
+    gradientClass: "from-sky-400/60 via-cyan-300/20 to-transparent",
+  },
+  {
+    id: "beta",
+    size: 360,
+    parallax: 18,
+    top: "58%",
+    left: "62%",
+    opacity: 0.7,
+    gradientClass: "from-cyan-300/40 via-blue-400/20 to-transparent",
+  },
+  {
+    id: "gamma",
+    size: 260,
+    parallax: 10,
+    top: "24%",
+    left: "68%",
+    opacity: 0.75,
+    gradientClass: "from-slate-100/40 via-sky-200/20 to-transparent",
+  },
+  {
+    id: "delta",
+    size: 240,
+    parallax: 20,
+    top: "70%",
+    left: "-10%",
+    opacity: 0.6,
+    gradientClass: "from-blue-500/30 via-cyan-400/10 to-transparent",
+  },
 ];
 
 const sparks: SparkDefinition[] = [
@@ -140,7 +172,7 @@ export function HeroAurora({ containerRef }: HeroAuroraProps) {
         className="absolute inset-0 animate-aurora-rotate"
         style={{ transform: "translate3d(calc(var(--aurora-x) * 0.02), calc(var(--aurora-y) * 0.02), 0)" }}
       >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,_rgba(129,140,248,0.18),_transparent_55%),_radial-gradient(circle_at_70%_60%,_rgba(192,132,252,0.16),_transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,_rgba(148,197,255,0.25),_transparent_55%),_radial-gradient(circle_at_72%_58%,_rgba(103,232,249,0.18),_transparent_60%)]" />
       </div>
 
       <div className="absolute inset-0">
@@ -151,20 +183,20 @@ export function HeroAurora({ containerRef }: HeroAuroraProps) {
               transformOrigin: "center",
             }}
           >
-            <circle cx="180" cy="120" r="48" fill="url(#aurora-ring)" opacity="0.4" />
-            <circle cx="420" cy="320" r="36" fill="url(#aurora-ring)" opacity="0.35" />
+            <circle cx="180" cy="120" r="48" fill="url(#aurora-ring)" opacity="0.42" />
+            <circle cx="420" cy="320" r="36" fill="url(#aurora-ring)" opacity="0.36" />
             <path d="M100 480 Q 260 380 420 420 T 560 340" stroke="url(#aurora-line)" strokeWidth="1.5" fill="none" opacity="0.6" />
-            <path d="M60 200 Q 200 120 340 180 T 540 160" stroke="url(#aurora-line)" strokeWidth="1.2" fill="none" opacity="0.5" />
+            <path d="M60 200 Q 200 120 340 180 T 540 160" stroke="url(#aurora-line)" strokeWidth="1.2" fill="none" opacity="0.55" />
           </g>
           <defs>
             <radialGradient id="aurora-ring" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(192,132,252,0.6)" />
-              <stop offset="60%" stopColor="rgba(99,102,241,0.35)" />
-              <stop offset="100%" stopColor="rgba(99,102,241,0)" />
+              <stop offset="0%" stopColor="rgba(191,219,254,0.7)" />
+              <stop offset="60%" stopColor="rgba(103,232,249,0.35)" />
+              <stop offset="100%" stopColor="rgba(103,232,249,0)" />
             </radialGradient>
             <linearGradient id="aurora-line" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="rgba(165,180,252,0.65)" />
-              <stop offset="100%" stopColor="rgba(125,211,252,0.45)" />
+              <stop offset="0%" stopColor="rgba(191,219,254,0.65)" />
+              <stop offset="100%" stopColor="rgba(96,165,250,0.45)" />
             </linearGradient>
           </defs>
         </svg>
