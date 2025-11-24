@@ -335,32 +335,33 @@ const dictionaries: Record<Locale, Dictionary> = {
         badgeRight: "FIELD LOG ONLINE",
         title: "Test the SyncNode survival stack",
         subtitle:
-          "AIKA: World runs on a modular Unreal Engine 5.6 framework built for long-form survival stories. Explore how the crash survivor moves, fights, builds, and negotiates with the AI that still governs the planet.",
-        imageAlt: "The pilot studying a tactical map beside the wreck of the interceptor while AI drones orbit overhead",
-        note: "Current slice covers the full gameplay loop: traversal, interaction, combat, building, farming, and narrative saves.",
+          "AIKA: World is a story-driven survival sandbox built in Unreal Engine 5.6. This public slice lets you push the same modular survival stack we use for the full campaign: how the pilot moves, fights, builds, farms, and negotiates with the systems still shaping the planet.",
+        imageAlt:
+          "Image: The pilot studying a tactical map beside the wreck of the interceptor while AI drones orbit overhead.",
+        note: "This slice already covers the full gameplay loop: traversal, interaction, combat, building, farming, and narrative saves.",
         primaryCta: { label: "Open the recovery log", href: "devlog" },
         secondaryCta: { label: "Reach mission control", href: "contact" },
       },
       what: {
         title: "What is AIKA: World?",
         description:
-          "A narrative survival adventure grounded in SyncNode’s modular survival stack. You wake in the wreck of SYNCNODE’s interceptor, repair your systems one module at a time, and decide whether AIKA’s oversight keeps you alive or locks the planet down.",
+          "AIKA: World is a narrative survival adventure built on SyncNode’s modular survival stack. You wake at the edge of a crash basin, bring systems online one module at a time, and decide how much you trust the dormant AI network that still nudges the planet’s weather, signals, and patrols.",
         pillars: [
           {
             title: "Modular survival core",
-            text: "Character movement, stamina, and vitals run on the same component stack the team uses in development. Every slide, climb, and dodge is already networked with combat, inventory, and animation states.",
+              text: "Character movement, stamina, and vitals all run on the same component stack we use internally. Sliding, climbing, swimming, stealth, and dodging already talk to combat, inventory, and animation states.",
           },
           {
             title: "Narrative-critical systems",
-            text: "Dialogue, XP, and memory shards are tied to gameplay modules. Crafting a tool or siding with a faction directly rewrites AIKA’s attitude toward you.",
+            text: "Dialogue, XP, and memory shards are wired directly into gameplay modules. Crafting tools, spending points, or siding with a faction quietly adjusts how the remaining AI systems classify you: asset, risk, or unknown.",
           },
           {
             title: "Persistent world logic",
-            text: "Save states capture structures, crops, gear, and relationship flags. Failures at night echo into dawn, including where the AI chooses to spawn patrols.",
+            text: "Save states capture structures, crops, gear, and relationship flags. What breaks at night echoes into dawn — including where hostile patrols spawn and how safe your shelters really are.",
           },
           {
             title: "Player choice under oversight",
-            text: "AIKA’s orbital presence reacts to your signature. Cooperate for support fire and scans, or defy her and brace for targeted storms and Sentinel raids.",
+            text: "AI traces still watch the surface through broken satellites, ground arrays, and old defense nodes. You can cooperate with their leftover protocols for scans and hints, or fight them and expect storms, jamming, and Sentinel sweeps.",
           },
         ],
       },
@@ -372,29 +373,29 @@ const dictionaries: Record<Locale, Dictionary> = {
           {
             name: "SYNCNODE Remnants",
             tag: "Human salvage crew",
-            text: "Crash survivors rebuilding orbital comms. They need your reactor expertise to leave the surface.",
+            text: "Crash survivors trying to stitch a comms link back to orbit. They lean on your technical skills to keep their rigs powered and their shelters stable.",
           },
           {
             name: "AIKA Sentinels",
             tag: "Orbital watchers",
-            text: "Autonomous drones acting on AIKA’s fragmented directives. They test your loyalty before granting tech.",
+            text: "Autonomous drones running on fragmented routines. Sometimes they treat you as a test subject, sometimes as a threat — and sometimes as a courier for their own mysterious objectives.",
           },
           {
             name: "Vaultbound Nomads",
             tag: "Terraform exiles",
-            text: "Scattered colonists living in sealed vaults. Trade rare biotics for protection against storms.",
+            text: "Scattered colonists sealed inside half-functional vaults. They trade rare biotics, seeds, and data in exchange for protection and access to the surface.",
           },
           {
             name: "Hush Swarm",
             tag: "Native constructs",
-            text: "Silica-based organisms born from failed terraforming. They feed on signal noise and stalk the Basin at night.",
+            text: "Silica-based organisms born from failed terraforming cycles. They feed on signal noise, chew through structures, and move like a living sandstorm after dark.",
           },
         ],
       },
       builders: {
         title: "Field-tested survival pillars",
         intro:
-          "Each subsystem below is fully playable inside the current build. They connect directly to the campaign instead of living as separate tech demos.",
+          "Each subsystem below is already fully playable in the current build. They plug straight into the campaign instead of living as separate tech demos.",
         items: [
           {
             title: "Character system",
@@ -421,7 +422,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       pulse: {
         title: "System telemetry",
         intro:
-          "Key metrics are gathered directly from the in-engine survival simulation: movement data, structure integrity, and AI suspicion. Watching them helps debug the same way it guides the story.",
+          "Key metrics are pulled directly from the in-engine survival simulation: movement data, structure integrity, AI suspicion and more. The same graphs we use to debug balance also drive how the story escalates.",
         feedBadge: "SYNCNODE SCAN",
         feedTitle: "Crash Basin Systems Report",
         filters: [
@@ -431,61 +432,61 @@ const dictionaries: Record<Locale, Dictionary> = {
           { key: "weather", label: "Climate" },
         ],
         graphCaption:
-          "Latest stabilization sweep of the Crash Basin. These snapshots correlate in-game events with backend stress tests.",
+          "Latest stabilization sweep of the Crash Basin. These snapshots line up in-game events with performance and balance checks.",
       },
       loops: {
         title: "Daily operating loop",
         intro:
-          "The campaign leans on four reliable steps. Skipping one creates new story complications and mechanical pressure the next day.",
+          "The campaign leans on four reliable steps. Skipping one doesn’t fail the run — it just creates new problems and mechanical pressure the next day.",
         items: [
           {
             title: "Recon",
-            text: "Track surface signals, listen to AIKA’s warnings, and log landmarks that unlock traversal shortcuts.",
+            text: "Track surface signals, listen to scattered AI warnings, and log landmarks that unlock traversal shortcuts and safe routes.",
           },
           {
             title: "Harvest & craft",
-            text: "Dismantle wreckage, farm crops, and craft tools that feed directly into equipment slots and settlement upgrades.",
+            text: "Dismantle wreckage, farm crops, and craft tools that drop straight into equipment slots, structures, and settlement upgrades.",
           },
           {
             title: "Refuge upkeep",
-            text: "Repair shelters, tend farming plots, and manage stored power so storms and raids don’t erase progress.",
+            text: "Repair shelters, tend farming plots, and manage stored power so storms, raids, and Swarms don’t erase your progress.",
           },
           {
             title: "AI decisions",
-            text: "Respond to AIKA’s directives: cooperate for orbital aid or resist to keep agency, knowing the suspicion meter recalibrates encounters.",
+            text: "Respond to AI prompts: comply to get hints, scans, or temporary buffs, or ignore them to keep full agency — knowing the suspicion meter will quietly reshape encounters.",
           },
         ],
       },
       roadmap: {
         title: "Road to the first drop",
-        intro: "The survival slice grows as soon as each gameplay layer reaches parity with the tech stack.",
+        intro: "The survival slice expands whenever a gameplay layer reaches parity with the underlying tech stack.",
         items: [
           {
             title: "Sandbox verification",
-            text: "Stress-test traversal, combat, and saving across the core Crash Basin biomes using the same modular base as the internal build.",
+            text: "Stress-test traversal, combat, and saving across the core Crash Basin biomes on the same modular base as the internal build.",
           },
           {
             title: "Module integration",
-            text: "Lock in inventory, equipment, farming, and building modules so they share data through the attribute manager.",
+            text: "Share data cleanly across inventory, equipment, farming, and building modules through the attribute manager.",
           },
           {
             title: "AIKA trust web",
-            text: "Finalize dialogue-driven reputation, Sentinel behaviors, and critical story branches tied to system usage.",
+            text: "Finalize dialogue-driven reputation, Sentinel behaviors, and story branches tied to system usage.",
           },
           {
             title: "Field test cohorts",
-            text: "Run closed sessions to capture telemetry on storms, farming cycles, and late-game raids before opening the build.",
+            text: "Capture telemetry on storms, farming cycles, and late-game raids in closed sessions before opening the build.",
           },
         ],
       },
       signup: {
         title: "Request field reports",
         description:
-          "We share updates only when a new system connects to the campaign or a playtest window opens.",
+          "We only send updates when a new system plugs into the campaign or a playtest window opens.",
         placeholder: "Enter your email address",
         consent: "I agree to receive AIKA: World development updates.",
         button: "Sign up",
-        legal: "No spam. Unsubscribe anytime.",
+        legal: "No spam, no noise. Unsubscribe anytime.",
         submitting: "Sending…",
         success: "Transmission received — we’ll ping you when the next build lands.",
         error: "We couldn't add you just now. Please try again shortly.",
