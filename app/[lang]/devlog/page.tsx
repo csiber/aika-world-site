@@ -36,10 +36,10 @@ export default async function DevlogPage({
 
   return (
     <div className="space-y-16 md:space-y-20">
-      <RevealSection className="space-y-6 rounded-3xl border border-slate-200 bg-white p-8 text-slate-900 shadow-xl shadow-indigo-100/50">
-        <span className="text-xs uppercase tracking-[0.4em] text-slate-600">{dictionary.nav.devlog}</span>
-        <h1 className="text-4xl font-semibold leading-tight md:text-5xl">{devlog.title}</h1>
-        <p className="max-w-3xl text-base text-slate-700 md:text-lg">{devlog.description}</p>
+      <RevealSection className="space-y-6 rounded-3xl border border-slate-800/80 bg-slate-950/70 p-8 text-slate-100 shadow-[0_30px_80px_-60px_rgba(0,0,0,0.8)]">
+        <span className="text-xs uppercase tracking-[0.4em] text-indigo-200">{dictionary.nav.devlog}</span>
+        <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">{devlog.title}</h1>
+        <p className="max-w-3xl text-base text-slate-200 md:text-lg">{devlog.description}</p>
       </RevealSection>
 
       <RevealSection className="space-y-6">
@@ -47,16 +47,16 @@ export default async function DevlogPage({
           {devlog.entries.map((entry) => (
             <li
               key={entry.title}
-              className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-indigo-50 to-blue-50 p-6 text-slate-900 shadow-sm"
+              className="rounded-3xl border border-slate-800/80 bg-gradient-to-br from-[#1a2641] via-[#111a33] to-[#0b1429] p-6 text-slate-100 shadow-[0_24px_70px_-60px_rgba(30,140,255,0.35)]"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-[0.3em] text-slate-600">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-[0.3em] text-indigo-200">
                 <span>{entry.date}</span>
                 <span>Build {entry.build}</span>
                 <span>{entry.status}</span>
               </div>
-              <h2 className="mt-4 text-2xl font-semibold">{entry.title}</h2>
-              <p className="mt-3 text-sm text-slate-700">{entry.summary}</p>
-              <ul className="mt-4 list-inside list-disc space-y-2 text-sm text-slate-700">
+              <h2 className="mt-4 text-2xl font-semibold text-white">{entry.title}</h2>
+              <p className="mt-3 text-sm text-slate-200">{entry.summary}</p>
+              <ul className="mt-4 list-inside list-disc space-y-2 text-sm text-slate-200">
                 {entry.details.map((detail) => (
                   <li key={detail}>{detail}</li>
                 ))}
@@ -66,7 +66,7 @@ export default async function DevlogPage({
         </ul>
       </RevealSection>
 
-      <RevealSection className="rounded-3xl border border-slate-200 bg-white p-8 text-sm text-slate-700 shadow-sm">
+      <RevealSection className="rounded-3xl border border-slate-800/80 bg-slate-950/70 p-8 text-sm text-slate-200 shadow-[0_30px_80px_-60px_rgba(0,0,0,0.8)]">
         {devlog.disclaimer}
       </RevealSection>
     </div>
