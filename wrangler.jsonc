@@ -1,6 +1,6 @@
 {
 	"name": "aika-world",
-	"main": ".open-next/worker.js",
+        "main": ".open-next/worker/index.mjs",
 	"assets": {
 		"directory": ".open-next/assets"
 	},

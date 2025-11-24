@@ -16,14 +16,14 @@ A projekt nem használ SQLite-ot; a form endpontok és a Turnstile integráció 
 | Parancs | Leírás |
 | --- | --- |
 | `npm run dev` | Next.js fejlesztői mód, hot reloaddal. |
-| `npm run build` | Production build Cloudflare Pages számára (statikus export + edge runtime). |
+| `npm run build` | Production build: először `next build`, majd az OpenNext Cloudflare builder generálja a `.open-next` munkafüggvényt és asseteket. |
 | `npm run start` | Preview szerver a buildelt kimenet ellenőrzésére. |
 | `npm run lint` | Statikus ellenőrzés a projekt ESLint szabályaival. |
 
 ## Build és deploy folyamat
 
-1. `npm run build` lokálisan ellenőrzi, hogy a Next.js alkalmazás statikusan előállítható.
-2. Cloudflare Pages-en a build parancs ugyanaz (`npm run build`), az outputot az `.open-next` konfiguráció írja le.
+1. `npm run build` először lefuttatja a `next build`-et, majd az OpenNext Cloudflare pipeline a meglévő `.next` kimenetből előállítja a `.open-next/worker/index.mjs` fájlt és a statikus asseteket.
+2. Cloudflare Pages + Workers deploy során a `.open-next` mappa tartalmát a `wrangler.jsonc` használja; a `main` bejegyzés a generált workerre mutat.
 3. A Workers funkciókat a `wrangler.jsonc` és az `open-next.config.ts` fájlok szabályozzák.
 4. Élesítés előtt érdemes Lighthouse-t futtatni (Chrome DevTools) és ellenőrizni, hogy a Performance + SEO legalább 90 pont.
 
