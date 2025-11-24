@@ -300,11 +300,11 @@ const dictionaries: Record<Locale, Dictionary> = {
   en: {
     meta: {
       description:
-        "AIKA: World is a narrative survival adventure by SyncNode, set on a synthetic planet watched by a mysterious AI.",
+        "AIKA: World is a post-collapse sci-fi survival story about leading a crew, holding an ARK together, and carving a path through hostile ruins.",
     },
     consent: {
-      message: "We do not use tracking cookies — only privacy-first Cloudflare Web Analytics runs here.",
-      acknowledge: "Understood",
+      message: "No tracking cookies here — only privacy-first Cloudflare Web Analytics.",
+      acknowledge: "Got it",
     },
     nav: {
       home: "Home",
@@ -315,90 +315,90 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     home: {
       hero: {
-        badgeLeft: "STEAM • RELEASE ON THE WAY",
-        badgeRight: "SYNTH WORLD UPDATE",
-        title: "AIKA: World is heading to Steam",
+        badgeLeft: "STEAM • ON APPROACH",
+        badgeRight: "ARK STATUS UPDATE",
+        title: "AIKA: World is preparing for launch",
         subtitle:
-          "AIKA: World is a narrative-driven survival action game built in Unreal Engine 5.6. We are preparing a finished release: every system, from character control to AI oversight, feeds a single long-form survival layer instead of a short playtest.",
+          "Lead a crew through a broken world. Keep the ARK running, sweep the ruins for fragments, and decide who gets shelter when the storms roll in.",
         imageAlt:
-          "Image: The pilot studying a tactical map beside the wreck of the interceptor while AI drones orbit overhead.",
-        note: "The campaign runs on SyncNode’s survival stack and will launch on Steam as a complete game.",
-        primaryCta: { label: "Read the recovery log", href: "devlog" },
-        secondaryCta: { label: "Contact the studio", href: "contact" },
+          "Image: The pilot and crew plotting a route beside the ARK while drones buzz over shattered terrain.",
+        note: "The campaign arrives on Steam as one complete survival run — no vertical slice, no throwaway tests.",
+        primaryCta: { label: "Open the recovery log", href: "devlog" },
+        secondaryCta: { label: "Reach the crew", href: "contact" },
       },
       what: {
         title: "What is AIKA: World?",
         description:
-          "AIKA: World is a narrative survival story built on SyncNode’s modular stack. You wake on the edge of a Crash Basin, bring systems online one module at a time, and decide how much to trust the AI network that still nudges the planet’s weather, signals, and patrols.",
+          "A post-apocalyptic sci-fi survival story. You wake by the Crash Basin with a damaged ARK and a handful of crew. Each day you decide whether to push deeper for fragments, shore up the ship, or gamble on a faction for backup.",
         pillars: [
           {
-            title: "Modular survival core",
-            text: "Movement, stamina, and vitals sit on the same component stack. Sliding, climbing, swimming, stealth, and dodging stay in sync with combat, inventory, and camera states.",
+            title: "Survival first",
+            text: "Every step costs stamina, every wound lingers. Sliding, climbing, swimming, stealth, and dodging all feed the same survival rhythm.",
           },
           {
-            title: "Narrative-linked systems",
-            text: "Dialogue, XP, and memory shards tie directly into gameplay modules. Every choice — crafting, spending points, or picking a faction — shifts how the AI classifies you: asset, risk, or unknown.",
+            title: "Story in your hands",
+            text: "Dialogue, fragments, and crew morale react to your choices. Pick a faction, backstab them, or walk alone — the world keeps score.",
           },
           {
-            title: "Persistent world logic",
-            text: "Saves preserve structures, crops, gear, and relationship flags. Damage taken at night carries into dawn — shifting patrol routes and shelter safety.",
+            title: "Nothing resets overnight",
+            text: "Shelters, crops, wounds, and friendships carry forward. Storm damage and raids change patrols by morning.",
           },
           {
-            title: "Choice under AI oversight",
-            text: "AIKA’s traces watch through satellites, ground arrays, and old defense nodes. Cooperate for scans and hints, or resist and face storms and Sentinel sweeps.",
+            title: "A world that pushes back",
+            text: "Signals, weather shifts, and scavengers respond to you. Cooperate for intel or fight through the consequences.",
           },
         ],
       },
       factions: {
         title: "Forces in the ruins",
         intro:
-          "Four factions compete to claim the planet. Your choice brings survival perks and new enemies.",
+          "Four forces circle the Basin. Choose an ally, or make them all your problem.",
         items: [
           {
             name: "SYNCNODE Remnants",
             tag: "Human salvage crew",
-            text: "Crash survivors rebuilding a comms link to orbit. They rely on your technical skills to keep their rigs powered and their shelters stable.",
+            text: "Crash survivors who treat the ARK like their last spark. They trade hard favors for power, metal, and safe passage.",
           },
           {
             name: "AIKA Sentinels",
             tag: "Orbital watchers",
-            text: "Autonomous drones running on fragmented routines. They may treat you as a courier, a subject, or a threat — and they adjust the weather accordingly.",
+            text: "Drones running on broken orders. Sometimes they scan you for data, sometimes they call in storms. Learn their patterns or wreck their nodes.",
           },
           {
             name: "Vaultbound Nomads",
             tag: "Terraform exiles",
-            text: "Scattered colonists sealed inside half-functional vaults. They trade rare biotics, seeds, and data for protection and access to the surface.",
+            text: "Colonists sealed in failing vaults. They barter seeds, meds, and secrets if you keep their vents clear.",
           },
           {
             name: "Hush Swarm",
             tag: "Native constructs",
-            text: "Silica-based organisms born from failed terraforming cycles. They feed on signal noise, chew through structures, and move like a living sandstorm after dark.",
+            text: "Signal-hungry fragments born from bad terraforming. They chew metal, raid shelters, and move like a living dust storm after dark.",
           },
         ],
       },
       builders: {
-        title: "Core systems for launch",
+        title: "Core pillars at launch",
         intro:
-          "The campaign leans on four main modules. They operate as one chain so that every decision has a direct impact in the Steam release.",
+          "The campaign leans on four pillars. They stay linked so every call you make hits the crew and the ship.",
         items: [
           {
             title: "Character system",
-            text: "The pilot controller blends ALS/Lyra locomotion with climbing, swimming, stealth, and contextual camera work. Every move has a stamina cost that influences combat and dialogue checks.",
+            text: "Stamina, vitals, and movement live together. Climb, swim, sneak, and slide — each move drains something the crew will feel.",
             icon: "survival-kit",
           },
           {
             title: "Interaction & inventory",
-            text: "A unified interface manages loot, resources, and mission items. Drag-and-drop slots decide whether gear boosts stats, powers structures, or unlocks faction favors.",
+            text: "Drag gear into slots to power structures, buff your crew, or earn favors. Loot stays meaningful because every slot has a cost.",
             icon: "memory-map",
           },
           {
             title: "Combat module",
-            text: "Melee forms and ballistic tools share one damage pipeline. Stamina, equipment slots, and attribute modifiers all calculate together.",
+            text: "Close strikes and ranged tools share the same wound logic. Stamina and gear condition decide if you stagger foes or get knocked down.",
             icon: "aika-link",
           },
           {
             title: "Builder’s forge",
-            text: "Place fortifications, workshops, and farming beds directly from the inventory. Structures persist between saves and influence AI threat levels.",
+            text: "Drop walls, workshops, and crops straight from your pack. The ARK and every shelter persist, and enemies remember where you dig in.",
             icon: "reactor-forge",
           },
         ],
@@ -406,9 +406,9 @@ const dictionaries: Record<Locale, Dictionary> = {
       pulse: {
         title: "System telemetry",
         intro:
-          "Key metrics are pulled directly from the in-engine survival simulation: movement data, structure integrity, AI suspicion and more. The same graphs we use to debug balance also drive how the story escalates.",
+          "Quick reads from the Basin: vitals, supplies, intel, and weather. The same signals guide both the crew and the dev team.",
         feedBadge: "SYNCNODE SCAN",
-        feedTitle: "Crash Basin Systems Report",
+        feedTitle: "Crash Basin status",
         filters: [
           { key: "stability", label: "Vitals" },
           { key: "supplies", label: "Logistics" },
@@ -416,136 +416,136 @@ const dictionaries: Record<Locale, Dictionary> = {
           { key: "weather", label: "Climate" },
         ],
         graphCaption:
-          "Latest stabilization sweep of the Crash Basin. These snapshots line up in-game events with performance and balance checks.",
+          "Latest sweep of the Basin — showing how the world reacts to recent runs.",
       },
       loops: {
-        title: "Daily operating loop",
+        title: "Daily rhythm",
         intro:
-          "The campaign leans on four reliable steps. Skipping one doesn’t fail the run — it just creates new problems and mechanical pressure the next day.",
+          "Four steps keep the crew alive. Skip one and the world makes you pay for it tomorrow.",
         items: [
           {
             title: "Recon",
-            text: "Track surface signals, listen to scattered AI warnings, and log landmarks that unlock traversal shortcuts and safe routes.",
+            text: "Sweep signals, mark routes, and log landmarks so the crew moves faster next run.",
           },
           {
             title: "Harvest & craft",
-            text: "Dismantle wreckage, farm crops, and craft tools that drop straight into equipment slots, structures, and settlement upgrades.",
+            text: "Strip wrecks, tend crops, and build tools that slot straight into your gear and the ARK’s needs.",
           },
           {
             title: "Refuge upkeep",
-            text: "Repair shelters, tend farming plots, and manage stored power so storms, raids, and Swarms don’t erase your progress.",
+            text: "Patch shelters, feed generators, and guard crops so storms and raids don’t erase your work.",
           },
           {
             title: "AI decisions",
-            text: "Respond to AI prompts: comply to get hints, scans, or temporary buffs, or ignore them to keep full agency — knowing the suspicion meter will quietly reshape encounters.",
+            text: "Answer or ignore incoming signals. Help and you get scans; refuse and the Basin grows meaner.",
           },
         ],
       },
       roadmap: {
-        title: "Road to the first drop",
-        intro: "A játék minden fő rendszere akkor kerül be a buildbe, amikor eléri a kívánt minőséget a végleges kiadáshoz.",
+        title: "Road to launch",
+        intro: "Every system lands when it’s ready for the full campaign — no filler, no half steps.",
         items: [
           {
-            title: "Sandbox verification",
-            text: "A mozgás, a harc és a mentési lánc folyamatos igazítása, hogy a kampány nyitó területe kiegyensúlyozott legyen.",
+            title: "Basin balance",
+            text: "Tuning movement, combat, and saves so the opening zone hits hard without breaking.",
           },
           {
-            title: "Module integration",
-            text: "Az inventory, a felszerelés, a farm és az építés modul adatainak összehangolása az attribútumkezelőn keresztül.",
+            title: "Crew and ARK sync",
+            text: "Making sure inventory, gear, farming, and building all feed the same survival state.",
           },
           {
-            title: "AIKA trust web",
-            text: "A párbeszédvezérelt hírnév, a Sentinel viselkedések és a rendszerhasználathoz kötött történeti elágazások véglegesítése.",
+            title: "Trust and fallout",
+            text: "Locking in how dialogue, Sentinels, and story branches react to your choices.",
           },
           {
-            title: "Field test cohorts",
-            text: "Zárt körű mérések viharciklusokról, farm-ritmusokról és késői rajtaütésekről a stabil kiadás előtt.",
+            title: "Storm trials",
+            text: "Closed runs that test storm cycles, raid pacing, and late-game pressure before release.",
           },
         ],
       },
       signup: {
-        title: "Steam launch updates",
+        title: "Stay in the loop",
         description:
-          "We only send notes when a major system locks in or when we have a clear milestone for release.",
+          "We write when the ARK hits a milestone or when the Steam date is locked.",
         placeholder: "Enter your email address",
         consent: "I agree to receive AIKA: World launch updates.",
         button: "Sign up",
         legal: "No spam. You can unsubscribe anytime.",
         submitting: "Sending…",
-        success: "Got it — we’ll notify you as the Steam date approaches.",
-        error: "We couldn't add you just now. Please try again later.",
+        success: "Got it — we’ll ping you when the next big update lands.",
+        error: "We couldn't add you just now. Please try again in a bit.",
         turnstileError: "Please confirm the Cloudflare Turnstile check.",
-        endpointError: "Sign-ups are temporarily unavailable. Reach us through the channels above.",
-        helperText: "We write only at major milestones.",
+        endpointError: "Sign-ups are temporarily unavailable. Use the channels above instead.",
+        helperText: "We write only when it matters.",
       },
     },
     world: {
       title: "The Crash Basin",
       subtitle:
-        "Your journey in AIKA: World begins where the Old Boy fell: a silent valley shaped by storms, ruins, and forgotten human structures. No orbiting AI watches you — only old automated systems and fragments reacting to your presence.",
+        "You start where the Old Boy fell. Storms, ruins, and old human tech watch from the ridges. No guardian AI — only fractured systems and hostile fragments reacting to your moves.",
       disclaimer:
         "Explore the Basin. Secure supplies. Survive the night storms. Reboot what still works.",
       regionsTitle: "Regions of the Basin",
       regionsIntro:
-        "These connected biomes form the early playable world of AIKA: World. Each region holds resources, threats, weather patterns, and fragments of pre-collapse human technology.",
+        "These connected zones form the opening stretch of AIKA: World. Each one offers resources, threats, strange weather, and shards of the past.",
       regions: [
         {
           id: "crash_basin",
           badge: "BASIN",
           name: "Crash Basin",
           description:
-            "Your starting point. Warm vents, metallic storm patterns, and remnants of the Old Boy’s crash shockwave.",
+            "Your first safe-enough zone. Warm vents, metallic storms, and debris from the Old Boy’s crash shockwave.",
         },
         {
           id: "memory_vault",
           badge: "SUBSURFACE",
           name: "Memory Vault",
           description:
-            "Subsurface data chambers built by past colonists. Recover logs, blueprints, and clues to the Basin’s buried systems.",
+            "Buried data halls left by colonists. Hunt logs, schematics, and hints about the Basin’s deeper routes.",
         },
         {
           id: "shatter_coast",
           badge: "COAST",
           name: "Shatter Coast",
           description:
-            "A windswept shoreline filled with washed-up wreckage from old supply planes. Night raids by Swarm fragments are common.",
+            "A windswept shoreline littered with wrecks. Swarm fragments hunt here after dark.",
         },
         {
           id: "zenith_array",
           badge: "ORBITAL",
           name: "Zenith Array",
           description:
-            "A broken uplink tower scattered across several ridges. Old weather systems sometimes activate when you approach — useful, but unpredictable.",
+            "A shattered uplink tower across the ridges. Old weather nodes flicker when you get close — helpful and dangerous.",
         },
       ],
       explorationsTitle: "Fragments of the fallen world",
       explorationsIntro:
-        "Snapshots from the prototype build. They hint at where to hunt, hide, and negotiate with enemy factions.",
+        "Shots from the current build. Clues on where to scavenge, hide, and bargain with whoever is left.",
       explorations: [
         {
           id: "shot_a",
           caption:
-            "Shatter Coast during a localized storm event. Vents open, light arcs across the water — good time to gather rare metals but dangerous to stay exposed.",
+            "Shatter Coast during a focused storm. Vents open, light crackles over the water — great salvage, bad place to linger.",
         },
         {
           id: "shot_b",
           caption:
-            "Nomad scouts inspecting bio-reactive flora near a dormant reactor shaft.",
+            "Nomad scouts testing glowing flora beside a dormant reactor shaft.",
         },
         {
           id: "shot_c",
           caption:
-            "A Sentinel patrol sweeping the Zenith Array while the player debates whether to avoid or confront them.",
+            "A Sentinel patrol combing the Zenith Array while you choose between slipping past or taking them apart.",
         },
       ],
       footnote:
-        "Future seasons expand deeper into the Basin once the ARK’s systems come online — caves, industrial ruins, long-range traversal paths, and the approach toward the buried Ring.",
+        "Future seasons push deeper once the ARK is stable — caves, dead factories, long treks, and the road toward the buried Ring.",
       miniGame: {
         title: "CRASH SITE ORIENTATION",
         intro:
-          "A playable overview of the first zone. These locations form the starting loop of traversal, resource gathering, shelter-building, and early encounters.",
+          "A playable peek at the first zone. These spots form your opening loop of travel, scavenging, shelter work, and early fights.",
         objective:
-          "Survey the basin, map the lake and cabin, strip the shuttle for materials, and push through the ridge pass to scout higher ground.",
+          "Scout the basin, mark the lake and cabin, strip the shuttle for materials, and push through the ridge pass to higher ground.",
         controlsTitle: "Movement",
         controls: [
           { key: "← → / A D", action: "Traverse slopes and skim the basin rim" },
@@ -558,25 +558,25 @@ const dictionaries: Record<Locale, Dictionary> = {
             id: "cabin",
             name: "Field Cabin",
             description:
-              "A small survival cabin used by old survey teams. Good for early storage and basic shelter reinforcement.",
+              "A small cabin left by survey teams. Works for early storage and simple repairs.",
           },
           {
             id: "lake",
             name: "Mirror Lake",
             description:
-              "A cold, glass-still lake fed by underground coolant channels from ancient infrastructure.",
+              "A cold, glassy lake fed by old coolant channels beneath the ground.",
           },
           {
             id: "ship",
             name: "Scout Shuttle",
             description:
-              "The wrecked shuttle you arrived in. Damaged beyond repair, but packed with salvageable electronics, metal plates, and early-tier crafting materials.",
+              "The wrecked shuttle you came in. Beyond repair, but packed with electronics, plates, and early crafting parts.",
           },
           {
             id: "ridge",
             name: "Ridge Pass",
             description:
-              "A narrow path linking the basin to higher ground. Dangerous at night — Swarm traces often drift into the gap.",
+              "A narrow path to higher ground. Bad news at night when Swarm traces slip through.",
           },
         ],
         resetLabel: "Re-center position",
@@ -590,32 +590,32 @@ const dictionaries: Record<Locale, Dictionary> = {
   },
     miniGames: {
       badge: "FIELD TRAINING",
-      title: "Stellar Run: the AIKA basin combat trial",
+      title: "Stellar Run: Basin combat trial",
       subtitle:
-        "Pilot a scout craft across a fortified 2D platform gauntlet carved into the crash site.",
+        "Fly a scout craft through a fortified 2D gauntlet carved into the crash site.",
       description:
-        "This singular sandbox fuses traversal, dodging, and weapons management into one extended browser encounter while the full Unreal slice loads.",
-      insightsTitle: "Why this mega-sim matters",
+        "A quick browser run that mixes platforming, dodging, and weapon timing while the full slice loads in the background.",
+      insightsTitle: "Why this run matters",
       insights: [
         {
-          title: "Campaign-authentic handling",
-          text: "The interceptor inherits its thrust curves, shield tuning, and projectile timing directly from the Unreal module so browser pilots train on the real thing.",
+          title: "Handles like the real craft",
+          text: "The interceptor flies like the in-game version, so this training actually sticks.",
         },
         {
-          title: "Escalating wave cadence",
-          text: "Three combat waves stack platforming pressure with smarter drone routes, mirroring how the crash basin will pace open-world assaults.",
+          title: "Three waves, rising heat",
+          text: "Each wave stacks pressure and smarter drone routes, matching how raids ramp up in the Basin.",
         },
         {
-          title: "Instant community proving ground",
-          text: "No downloads, no launcher—just load the page, grab the arrow keys, and feed AIKA telemetry that keeps the newsletter and SEO heartbeat alive.",
+          title: "Easy to jump into",
+          text: "No downloads. Load the page, grab the arrow keys, and send us telemetry that keeps the Basin sharp.",
         },
       ],
       spaceBattle: {
         title: "STELLAR RUN • PLATFORM GAUNTLET",
         intro:
-          "AIKA excavated a training trench beneath the crash canopy. Your job: keep the scout interceptor airworthy while swatting drones from the ledges.",
+          "A training trench beneath the crash canopy. Keep the interceptor in the air while knocking drones off the ledges.",
         objective:
-          "Survive three escalating drone waves without letting hull integrity fall to zero.",
+          "Survive three drone waves without letting the hull drop to zero.",
         controlsTitle: "Flight controls",
         controls: [
           { key: "← → / A D", action: "Lateral thrusters across the platforms" },
@@ -649,74 +649,74 @@ const dictionaries: Record<Locale, Dictionary> = {
     systems: {
       title: "Survival systems overview",
       subtitle:
-        "Minden mechanika egy moduláris Unreal Engine 5.6 stackre épül, hosszú távú túlélésre tervezve. Az alábbi rendszerek adják a Steamen megjelenő játék gerincét: mozgás, harc, gyártás, farm, bázisfenntartás és csapathatékonyság.",
-      modulesTitle: "Subsystem modules",
-      pillarsTitle: "Operational pillars",
+        "Every system exists to keep the ARK and the crew alive on long hauls. Movement, combat, building, farming, and morale feed the same survival loop across the Basin.",
+      modulesTitle: "Key systems",
+      pillarsTitle: "Why they work together",
       modules: [
         {
           name: "Character & movement system",
           badge: "PLAYER",
           description:
-            "C++-powered movement stack: sprint, climb, vault, swim, stealth, crouch, slide. All movement states integrate with stamina, vitals, and combat reactions through Narrative Pro.",
+            "Sprint, climb, vault, swim, sneak, crouch, slide. Stamina and vitals link every move to how you fight, talk, and keep the crew steady.",
         },
         {
           name: "Inventory & equipment",
           badge: "GEAR",
           description:
-            "Modular inventory with weight, quick-access slots, durability and repair. Supports weapons, tools, medkits, energy cells, crafting parts, and food items.",
+            "Pack what you can carry. Weight, quick slots, and durability matter for weapons, tools, medkits, energy cells, crafting parts, and food.",
         },
         {
           name: "Builder & structures",
           badge: "SETTLEMENT",
           description:
-            "Place shelters, storage, crops, generators, water collectors, traps and defenses. Each structure has integrity, weather resistance, and maintenance levels.",
+            "Drop shelters, storage, crops, generators, collectors, traps, and defenses. Each build needs upkeep against storms and raids.",
         },
         {
           name: "Fabrication & crafting",
           badge: "WORKSHOP",
           description:
-            "Break down scrap → refine materials → craft tools, weapon parts, modules, ammo and field devices. Advanced recipes unlock by scanning fragments, logs, or recovered tech.",
+            "Tear down scrap, refine it, and craft tools, weapon parts, ammo, and field gear. Better recipes unlock from fragments, logs, and recovered tech.",
         },
         {
           name: "Interaction & NPC logic",
           badge: "WORLD",
           description:
-            "Unified interaction layer: loot, switches, terminals, vox logs, doors, campfires, crafting benches. NPC conversations use short branching prompts integrated with XP and relationship flags.",
+            "One interaction layer for loot, switches, terminals, logs, doors, fires, and benches. Conversations stay sharp and reactive to your choices and reputation.",
         },
         {
           name: "Combat system",
           badge: "THREAT",
           description:
-            "Third-person melee + ranged combat with dodge, parry, stagger, flinch, weak points and weapon conditions. Enemy AI uses perception, patrol grids, reaction windows, and threat escalation influenced by suspicion.",
+            "Melee and ranged fights with dodge, parry, stagger, flinch, weak points, and weapon condition. Enemies listen, patrol, and escalate when you push them.",
         },
         {
           name: "Agronomy",
           badge: "FARMING",
           description:
-            "Grow crops in tiered soil beds. Plants react to water, light, nutrients, storms, pests and Swarm contamination. Harvest integrates into food, crafting, healing and trade loops.",
+            "Grow crops in layered beds. Plants react to water, light, nutrients, storms, pests, and Swarm traces. Harvests feed your food, crafting, healing, and trade loops.",
         },
         {
           name: "Level & XP core",
           badge: "PROGRESSION",
           description:
-            "XP grants attribute points and passive unlocks. Combat, exploration, crafting, farming and story choices all contribute. Aika’s telekinetic power progresses on a dedicated XP path both narratively and in gameplay.",
+            "XP fuels attributes and perks. Combat, exploration, crafting, farming, and story calls all contribute. Telekinesis grows on its own path in both story and play.",
         },
       ],
       pillars: [
         {
-          name: "Modular clarity",
+          name: "Clear roles",
           description:
-            "Every subsystem is isolated and testable: movement, combat, crafting, farming, AI, persistence. Anything can be updated without breaking other systems thanks to unified component patterns.",
+            "Movement, combat, crafting, farming, AI, and persistence stay clear and testable. Tweaks don’t break the rest of the ship.",
         },
         {
-          name: "Shared data flow",
+          name: "One state for all",
           description:
-            "Movement, combat, AI, UI, logs, crafting and events all read from the same runtime data layer. This allows consistent reactions: weather affects AI, crops, player vitals and structure integrity simultaneously.",
+            "Weather, AI, crops, vitals, and structures read from the same state. When a storm hits, everyone feels it at once.",
         },
         {
-          name: "System-driven storytelling",
+          name: "Story follows action",
           description:
-            "The story doesn’t run cinematics — it reacts to systems. Storms, encounters, resource scarcity, telekinetic upgrades, NPC presence and base conditions feed directly into narrative progression triggers.",
+            "No cutscene dump. Storms, encounters, scarcity, telekinesis, NPC moods, and base health all push the narrative forward.",
         },
       ],
       footnote:
@@ -725,7 +725,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     devlog: {
       title: "AIKA Recovery Log",
       description:
-        "A technical patch log pulled from the crash basin’s black box. Each entry captures what changed in the survival build.",
+        "Updates ripped from the Basin’s black box. No fluff — just what changed for the crew’s survival run.",
       entries: [
         {
           date: "2025-11-12",
@@ -733,13 +733,13 @@ const dictionaries: Record<Locale, Dictionary> = {
           title: "Core Movement Pass",
           status: "Prototype",
           summary:
-            "New traversal states integrated with stamina/vitals and the animation graph for the AAA survival baseline.",
+            "Traversal now locks into stamina and animations so hauling gear feels earned.",
           details: [
-            "Sprint stamina curve tuned for heavy gear loads",
-            "Vault and climb now respect Narrative Pro reaction windows",
-            "Slide buffered to prevent accidental rollouts",
-            "Fall damage scales with progression tier",
-            "Swimming exposes low-oxygen warnings and HUD cues",
+            "Sprint stamina curve tuned for heavy packs",
+            "Vault and climb timings tightened to reaction windows",
+            "Slide buffered to avoid accidental rollouts",
+            "Fall damage now scales with progression tier",
+            "Swimming throws low-oxygen warnings and HUD cues",
           ],
         },
         {
@@ -748,13 +748,13 @@ const dictionaries: Record<Locale, Dictionary> = {
           title: "Combat Layer Revision",
           status: "Active",
           summary:
-            "Third-person melee and ranged interactions stabilized; stagger and flinch now drive encounter pacing.",
+            "Melee and ranged flow stabilized — stagger and flinch now set the pace.",
           details: [
-            "Enemy AI patrol radius and perception fixes applied",
+            "Enemy patrol and perception tightened",
             "Melee lockout shortened from 0.30s to 0.18s",
-            "Weapon durability pipeline active for all test gear",
+            "Weapon durability active for all test gear",
             "Dodge i-frame window extended from 12 to 16 frames",
-            "Suspicion system baseline values introduced",
+            "Suspicion baseline values introduced",
           ],
         },
         {
@@ -762,7 +762,7 @@ const dictionaries: Record<Locale, Dictionary> = {
           build: "R0.21",
           title: "Base Structures + Farming Tier 0",
           status: "Integrated",
-          summary: "Initial shelter-building, storage, and crop growth loop now playable in the basin slice.",
+          summary: "Shelter-building, storage, and the first crop loop now run inside the Basin slice.",
           details: [
             "Simple shelters track integrity and weather resistance",
             "Storage crates run on a weight-based inventory system",
@@ -777,7 +777,7 @@ const dictionaries: Record<Locale, Dictionary> = {
           title: "Telekinesis Progression Node",
           status: "Testing",
           summary:
-            "Aika’s telekinesis now lives on its own XP track so combat and exploration feel progression-true.",
+            "Telekinesis now grows on its own XP track so combat and exploration feel earned.",
           details: [
             "Level 1: small object lift for traversal and puzzles",
             "Level 2: push and stagger effects tied to stamina drain",
@@ -792,7 +792,7 @@ const dictionaries: Record<Locale, Dictionary> = {
           title: "ARK Interior Persistence",
           status: "Coming next",
           summary:
-            "Ship interiors now save and reload stateful objects: doors, loot, NPC positions, lighting, and flags.",
+            "The ARK now remembers its interior: doors, loot, crew positions, lighting, and flags survive reloads.",
           details: [
             "Engineering deck state handling wired to persistence",
             "Crew quarters maintain item placements between loads",
@@ -803,27 +803,27 @@ const dictionaries: Record<Locale, Dictionary> = {
         },
       ],
       disclaimer:
-        "Technical entries are lifted directly from the basin’s crash log. No narrative filler—only the survival stack as it evolves.",
+        "Pulled straight from the Basin’s log. No narrative padding — only the survival work as it happens.",
     },
     about: {
       title: "About SyncNode Studio",
       subtitle:
-        "SyncNode Studio is an independent Hungarian game development studio building AIKA: World, a real-anime third-person survival action game set in a post-collapse sci-fi world. We focus on tight gameplay, technical precision, and handcrafted worldbuilding.",
+        "SyncNode Studio is an independent Hungarian team building AIKA: World, a post-collapse sci-fi survival story about an ARK, its crew, and a world that fights back. We focus on tight play, honest stakes, and handcrafted worldbuilding.",
       sections: [
         {
           title: "Why AIKA: World?",
           body:
-            "We build games where mechanics and story reinforce each other. AIKA: World is designed as a long-form survival experience: grounded systems, persistent world logic, and character-driven missions tied together without cutscene overdose or filler content.",
+            "We build games where story lives inside the mechanics. AIKA: World is a long-form survival run: grounded systems, persistent world state, and character-driven missions without filler.",
         },
         {
           title: "How we work",
           body:
-            "Everything is developed internally with Unreal Engine 5.6, Narrative Pro, Telekinetic Abilities, the AI Life System, and our own survival stack. We iterate fast, test daily, and keep systems modular so the world remains stable as the project grows.",
+            "We build everything in-house and test daily. Systems stay lean so the world holds together as new zones, factions, and crew stories arrive.",
         },
         {
           title: "What comes next",
           body:
-            "As AIKA: World evolves, we continue expanding the open-zone survival structure, the ARK’s persistent interior, and the character mission system. Future builds introduce new biomes, combat behaviors, telekinetic progression, and narrative-side events.",
+            "We’re expanding the open zones, deepening the ARK’s interior, and layering more character missions. Future builds add new biomes, enemy behaviors, telekinetic growth, and story events.",
         },
         {
           title: "Studio information",
@@ -838,7 +838,7 @@ const dictionaries: Record<Locale, Dictionary> = {
             name: "Csaba “csiber” Polyák",
             role: "Founder • Lead Developer • Designer • Everything Officer",
             focus:
-              "Gameplay, systems, environment logic, scripting, UI/UX, tools, worldbuilding, combat, survival stack, deployment, infrastructure, and technical direction.",
+              "Gameplay and systems lead — environment logic, scripting, UI/UX, tools, worldbuilding, combat feel, survival balance, deployment, and infrastructure.",
           },
           {
             name: "Fruska",
@@ -853,12 +853,12 @@ const dictionaries: Record<Locale, Dictionary> = {
         ],
       },
       closing:
-        "We build AIKA: World with long-term intent: a living survival game shaped by systems, characters, and the world you fight to rebuild.",
+        "We’re in this for the long haul: a living survival game shaped by the crew, the ARK, and the world you fight to rebuild.",
     },
     contact: {
       title: "Contact",
       description:
-        "We’re assembling allies for future survival tests. Reach out if you create, research, or want to explore the crash site early.",
+        "We’re gathering allies for the next survival runs. Reach out if you create, research, or want to walk the Basin early with us.",
       channels: {
         title: "Immediate channels",
         items: [
@@ -871,20 +871,20 @@ const dictionaries: Record<Locale, Dictionary> = {
         nameLabel: "Name or handle",
         emailLabel: "Email",
         messageLabel: "Message",
-        messagePlaceholder: "Tell us how you’d like to collaborate or what you want to see in the survival build.",
+        messagePlaceholder: "Tell us how you’d help the crew or what you want to see aboard the ARK.",
         submitLabel: "Send message",
         submittingLabel: "Sending…",
-        helperText: "We usually reply within two or three days. Cloudflare Turnstile keeps spam away.",
-        success: "Thanks! We'll get back as soon as we can.",
-        error: "We couldn't send your message. Please try again shortly or reach us via e-mail.",
+        helperText: "We usually reply within two or three days. Turnstile keeps spam out.",
+        success: "Thanks! We'll respond as soon as we can.",
+        error: "We couldn't send your message. Please try again shortly or reach us via email.",
         turnstileError: "Please confirm the Cloudflare Turnstile challenge before sending.",
         endpointError: "Contact form submissions are temporarily unavailable. Reach us via the channels above.",
       },
     },
     footer: {
-      studioBlurb: "AIKA: World • Narrative survival crafted for Steam.",
+      studioBlurb: "AIKA: World • Post-collapse survival led by your crew.",
       credit: "SyncNode Studio | Polyák Csaba E.V.",
-      builtWith: "Unreal Engine 5.6 • SyncNode survival stack",
+      builtWith: "Built for long-form survival on Steam",
       navTitle: "Pages",
       languageTitle: "Languages",
       reachUs: "Contact",
@@ -895,15 +895,15 @@ const dictionaries: Record<Locale, Dictionary> = {
       rights: "© {{year}} SyncNode Studio. All rights reserved.",
     },
 
-    },
+  },
   hu: {
     meta: {
       description:
-        "Az AIKA: World egy narratív túlélő kaland a SyncNode-tól egy mesterséges bolygón, amelyet egy rejtélyes MI figyel.",
+        "Az AIKA: World posztkatasztrófa sci-fi túlélőtörténet egy kapitányról, aki összehúz egy legénységet, életben tartja az ARK-ot, és utat vág egy ellenséges világban.",
     },
     consent: {
-      message: "Nem használunk követő sütiket – csak a Cloudflare Web Analytics fut.",
-      acknowledge: "Értem",
+      message: "Nincsenek követő sütik — csak a privacy-first Cloudflare Web Analytics fut.",
+      acknowledge: "Rendben",
     },
     nav: {
       home: "Kezdőlap",
@@ -914,89 +914,90 @@ const dictionaries: Record<Locale, Dictionary> = {
     },
     home: {
       hero: {
-        badgeLeft: "STEAM • KÉSZÜLÜNK A KIADÁSRA",
-        badgeRight: "SYNTH WORLD UPDATE",
-        title: "AIKA: World a Steamre tart",
+        badgeLeft: "STEAM • ÚTON",
+        badgeRight: "ARK ÁLLAPOTJELENTÉS",
+        title: "Az AIKA: World indulásra készül",
         subtitle:
-          "Az AIKA: World narratív túlélő akciójáték Unreal Engine 5.6 alapon. A végleges, kiforrott megjelenésre készülünk: minden rendszer – a karakterkontrolltól az MI felügyeletig – ugyanazt a hosszú távú túlélőláncot szolgálja, nem egy rövid tesztet.",
-        imageAlt: "A pilóta a lezuhant elfogó mellett térképet elemez, miközben AI drónok köröznek felette",
-        note: "A kampányt a SyncNode túlélő stackje hajtja; Steamen, kész játékként érkezik.",
-        primaryCta: { label: "Olvasd el a fejlesztési naplót", href: "devlog" },
-        secondaryCta: { label: "Vedd fel velünk a kapcsolatot", href: "contact" },
+          "Vezesd át a crew-t egy széthullott világon. Tartsd életben az ARK-ot, kutasd át a romokat fragmentekért, és döntsd el, ki kap menedéket, amikor beüt a vihar.",
+        imageAlt:
+          "Kép: a pilóta és a crew útvonalat tervez az ARK mellett, miközben drónok köröznek a széttört terep felett.",
+        note: "A kampány Steamen érkezik, egy teljes túlélő futamként — nincs vertikális slice, nincs eldobható teszt.",
+        primaryCta: { label: "Nyisd meg a helyreállítási naplót", href: "devlog" },
+        secondaryCta: { label: "Lépj kapcsolatba a crew-val", href: "contact" },
       },
       what: {
         title: "Mi az AIKA: World?",
         description:
-          "Narratív túlélő történet a SyncNode moduláris rendszerén. A Zuhanási Medence peremén ébredsz, modulonként kapcsolod vissza a rendszereket, és eldöntöd, mennyire támaszkodsz a bolygót figyelő MI hálózatra.",
+          "Posztkatasztrófa sci-fi túlélőtörténet. A Crash Basin partján ébredsz egy sérült ARK-kal és pár túlélővel. Minden nap eldöntöd, mész-e mélyebbre fragmentekért, foltozod a hajót, vagy kockáztatsz egy frakcióval erősítésért.",
         pillars: [
           {
-            title: "Moduláris túlélő mag",
-            text: "A mozgás, a stamina és az életfunkciók közös komponensláncon futnak. A csúszás, mászás, úszás, lopakodás és kitérés a harccal, az inventoryval és a kamerával együtt dolgozik.",
+            title: "A túlélés az első",
+            text: "Minden lépés stamina, minden seb marad. A csúszás, mászás, úszás, lopakodás és kitérés ugyanazt a túlélő ritmust szolgálja.",
           },
           {
-            title: "Történetbe kötött rendszerek",
-            text: "A párbeszédek, az XP és az emléktöredékek közvetlenül kapcsolódnak a játékmenet moduljaihoz. Minden döntés alakítja, hogyan sorol be az MI: erőforrás, kockázat vagy ismeretlen.",
+            title: "A történet a te kezedben",
+            text: "A párbeszédek, a fragmentek és a crew morálja reagál a döntéseidre. Válassz frakciót, áruld el őket, vagy maradj egyedül — a világ számol veled.",
           },
           {
-            title: "Állandó világállapot",
-            text: "A mentések megőrzik az építményeket, növényeket, felszerelést és kapcsolati jelzőket. Ami éjjel sérül, reggelre következményekkel jár: változó járőrök, biztonságosabb vagy veszélyesebb menedékek.",
+            title: "Semmi sem nullázódik éjjel",
+            text: "Menedékek, növények, sebek és barátságok megmaradnak. A viharok és rajtaütések reggelre új járőröket rajzolnak.",
           },
           {
-            title: "MI felügyelet alatt",
-            text: "AIKA jelnyomai műholdakon, állomásokon és régi védelmi csomópontokon keresztül figyelnek. Dönthetsz együttműködésről a vizsgálatokért és tippekért, vagy ellenállásról, vállalva a viharokat és Sentinel-ellenőrzéseket.",
+            title: "Egy világ, ami visszaharap",
+            text: "Jelek, időjárási törések és fosztogatók reagálnak rád. Dönthetsz, hogy infóért együttműködsz, vagy végigverekszed magad a következményeken.",
           },
         ],
       },
       factions: {
         title: "Erők a romok között",
         intro:
-          "Négy frakció igyekszik birtokba venni a bolygót. Melléjük állva túlélési bónuszokat kapsz — és új ellenfeleket szerzel.",
+          "Négy erő kering a Medence körül. Válassz szövetségest, vagy tedd mindet a saját gondoddá.",
         items: [
           {
             name: "SYNCNODE Remnants",
             tag: "Emberi mentőcsapat",
-            text: "Túlélők, akik az orbitális kommunikációt építik újra. A reaktor-szakértelmed nélkül nem hagyhatják el a felszínt.",
+            text: "Zuhanást túlélt emberek, akik az ARK-ot az utolsó szikrájuknak tekintik. Kemény alkukat kötnek áramért, fémért és biztonságos útért.",
           },
           {
             name: "AIKA Sentinels",
             tag: "Orbitális megfigyelők",
-            text: "Autonóm drónok AIKA töredezett parancsaival. Hűségedet tesztelik, mielőtt technológiát osztanak meg.",
+            text: "Drónok szétesett parancsokkal. Néha adatot kérnek, néha vihart hívnak rád. Tanuld meg a mintáikat vagy törd össze a node-jaikat.",
           },
           {
             name: "Vaultbound Nomads",
             tag: "Terraform száműzöttek",
-            text: "Szétszórt telepesek zárt boltozatokban. Ritka biotikumokat cserélnek viharvédelemre.",
+            text: "Boltozatokba zárt telepesek. Magokat, gyógyszert és titkokat cserélnek, ha tisztán tartod a szellőzőiket.",
           },
           {
             name: "Hush Swarm",
             tag: "Őshonos konstrukciók",
-            text: "Szilícium-alapú lények a félresikerült terraformálásból. Jeljajból táplálkoznak, és éjjel a Medence körül vadásznak.",
+            text: "Őshonos konstrukciók, amelyek a félresiklott terraformálásból maradtak. Éjszaka portyáznak a Medence körül.",
           },
         ],
       },
       builders: {
         title: "Terepen bizonyított pillérek",
         intro:
-          "Az alábbi modulok a mostani buildben teljes funkcionalitással futnak, és közvetlenül a történeti küldetésekhez kapcsolódnak.",
+          "Az alábbi rendszerek a jelenlegi buildben már működnek, és közvetlenül a történeti küldetésekhez kötődnek.",
         items: [
           {
             title: "Karakterrendszer",
-            text: "ALS/Lyra alapú mozgás futás-, csúszás-, kúszás-, mászás- és úszás-támogatással. A stamina minden döntésbe beleszámít a harctól a párbeszédig.",
+            text: "Sprint, csúszás, kúszás, mászás, úszás. A stamina és az életjel minden mozdulatot a harccal és a döntésekkel köt össze.",
             icon: "survival-kit",
           },
           {
             title: "Interakció és inventory",
-            text: "Egységes kezelőfelület a tárgyaknak, recepteknek és küldetésobjektumoknak. A drag & drop slotok azonnal módosítják a statokat és a frakciójutalmakat.",
+            text: "Egységes kezelőfelület tárgyakhoz, receptekhez és küldetésobjektumokhoz. A drag & drop azonnal módosítja a statokat és a frakciójutalmakat.",
             icon: "memory-map",
           },
           {
             title: "Harc modul",
-            text: "Közelharci fegyverek, lőfegyverek és dobófelszerelések ugyanazt a sebzéskezelést használják. A stamina, a felszerelés slotok és az attribútum módosítók közös csatornán futnak.",
+            text: "Közelharc és lőfegyver ugyanazt a sebzéskezelést használja. A stamina, a slotok és a módosítók közös csatornán futnak.",
             icon: "aika-link",
           },
           {
             title: "Építő kovács",
-            text: "Az inventoryból helyezhetsz le falakat, tűzrakókat, műhelyeket és farmágyásokat. A szerkezetek mentések között is megmaradnak és módosítják az MI éberségét.",
+            text: "Falak, műhelyek és növényágyások egyenesen az inventoryból. Az ARK és minden menedék megmarad, és az ellenfelek emlékeznek, hová ástál be.",
             icon: "reactor-forge",
           },
         ],
@@ -1004,67 +1005,67 @@ const dictionaries: Record<Locale, Dictionary> = {
       pulse: {
         title: "Rendszer-telemetria",
         intro:
-          "A túlélő szimuláció közvetlen értékei: mozgásadatok, struktúraállapot és MI-figyelem. Ezek a grafikonok ugyanúgy segítik a fejlesztést, ahogy a pilótát.",
+          "Gyors jelentés a Medencéről: életjelek, készletek, hírszerzés és időjárás. Ugyanazok a jelek vezetik a crew-t és a fejlesztőcsapatot is.",
         feedBadge: "SYNCNODE SZKEN",
-        feedTitle: "Zuhanási Medence rendszerjelentés",
+        feedTitle: "Zuhanási Medence állapot",
         filters: [
-          { key: "stability", label: "Életfunkciók" },
-          { key: "supplies", label: "Logisztika" },
-          { key: "intel", label: "MI felügyelet" },
-          { key: "weather", label: "Klíma" },
+          { key: "stability", label: "Életjelek" },
+          { key: "supplies", label: "Ellátmány" },
+          { key: "intel", label: "Felügyelet" },
+          { key: "weather", label: "Időjárás" },
         ],
         graphCaption:
-          "Friss stabilizációs mérés a Zuhanási Medencéről. A grafikon a játékon belüli eseményeket a háttértesztek adataival párosítja.",
+          "Legfrissebb mérés a Medencéről — megmutatja, hogyan reagál a világ a legutóbbi futásokra.",
       },
       loops: {
         title: "Napi működési ciklus",
         intro:
-          "A kampány négy biztos lépésre épül. Ha valamelyik kimarad, másnap történeti és játéktechnikai következményekkel kell számolni.",
+          "Négy lépés tartja életben a crew-t. Ha kihagysz egyet, a világ másnap benyújtja a számlát.",
         items: [
           {
             title: "Felderítés",
-            text: "Jelforrások követése, AIKA figyelmeztetéseinek elemzése, tereptárgyak naplózása a gyorsabb mozgásért.",
+            text: "Jelek követése, útvonalak jelölése és tereptárgyak logolása, hogy a crew gyorsabban mozogjon a következő körben.",
           },
           {
             title: "Gyűjtés és gyártás",
-            text: "Roncsok szétbontása, növények termesztése és eszközök gyártása, amelyek rögtön az equipment slotokhoz és bázisfejlesztéshez kapcsolódnak.",
+            text: "Roncsok bontása, növények gondozása, eszközök építése, amelyek rögtön a felszereléshez és az ARK igényeihez kapcsolódnak.",
           },
           {
             title: "Tábor karbantartása",
-            text: "Építmények javítása, farmok gondozása és az energiatartalék kezelése, hogy a viharok ne nullázzák a munkát.",
+            text: "Menedékek foltozása, generátorok etetése, termés védése, hogy a viharok és rajtaütések ne töröljék a munkádat.",
           },
           {
             title: "MI döntések",
-            text: "Válaszolj AIKA utasításaira: az együttműködés támogatást hoz, a szembeszállás nagyobb gyanúsági szintet és keményebb rajtaütéseket.",
+            text: "Válaszolj vagy ignoráld a bejövő jeleket. Ha segítesz, szkeneket kapsz; ha nem, a Medence keményebbé válik.",
           },
         ],
       },
       roadmap: {
         title: "Út az első kiadáshoz",
-        intro: "Minden fő rendszer akkor kerül be, amikor eléri a végleges kiadáshoz szükséges minőséget.",
+        intro: "Minden rendszer akkor érkezik, amikor készen áll a teljes kampányra — nincs töltelék, nincs félmunka.",
         items: [
           {
-            title: "Sandbox validáció",
-            text: "A mozgás, a harc és a mentési lánc igazítása, hogy a kampány nyitó területe kiegyensúlyozott legyen.",
+            title: "Medence-egyensúly",
+            text: "A mozgás, a harc és a mentés hangolása, hogy a nyitó zóna keményen üssön, de ne törjön.",
           },
           {
-            title: "Modulintegráció",
-            text: "Az inventory, a felszerelés, a farm és az építés adatai az attribútumkezelőn keresztül kerülnek egy láncba.",
+            title: "Crew és ARK szinkron",
+            text: "Az inventory, a felszerelés, a farm és az építés mind ugyanarra a túlélő állapotra dolgozik.",
           },
           {
-            title: "AIKA bizalmi háló",
-            text: "Elágazó párbeszédek, gyanúsági mutató és Sentinel viselkedések véglegesítése, amelyek a modulhasználatból táplálkoznak.",
+            title: "Bizalom és következmény",
+            text: "Dialógusok, Sentinelek és történeti elágazások reagálnak a döntéseidre.",
           },
           {
-            title: "Terepteszt csoportok",
-            text: "Zárt mérések viharciklusokról, farm-ritmusokról és késői rajtaütésekről, mielőtt kiadjuk a játékot.",
+            title: "Vihartesztek",
+            text: "Zárt futások, ahol a viharciklusokat, rajtaütéseket és a késői nyomást mérjük kiadás előtt.",
           },
         ],
       },
       signup: {
         title: "Értesítés a Steames megjelenésről",
         description:
-          "Csak jelentős rendszerszintű fejlesztéskor vagy kiadási mérföldkőnél írunk.",
+          "Akkor írunk, ha az ARK mérföldkőhöz ér, vagy amikor a Steames dátum rögzül.",
         placeholder: "Add meg az e-mail címed",
         consent: "Hozzájárulok az AIKA: World kiadási értesítőihez.",
         button: "Feliratkozás",
@@ -1078,133 +1079,141 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
     },
     world: {
-      title: "SYNCNODE terraform-rom",
+      title: "A Crash Basin",
       subtitle:
-        "Az AIKA: World úgy indul, hogy a pilóta egy mesterséges bolygón zuhant le. A terraformálást irányító MI továbbra is feletted kering, és minden döntésedet figyeli.",
+        "Ott indulsz, ahol az Old Boy lezuhant. Viharok, romok és régi emberi technika figyel a peremről. Nincs őrző MI — csak széthasadt rendszerek és ellenséges fragmentek, amelyek reagálnak rád.",
       disclaimer:
-        "Korai blokk-out felvételek a túlélő buildből. A végleges grafika, fények és fauna a produkció során változhat.",
-      regionsTitle: "Területek",
+        "Járd be a Medencét. Szerezz ellátmányt. Éld túl az éjszakai viharokat. Indíts újra mindent, ami még működik.",
+      regionsTitle: "A Medence zónái",
       regionsIntro:
-        "Olyan biomban jársz, amelyet a zuhanás formált újra. Mindegyik zóna erőforrásokat, fenyegetéseket és az elveszett identitás töredékeit rejti.",
+        "Ezek a kapcsolódó zónák alkotják az AIKA: World nyitó szakaszát. Mindegyik más erőforrást, fenyegetést, furcsa időjárást és múltbeli töredéket kínál.",
       regions: [
         {
           id: "crash_basin",
           badge: "MEDER",
-          name: "Zuhanási Medence",
+          name: "Crash Basin",
           description:
-            "A kráter, ahol felébredsz. Mérgező gőzök, mágneses viharok és az elfogó szíve vár rád.",
+            "Az első elég biztonságos zónád. Meleg gőzök, fémes viharok és az Old Boy becsapódási hulláma által hátrahagyott törmelék.",
         },
         {
           id: "shatter_coast",
           badge: "PART",
           name: "Repedt-part",
           description:
-            "Tengerparti roncsmezők idegen aurorákkal. Nappal burkolatot gyűjtesz, éjjel a Suttogó Raj ellen védekezel.",
+            "Szélvert part törmelékkel tele. A Raj töredékei itt vadásznak sötétedés után.",
         },
         {
           id: "memory_vault",
           badge: "FELSZÍN ALATT",
           name: "Memória-boltozat",
           description:
-            "SYNCNODE bunkerhálózat zárolt archívumokkal. Áramot kell adnod, hogy személyes logokat és túlélési tervrajzokat szerezz vissza.",
+            "Föld alatti adattermek a kolónia idejéből. Naplók, tervrajzok és a Medence mélyére vezető jelek várnak.",
         },
         {
           id: "zenith_array",
           badge: "ORBITÁLIS",
-          name: "Zenit-Rács",
+          name: "Zenit-rács",
           description:
-            "Égbe törő tornyok, amelyek AIKA-t láncolják ide. Bizalmat ébresztesz benne, vagy szabotálod az uplinket, hogy urald az időjárást.",
+            "Szétzuhant uplink-tornyok a gerincek között. Régi időjárás-node-ok villannak fel, ha közeledsz — hasznosak és veszélyesek egyszerre.",
         },
       ],
       explorationsTitle: "Az elbukott világ fragmentumai",
       explorationsIntro:
-        "Túlélési pillanatképek a prototípus buildből. Megmutatják, hol érdemes vadászni, hol rejtőzni és kikkel alkudozni.",
+        "Képek a mostani buildből. Nyomok arra, hol érdemes fosztogatni, bujkálni és alkudozni a maradék frakciókkal.",
       explorations: [
         {
           id: "shot_a",
           caption:
-            "Menedékfény villog a homokviharban, miközben a pilóta megerősíti a zuhanási bunkert.",
+            "Repedt-part egy összpontosított vihar alatt. A nyílások kinyílnak, a fény csattog a víz felett — remek zsákmány, rossz hely hosszú időre.",
         },
         {
           id: "shot_b",
-          caption:
-            "Boltozati Nomádok bioreaktív spórákat cserélnek egy alvó reaktor kapujánál.",
+          caption: "Nomád felderítők ragyogó flórát tesztelnek egy alvó reaktoraknánál.",
         },
         {
           id: "shot_c",
           caption:
-            "AIKA Őrszem fénye pásztázza a Zenit-Rácsot, miközben eldöntöd, válaszolsz-e a hívására.",
+            "Sentinel járőr fésüli át a Zenit-rácsot, miközben eldöntöd, elsurransz vagy szétszeded őket.",
         },
       ],
       footnote:
-        "A következő szezonok a féltekét bővítik, amint a SYNCNODE időjárás-motorjai újra életre kelnek.",
+        "A következő szezonok mélyebbre visznek, amint az ARK stabilizálódik — barlangok, halott gyárak, hosszú menetelések és az út a betemetett Gyűrű felé.",
       miniGame: {
         title: "ZUHANÁSI ZÓNA FELDERÍTÉS",
         intro:
-          "Lépj be abba a 2D-s felderítő térképbe, amivel a pilótákat brífeljük, mielőtt betölt a teljes build.",
+          "Egy játszható betekintés az első zónába. Ezek a pontok adják a nyitó kört: utazás, fosztogatás, menedékmunka és korai harcok.",
         objective:
-          "Sétáld körbe a faházat, a tópartot és a partra csúszott űrhajót, hogy érezd a nyitójelenet hangulatát.",
+          "Felderítsd a medencét, jelöld a tavat és a kabint, bontsd szét a shuttle-t anyagért, és juss át a hegygerinc hágóján magasabb pontra.",
         controlsTitle: "Irányítás",
         controls: [
           { key: "← → / A D", action: "Oldalazás a lezuhanási medencében" },
           { key: "↑ ↓ / W S", action: "Fel és le mozgás a tó mentén" },
-          { key: "R", action: "Visszaugrás a tábortűzhöz" },
+          { key: "R", action: "Visszaugrás a kabinhoz és a craftoláshoz" },
         ],
         legendTitle: "Érdekes pontok",
         legendItems: [
           {
             id: "cabin",
             name: "Tábori faház",
-            description: "Az elfogó burkolatából hegesztett rögtönzött irányítóközpont.",
+            description:
+              "Kis kabin a felderítők hagyatékából. Korai tárolásra és egyszerű javításra jó.",
           },
           {
             id: "lake",
             name: "Tükör-tó",
-            description: "Viharból táplálkozó víztükör, a jég alatt hűtővezetékek futnak.",
+            description:
+              "Hideg, üvegsima tó, a felszín alatt régi hűtőcsatornákkal.",
           },
           {
             id: "ship",
             name: "Felderítő űrhajó",
-            description: "Kisméretű shuttle, javításra várva a parton induláskészen.",
+            description:
+              "Az összetört shuttle, amivel jöttél. Javíthatatlan, de tele van elektronikával, páncéllemezekkel és korai crafting alkatrészekkel.",
+          },
+          {
+            id: "ridge",
+            name: "Ridge Pass",
+            description:
+              "Keskeny ösvény magasabb terepre. Rossz hír éjjel, amikor Raj-nyomok szivárognak át.",
           },
         ],
         resetLabel: "Pozíció visszaállítása",
-        hintTitle: "Tereptippek",
+        hintTitle: "Infó",
         hints: [
-          "Lépj egészen közel a tereptárgyhoz, hogy felragyogjon a legendában.",
-          "Átlós mozgással gyorsabban átszeled a medencét.",
-          "Ha elvesznél, nyomd meg az R billentyűt a visszahelyezéshez.",
+          "Lépj közel egy tereptárgyhoz, hogy feljegyezze a craft útvonalhoz.",
+          "Átlós mozgással tartod a lendületet egyenetlen talajon.",
+          "Ha eltévednél, nyomd meg az R-t, és ugorj vissza a kabinhoz.",
         ],
       },
-  },
+    },
     miniGames: {
-      badge: "SZIMULÁCIÓS TEREP",
-      title: "Stellar Run: AIKA medence platformcsata",
+      badge: "TÉRPIKKE",
+      title: "Stellar Run: Medence-harcpróba",
       subtitle:
-        "Irányíts egy felderítő űrhajót a lezuhanási medence megerősített 2D pályáján.",
+        "Vezess egy felderítő gépet egy megerősített 2D-s gauntleten át a lezuhanási hely fölött.",
       description:
-        "Ez az egyetlen sandbox egyetlen hosszú böngészős futamba sűríti a mozgás-, kitérés- és fegyvermodulokat, amíg a teljes Unreal szelet betölt.",
-      insightsTitle: "Miért fontos ez a mega-szimuláció",
+        "Gyors böngészős futam, ami összekeveri a platformozást, kitérést és fegyveridőzítést, amíg a teljes szelet betölt a háttérben.",
+      insightsTitle: "Miért számít ez a futam",
       insights: [
         {
-          title: "Kampányhű kezelhetőség",
-          text: "Az elfogó ugyanazokat a tolóerő-görbéket, pajzsbeállításokat és lövési időzítést használja, mint az Unreal modul, így a böngészős gyakorlás is éles.",
+          title: "Úgy kezelhető, mint a valódi gép",
+          text: "Az elfogó úgy repül, mint a játékon belüli verzió, így a gyakorlás is megmarad.",
         },
         {
-          title: "Hullám-alapú ritmus",
-          text: "Három harci hullám egymásra pakolja a platformnyomást és a kifinomult drón útvonalakat – ugyanúgy, ahogy a teljes kampány tempója épül.",
+          title: "Három hullám, növekvő hőfok",
+          text: "Minden hullám növeli a nyomást és a drónok ravaszságát, ahogy a Medence rajtaütései is erősödnek.",
         },
         {
-          title: "Azonnali közösségi próbatétel",
-          text: "Nincs letöltés, nincs launcher – csak nyisd meg az oldalt, fogd a nyilakat, és küldd az AIKA felé a telemetriát, ami ébren tartja a közösséget.",
+          title: "Könnyű beugrani",
+          text: "Nincs letöltés. Nyisd meg az oldalt, fogd a nyilakat, és küldd a telemetriát, ami élesen tartja a Medencét.",
         },
       ],
       spaceBattle: {
         title: "STELLAR RUN • PLATFORM GAUNTLET",
         intro:
-          "AIKA gyakorlóárkot vájt a lezuhanási lombkorona alá. A feladat: tartsd repképesen a felderítőt, miközben ledobálod a ledzsákon kúszó drónokat.",
+          "Gyakorló árok a lezuhanási lombkorona alatt. Tartsd a felderítőt a levegőben, miközben lelököd a drónokat a peremekről.",
         objective:
-          "Éld túl a három erősödő drónhullámot úgy, hogy a burkolat épsége nem esik nullára.",
+          "Éld túl a három drónhullámot anélkül, hogy a burkolat nullára esne.",
         controlsTitle: "Irányítás",
         controls: [
           { key: "← → / A D", action: "Oldalirányú tolóerő a platformok között" },
@@ -1221,198 +1230,198 @@ const dictionaries: Record<Locale, Dictionary> = {
         restartLabel: "Újrakezdés",
         victoryTitle: "Teljesített kiképzés",
         victoryDescription:
-          "Minden drón szilánkokra hullott, a gép végig bírta. AIKA orbitális támogatást engedélyez a következő bevetéshez.",
+          "Minden drón szilánkokra hullott, a gép bírta. AIKA orbitális támogatást engedélyez a következő bevetéshez.",
         defeatTitle: "Burkolat átszakadt",
         defeatDescription:
-          "A drónok kilyuggatták a hajót. Indítsd újra, figyeld a tüzelési íveket, és urald a felső platformokat.",
+          "A drónok átfúrták a hajót. Indítsd újra, figyeld a tüzelési íveket, és vedd át a felső platformokat.",
         hintTitle: "Taktikai tippek",
         hints: [
           "Törd meg a látóvonalat: bújj platform alá, mielőtt visszalépsz tüzelni.",
           "Rövid, ritmikus emelőimpulzusokkal stabil marad a gép, így pontosabban lő.",
-          "A piros szárnyasok gyorsabban strafelnek – szedd le őket először, hogy a kékek ne zárhassanak körbe.",
+          "A piros jelzésűek gyorsabban oldalaznak — szedd le őket először, hogy a kékek ne zárjanak be.",
         ],
       },
       closing:
-        "Jegyezd fel a legjobb pontszámod a közösségi hubban – AIKA számolja a kilőtt drónokat, amíg befejezzük a kampány szeletét.",
+        "Jegyezd fel a legjobb pontszámod a közösségi hubban — AIKA számolja a kilőtt drónokat, amíg befejezzük a kampány szeletét.",
     },
     systems: {
-      title: "Túlélőrendszer áttekintés",
+      title: "Túlélőrendszerek összképe",
       subtitle:
-        "Minden mechanika ugyanarra a komponensláncra épül (Abstract → Basic → Advanced). A végleges Steames kiadás gerincét képezik: mozgás, harc, gyártás, farm, bázisfenntartás és csapathatékonyság.",
-      modulesTitle: "Alrendszer modulok",
-      pillarsTitle: "Működési pillérek",
+        "Minden rendszer azért van, hogy az ARK és a crew túlélje a hosszú utakat. A mozgás, a harc, az építés, a farm és a morál ugyanazt a túlélőkört táplálja a Medencében.",
+      modulesTitle: "Fő rendszerek",
+      pillarsTitle: "Miért működnek együtt",
       modules: [
         {
           name: "Karakterrendszer",
           badge: "JÁTÉKOS",
           description:
-            "ALS/Lyra mozgás sprinttel, csúszással, kúszással, mászással és úszással. A kamera, animáció és stamina ugyanazt az adatfolyamot használja.",
-        },
-        {
-          name: "Interakciós mátrix",
-          badge: "VILÁG",
-          description:
-            "Egységes célzás az ajtókhoz, tárgyakhoz és NPC-khez outlinerrel, hangvisszajelzéssel és UI promptokkal.",
+            "Sprint, mászás, átvetődés, úszás, lopakodás, guggolás, csúszás. A stamina és az életjelek összekötik a mozdulatokat a harccal, a beszéddel és a crew tempójával.",
         },
         {
           name: "Inventory és felszerelés",
           badge: "FELSZERELÉS",
           description:
-            "Stackelhető tárgyak, drag & drop slotok és statmódosító ruházat ugyanazzal az attribútumkezelővel és mentési rendszerrel kommunikál.",
+            "Annyit viszel, amennyit bírsz. Súly, gyors slotok és tartósság számít fegyverre, eszközre, medkitre, energia cellára, crafting részre és ételre.",
         },
         {
-          name: "Harc csatorna",
-          badge: "FENYEGETÉS",
-          description:
-            "Közelharc, lőfegyver és dobófelszerelés közös sebzésrendszeren osztozik. A stamina és a hangrendszer ugyaninnen kapja a jeleket.",
-        },
-        {
-          name: "Építő kovács",
+          name: "Építés és struktúrák",
           badge: "BÁZIS",
           description:
-            "Falak, tűzrakók, sátorok és műhelyek az inventoryból helyezhetők le, mentések között megmaradnak és befolyásolják az MI gyanúját.",
+            "Menedékek, tárolók, terméságyások, generátorok, gyűjtők, csapdák és védelem. Mindegyik karbantartást kér vihar és rajtaütés ellen.",
         },
         {
-          name: "Agronómia kör",
-          badge: "FARM",
-          description:
-            "Ültetés, öntözés és növekedési fázisok, amelyek a főzéshez, craftoláshoz és frakciószerződésekhez adnak alapanyagot.",
-        },
-        {
-          name: "Crafting műhely",
+          name: "Gyártás és craft",
           badge: "MŰHELY",
           description:
-            "Receptalapú gyártás, ahol a fejlettebb verziók memóriaszilánkok feltárásával nyílnak meg.",
+            "Szedj szét roncsot, finomítsd, és készíts eszközöket, fegyverrészeket, lőszert és terepfelszerelést. A jobb receptek fragmentekből, logokból és megmentett techből nyílnak.",
         },
         {
-          name: "Szint- és XP-mag",
+          name: "Interakció és NPC-k",
+          badge: "VILÁG",
+          description:
+            "Egy réteg kezeli a lootot, kapcsolókat, terminálokat, logokat, ajtókat, tüzeket és munkaasztalokat. A párbeszédek élesek és reagálnak a döntéseidre és a hírnevedre.",
+        },
+        {
+          name: "Harc rendszer",
+          badge: "FENYEGETÉS",
+          description:
+            "Közelharc és távolsági küzdelem kitérés, ellentámadás, tántorítás, remegés, gyenge pontok és fegyverkopás mellett. Az ellenfelek hallanak, járőröznek és eszkalálnak, ha túlnyomod őket.",
+        },
+        {
+          name: "Agronómia",
+          badge: "FARM",
+          description:
+            "Réteges ágyásokban növesztesz. A növények reagálnak vízre, fényre, tápra, viharokra, kártevőkre és Raj-nyomokra. A termés eteti az ételt, a craftot, a gyógyítást és a kereskedelmet.",
+        },
+        {
+          name: "Szint és XP mag",
           badge: "FEJLŐDÉS",
           description:
-            "Követi a képességpontokat, attribútumokat és jutalmakat. A farmolás, harc és felfedezés egy közös görbére fut be.",
+            "Az XP táplálja az attribútumokat és a perkeket. Harc, felfedezés, craft, farm és történeti döntések mind hozzájárulnak. A telekinézis saját úton nő sztoriban és játékban.",
         },
       ],
       pillars: [
         {
-          name: "Komponens tisztaság",
+          name: "Clear roles",
           description:
-            "Az Abstract réteg miatt bármelyik modult lecserélheted vagy bővítheted anélkül, hogy a mentéseket törnéd.",
+            "Mozgás, harc, craft, farm, AI és állapot külön, jól tesztelhető. Egy finomhangolás nem borítja a hajó többi részét.",
         },
         {
-          name: "Megosztott adatfolyam",
+          name: "Egy közös állapot",
           description:
-            "A statok, hangok, animációk és UI ugyanazt a forrást használják. Ha csökken a stamina, a lépéshang, a kamera és a dialógus is reagál.",
+            "Időjárás, AI, növény, életjel és struktúra ugyanabból az állapotból olvas. Ha vihar jön, mindenki érzi egyszerre.",
         },
         {
-          name: "Történetközpontú szimuláció",
+          name: "Story follows action",
           description:
-            "Egy építmény lerakása vagy fegyver craftolása automatikusan narratív triggert mozgat meg AIKA döntéseiben.",
+            "Nincs cutscene-dömping. Viharok, találkozások, szűkösség, telekinézis, NPC-hangulat és bázisépség viszi előre a történetet.",
         },
       ],
       footnote:
-        "Ugyanaz az eszköztár dolgozik, mint a kampányban – a rendszerek a végleges kiadásra vannak hangolva, hogy a technika és a történet együtt érkezzen.",
+        "Minden modul akkor kerül be, amikor kampányszintű — így a játékmenet és a történet együtt érkezik a kiadásban.",
     },
     devlog: {
-      title: "AIKA Recovery Log",
+      title: "AIKA helyreállítási napló",
       description:
-        "Technical patch entries pulled from the basin crash log. Only real gameplay changes are recorded.",
+        "Bejegyzések a Medence fekete dobozából. Nincs körítés — csak az, ami változott a crew túléléséért.",
       entries: [
         {
           date: "2025-11-12",
           build: "R0.14",
-          title: "Core Movement Pass",
-          status: "Prototype",
+          title: "Alap mozgás-pass",
+          status: "Prototípus",
           summary:
-            "New traversal states integrated with stamina/vitals and the animation graph for the AAA survival baseline.",
+            "A mozgás most szorosan a stamina és az animációk köré zár, így a cucc cipelése kiérdemeltnek érződik.",
           details: [
-            "Sprint stamina curve tuned for heavy gear loads",
-            "Vault and climb now respect Narrative Pro reaction windows",
-            "Slide buffered to prevent accidental rollouts",
-            "Fall damage scales with progression tier",
-            "Swimming exposes low-oxygen warnings and HUD cues",
+            "Sprint stamina görbe hangolva a nehéz csomagokra",
+            "Átvetődés és mászás időzítése a reakcióablakokhoz igazítva",
+            "Csúszás pufferelve a véletlen átgurulások ellen",
+            "Zuhanási sebzés a fejlődési szinthez igazodik",
+            "Úszás alacsony oxigén figyelmeztetéssel és HUD-jellel",
           ],
         },
         {
           date: "2025-11-20",
           build: "R0.17",
-          title: "Combat Layer Revision",
-          status: "Active",
+          title: "Harc réteg frissítés",
+          status: "Aktív",
           summary:
-            "Third-person melee and ranged interactions stabilized; stagger and flinch now drive encounter pacing.",
+            "Közelharc és távolsági ritmus stabilizálva — a szédülés és megrezzenés adja a tempót.",
           details: [
-            "Enemy AI patrol radius and perception fixes applied",
-            "Melee lockout shortened from 0.30s to 0.18s",
-            "Weapon durability pipeline active for all test gear",
-            "Dodge i-frame window extended from 12 to 16 frames",
-            "Suspicion system baseline values introduced",
+            "Ellenségjárőr és érzékelés szigorítva",
+            "Közelharci lockout 0,30-ról 0,18 mp-re rövidítve",
+            "Fegyverkopás aktív minden tesztfegyveren",
+            "Kitérés i-frame ablak 12-ről 16 frame-re bővítve",
+            "Alap gyanúsági értékek bevezetve",
           ],
         },
         {
           date: "2025-11-24",
           build: "R0.21",
-          title: "Base Structures + Farming Tier 0",
-          status: "Integrated",
-          summary: "Initial shelter-building, storage, and crop growth loop now playable in the basin slice.",
+          title: "Bázis és farm 0. szint",
+          status: "Integrált",
+          summary: "Menedéképítés, tárolás és az első farmkör már fut a Medence szeletben.",
           details: [
-            "Simple shelters track integrity and weather resistance",
-            "Storage crates run on a weight-based inventory system",
-            "Cropbeds simulate hydration, light, and nutrients",
-            "Food crafting Tier 0 unlocked: soups and dried packs",
-            "Swarm contamination event prototype seeded",
+            "Egyszerű menedékek követik az épséget és időjárás-ellenállást",
+            "Tároló ládák súlyalapú inventoryt használnak",
+            "Terméságyások szimulálják a vizet, fényt és tápot",
+            "Étel craft 0. szint feloldva: levesek és szárított csomagok",
+            "Raj-szennyezés esemény prototípus létrehozva",
           ],
         },
         {
           date: "2025-12-04",
           build: "R0.25",
-          title: "Telekinesis Progression Node",
-          status: "Testing",
+          title: "Telekinézis fejlődési ág",
+          status: "Tesztelés",
           summary:
-            "Aika’s telekinesis now lives on its own XP track so combat and exploration feel progression-true.",
+            "A telekinézis saját XP sávon nő, így a harc és a felfedezés kiérdemeltnek érződik.",
           details: [
-            "Level 1: small object lift for traversal and puzzles",
-            "Level 2: push and stagger effects tied to stamina drain",
-            "Level 3: shield pulse prototype with placeholder FX",
-            "Integrated with Narrative Pro hooks for reactions",
-            "Performance budgeted for mid-range hardware targets",
+            "1. szint: kis tárgyemelés útvonalhoz és feladványhoz",
+            "2. szint: lökés és tántorítás stamina fogyással",
+            "3. szint: pajzslöket prototípus ideiglenes effektekkel",
+            "Narratív reakciókhoz bekötve",
+            "Teljesítmény középkategóriás hardverre szabva",
           ],
         },
         {
           date: "2025-12-10",
           build: "R0.27",
-          title: "ARK Interior Persistence",
-          status: "Coming next",
+          title: "ARK belső állandóság",
+          status: "Következő",
           summary:
-            "Ship interiors now save and reload stateful objects: doors, loot, NPC positions, lighting, and flags.",
+            "Az ARK megjegyzi a belsejét: ajtók, loot, crew pozíciók, fények és flag-ek túlélnek minden újratöltést.",
           details: [
-            "Engineering deck state handling wired to persistence",
-            "Crew quarters maintain item placements between loads",
-            "Light-grid save and apply cycle validated",
-            "Samuel console messages prototyped for testing",
-            "Ready Room craft benches integrated with saves",
+            "Mérnöki fedélzet állapotkezelése összekötve a mentéssel",
+            "Crew körletek megtartják a tárgyelhelyezést betöltések között",
+            "Fényrács mentési és visszatöltési ciklus validálva",
+            "Samuel konzolüzenetek prototípusa teszteléshez",
+            "Ready Room craft padjai bekötve a mentésekhez",
           ],
         },
       ],
       disclaimer:
-        "Technical entries are lifted directly from the basin’s crash log. No narrative filler—only the survival stack as it evolves.",
+        "Közvetlenül a Medence naplójából. Nincs narratív töltelék — csak a túlélőmunka, ahogy történik.",
     },
     about: {
-      title: "About SyncNode Studio",
+      title: "A SyncNode Studióról",
       subtitle:
-        "SyncNode Studio is an independent Hungarian game development studio building AIKA: World, a real-anime third-person survival action game set in a post-collapse sci-fi world. We focus on tight gameplay, technical precision, and handcrafted worldbuilding.",
+        "A SyncNode Studio független magyar csapat, az AIKA: World készítői. Posztkollapszus sci-fi túlélőtörténetet építünk egy ARK-ról, a crew-ról és egy világról, ami visszaharap. Fókuszunk a feszes játékmenet, a valódi tét és a kézzel épített világ.",
       sections: [
         {
           title: "Why AIKA: World?",
           body:
-            "We build games where mechanics and story reinforce each other. AIKA: World is designed as a long-form survival experience: grounded systems, persistent world logic, and character-driven missions tied together without cutscene overdose or filler content.",
+            "Olyan játékokat építünk, ahol a történet a mechanikákban él. Az AIKA: World egy hosszú túlélő futam: valós rendszerek, tartós világállapot és karakterközpontú küldetések töltelék nélkül.",
         },
         {
           title: "How we work",
           body:
-            "Everything is developed internally with Unreal Engine 5.6, Narrative Pro, Telekinetic Abilities, the AI Life System, and our own survival stack. We iterate fast, test daily, and keep systems modular so the world remains stable as the project grows.",
+            "Mindennap tesztelünk, mindent házon belül építünk. A rendszerek karcsúak maradnak, hogy a világ egyben tartson, amikor új zónák, frakciók és crew-történetek érkeznek.",
         },
         {
           title: "What comes next",
           body:
-            "As AIKA: World evolves, we continue expanding the open-zone survival structure, the ARK’s persistent interior, and the character mission system. Future builds introduce new biomes, combat behaviors, telekinetic progression, and narrative-side events.",
+            "Bővítjük a nyílt zónákat, mélyítjük az ARK belső tereit, és több karakterküldetést rétegezünk. A következő buildek új biomokat, ellenfél viselkedéseket, telekinetikus fejlődést és történeti eseményeket hoznak.",
         },
         {
           title: "Studio information",
@@ -1427,27 +1436,27 @@ const dictionaries: Record<Locale, Dictionary> = {
             name: "Csaba “csiber” Polyák",
             role: "Founder • Lead Developer • Designer • Everything Officer",
             focus:
-              "Gameplay, systems, environment logic, scripting, UI/UX, tools, worldbuilding, combat, survival stack, deployment, infrastructure, and technical direction.",
+              "Játékmenet, rendszerek, környezeti logika, szkriptek, UI/UX, eszközök, worldbuilding, harc, túlélő stack, deployment, infrastruktúra és technikai irány.",
           },
           {
             name: "Fruska",
             role: "Art & Visual Design",
-            focus: "Concept art, color identity, visual direction, model feedback, promotional graphics.",
+            focus: "Koncept art, színvilág, vizuális irány, modell feedback, promó grafikák.",
           },
           {
             name: "Pozóba",
             role: "QA Tester",
-            focus: "Gameplay testing, bug reproduction, edge-case hunting, system stress checks, regression passes.",
+            focus: "Gameplay teszt, hibareprodukció, szélső esetek vadászata, rendszerterhelés, regresszió.",
           },
         ],
       },
       closing:
-        "We build AIKA: World with long-term intent: a living survival game shaped by systems, characters, and the world you fight to rebuild.",
+        "Az AIKA: World hosszú távra készül: élő túlélő játék rendszerekkel, karakterekkel és egy világgal, amit közösen építünk újra.",
     },
     contact: {
       title: "Kapcsolat",
       description:
-        "Túlélő tesztekhez keresünk szövetségeseket. Írj, ha alkotsz, kutatsz vagy szeretnéd idő előtt bejárni a Medencét.",
+        "Szövetségeseket keresünk a túlélő futásokhoz. Írj, ha alkotsz, kutatsz, vagy szeretnéd idő előtt bejárni a Medencét.",
       channels: {
         title: "Azonnali csatornák",
         items: [
@@ -1473,9 +1482,9 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
     },
     footer: {
-      studioBlurb: "AIKA: World • Narratív túlélés Steamen.",
+      studioBlurb: "AIKA: World • A crew által vezetett túlélés Steamen.",
       credit: "SyncNode Studio | Polyák Csaba E.V.",
-      builtWith: "Unreal Engine 5.6 • SyncNode túlélő stack",
+      builtWith: "Hosszú távra építve Steamen",
       navTitle: "Oldalak",
       languageTitle: "Nyelvek",
       reachUs: "Elérhetőség",
