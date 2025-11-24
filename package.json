@@ -11,9 +11,9 @@
 		"preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
 		"cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts",
 		"cf:build": "opennextjs-cloudflare build",
-		"cf:preview": "wrangler dev --test --persist --local .open-next/worker",
-		"cf:deploy": "wrangler deploy .open-next/worker"
-	},
+                "cf:preview": "npm run cf:build && wrangler dev --test --persist --local .open-next/worker.js",
+                "cf:deploy": "wrangler deploy .open-next/worker.js"
+        },
 	"dependencies": {
 		"@opennextjs/cloudflare": "^1.3.0",
 		"geist": "^1.5.1",
