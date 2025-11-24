@@ -51,11 +51,16 @@ export default async function DevlogPage({
             >
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-[0.3em] text-white/50">
                 <span>{entry.date}</span>
+                <span>Build {entry.build}</span>
                 <span>{entry.status}</span>
               </div>
               <h2 className="mt-4 text-2xl font-semibold">{entry.title}</h2>
-              <p className="mt-3 text-sm text-white/80">{entry.desc}</p>
-              <p className="mt-2 text-xs text-white/60 italic">{entry.devnote}</p>
+              <p className="mt-3 text-sm text-white/80">{entry.summary}</p>
+              <ul className="mt-4 list-inside list-disc space-y-2 text-sm text-white/80">
+                {entry.details.map((detail) => (
+                  <li key={detail}>{detail}</li>
+                ))}
+              </ul>
             </li>
           ))}
         </ul>
