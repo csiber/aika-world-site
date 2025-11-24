@@ -9,8 +9,6 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { HeroAurora } from "./hero-aurora";
 import { HeroSoundscape } from "./hero-soundscape";
-import { HeroStoryAnimation } from "./hero-story-animation";
-import { LivePulse } from "./live-pulse";
 
 type HomeLandingProps = {
   locale: Locale;
@@ -227,60 +225,6 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
               </div>
               <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
               <p className="mt-3 text-sm text-slate-200">{feature.text}</p>
-            </div>
-          ))}
-        </div>
-      </RevealSection>
-
-      <RevealSection className="space-y-8 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-10 shadow-[0_30px_80px_-60px_rgba(30,140,255,0.3)] backdrop-blur">
-        <div className="space-y-3">
-          <h2 className="text-3xl font-semibold text-white">{content.pulse.title}</h2>
-          <p className="max-w-2xl text-base text-slate-200">{content.pulse.intro}</p>
-        </div>
-        <LivePulse {...content.pulse} />
-      </RevealSection>
-
-      <RevealSection className="space-y-10 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-10 shadow-[0_30px_80px_-60px_rgba(30,140,255,0.3)] backdrop-blur">
-        <div className="space-y-4">
-          <h2 className="text-3xl font-semibold text-white">{content.loops.title}</h2>
-          <p className="max-w-2xl text-base text-slate-200">{content.loops.intro}</p>
-        </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          {content.loops.items.map((loop) => (
-            <article
-              key={loop.title}
-              className="flex h-full flex-col gap-4 rounded-2xl border border-slate-800/80 bg-gradient-to-br from-[#182640] via-[#121b30] to-[#0c1328] p-6 transition-transform hover:-translate-y-1 hover:shadow-[0_24px_70px_-50px_rgba(30,160,255,0.35)]"
-            >
-              <div>
-                <h3 className="text-xl font-semibold text-white">{loop.title}</h3>
-                <p className="mt-2 text-sm text-slate-200">{loop.text}</p>
-              </div>
-              <div className="mt-auto flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-indigo-200">
-                <span className="inline-flex h-2 w-2 rounded-full bg-cyan-300/80" aria-hidden />
-                {content.pulse.feedBadge}
-              </div>
-            </article>
-          ))}
-        </div>
-      </RevealSection>
-
-      <RevealSection id="roadmap" className="space-y-10 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-10 shadow-[0_30px_80px_-60px_rgba(30,140,255,0.3)] backdrop-blur">
-        <div>
-          <h2 className="text-3xl font-semibold text-white">{content.roadmap.title}</h2>
-          <p className="mt-3 max-w-2xl text-base text-slate-200">{content.roadmap.intro}</p>
-        </div>
-        <div className="grid gap-6 lg:grid-cols-2">
-          {content.roadmap.items.map((phase, index) => (
-            <div
-              key={phase.title}
-              className="flex flex-col gap-4 rounded-2xl border border-slate-800/80 bg-gradient-to-br from-[#1a2b4a] via-[#121f3c] to-[#0b152a] p-6 transition-transform hover:-translate-y-1 hover:shadow-[0_24px_70px_-50px_rgba(30,160,255,0.35)]"
-            >
-              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-indigo-300/60 bg-indigo-500/20 px-3 py-1 text-xs uppercase tracking-[0.3em] text-indigo-100">
-                <span className="inline-flex h-2 w-2 rounded-full bg-cyan-300" aria-hidden />
-                {index + 1}
-              </div>
-              <h3 className="text-xl font-semibold text-white">{phase.title}</h3>
-              <p className="text-sm text-slate-200">{phase.text}</p>
             </div>
           ))}
         </div>
