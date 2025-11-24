@@ -29,9 +29,9 @@ Ez a dokumentum a Cloudflare Pages/Workers környezetben történő üzemelteté
 
 ## Domain kezelés
 
-- Az alap domain `aika.world`; a `NEXT_PUBLIC_SITE_URL` változót ehhez igazítsd.
+- Az alap domain `aikaworld.com`; a `NEXT_PUBLIC_SITE_URL` változót ehhez igazítsd.
 - Cloudflare Pages-en az egyedi domaint a „Custom domains” menüben add hozzá, majd várd meg az SSL validációt.
-- Ha több nyelvi aldomaint szeretnél (pl. `hu.aika.world`), a DNS-ben CNAME-ként mutass a Pages default domainre, majd adj hozzá új custom domaint.
+- Ha több nyelvi aldomaint szeretnél (pl. `hu.aikaworld.com`), a DNS-ben CNAME-ként mutass a Pages default domainre, majd adj hozzá új custom domaint.
 
 ## Monitorozás
 

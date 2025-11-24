@@ -144,17 +144,15 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
                 </g>
               </svg>
             </div>
-            <div className="relative h-auto w-full">
-              <HeroStoryAnimation className="pointer-events-none" />
-              <Image
-                src="/images/hero/aika-hero-orb.svg"
-                alt={content.hero.imageAlt}
-                width={600}
-                height={600}
-                priority
-                sizes="(min-width: 1280px) 380px, (min-width: 768px) 320px, 240px"
-                className="relative h-auto w-full"
-              />
+            <div className="grid gap-2 rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-sm text-slate-200">
+              <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-indigo-200">
+                <span>{content.pulse.feedBadge}</span>
+                <span className="inline-flex items-center gap-2 text-cyan-100">
+                  <span className="h-2 w-2 rounded-full bg-emerald-300 animate-pulse" aria-hidden />
+                  Live signal
+                </span>
+              </div>
+              <p className="text-sm text-slate-100">{content.pulse.intro}</p>
             </div>
           </figure>
         </div>
@@ -183,7 +181,7 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
           <h2 className="text-3xl font-semibold text-white">{content.factions.title}</h2>
           <p className="max-w-2xl text-base text-slate-200">{content.factions.intro}</p>
         </div>
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-3">
           {content.factions.items.map((faction) => (
             <article
               key={faction.name}
@@ -219,6 +217,13 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
                   sizes="(min-width: 1280px) 140px, (min-width: 768px) 120px, 96px"
                   className="h-16 w-16 shrink-0 md:h-20 md:w-20"
                 />
+                <span className="rounded-full border border-indigo-300/30 bg-indigo-400/10 px-3 py-1 text-[11px] uppercase tracking-[0.3em] text-indigo-100">
+                  Core
+                </span>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
+                <p className="text-sm text-slate-200">{feature.text}</p>
               </div>
               <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
               <p className="mt-3 text-sm text-slate-200">{feature.text}</p>
@@ -375,4 +380,5 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
       </RevealSection>
     </div>
   );
+
 }

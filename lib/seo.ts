@@ -1,7 +1,7 @@
 import type { Metadata, MetadataRoute } from "next";
 import { getDictionary, locales, type Locale, type NavKey } from "@/lib/i18n";
 
-const fallbackSiteUrl = "https://aika.world";
+const fallbackSiteUrl = "https://aikaworld.com";
 
 const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 

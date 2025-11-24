@@ -862,7 +862,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       channels: {
         title: "Immediate channels",
         items: [
-          "hello@aika.world",
+          "info@aikaworld.com",
           "Discord: syncnode",
           "Matrix: #aika-world:matrix.org",
         ],
@@ -891,7 +891,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       privacy: "Privacy",
       terms: "Terms",
       cookies: "Cookies",
-      contactEmail: "hello@aika.world",
+      contactEmail: "info@aikaworld.com",
       rights: "© {{year}} SyncNode Studio. All rights reserved.",
     },
 
@@ -1451,7 +1451,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       channels: {
         title: "Azonnali csatornák",
         items: [
-          "hello@aika.world",
+          "info@aikaworld.com",
           "Discord: syncnode",
           "Matrix: #aika-world:matrix.org",
         ],
@@ -1482,7 +1482,7 @@ const dictionaries: Record<Locale, Dictionary> = {
       privacy: "Adatvédelem",
       terms: "Felhasználási feltételek",
       cookies: "Sütik",
-      contactEmail: "hello@aika.world",
+      contactEmail: "info@aikaworld.com",
       rights: "© {{year}} SyncNode Studio. Minden jog fenntartva.",
     },
 
