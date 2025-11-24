@@ -22,10 +22,11 @@ A projekt nem használ SQLite-ot; a form endpontok és a Turnstile integráció 
 
 ## Build és deploy folyamat
 
-1. `npm run build` először lefuttatja a `next build`-et, majd az OpenNext Cloudflare pipeline a meglévő `.next` kimenetből előállítja a `.open-next/worker/index.mjs` fájlt és a statikus asseteket.
+1. `npm run build` először lefuttatja a `next build`-et, majd az OpenNext Cloudflare pipeline a meglévő `.next` kimenetből előállítja a `.open-next/worker.js` fájlt és a statikus asseteket.
 2. Cloudflare Pages + Workers deploy során a `.open-next` mappa tartalmát a `wrangler.jsonc` használja; a `main` bejegyzés a generált workerre mutat.
 3. A Workers funkciókat a `wrangler.jsonc` és az `open-next.config.ts` fájlok szabályozzák.
 4. Élesítés előtt érdemes Lighthouse-t futtatni (Chrome DevTools) és ellenőrizni, hogy a Performance + SEO legalább 90 pont.
+5. A `npm run cf:preview` parancs előbb lefuttatja a Cloudflare buildet, így a `.open-next/worker.js` mindig létezik, mielőtt a Wrangler dev elindul.
 
 ## I18n struktúra
 
