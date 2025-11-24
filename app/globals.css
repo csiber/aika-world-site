@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #030014;
-  --foreground: #f4f4f7;
+  --background: #f3f6ff;
+  --foreground: #0b1024;
 }
 
 @theme inline {
@@ -12,10 +12,10 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   :root {
-    --background: #ffffff;
-    --foreground: #0b0b14;
+    --background: #0f1224;
+    --foreground: #e6e8f5;
   }
 }
 
@@ -32,7 +32,7 @@ a {
 }
 
 ::selection {
-  background: rgba(121, 80, 255, 0.35);
+  background: rgba(76, 106, 255, 0.25);
   color: inherit;
 }
 
