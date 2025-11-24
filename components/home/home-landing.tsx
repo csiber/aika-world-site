@@ -85,88 +85,64 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
   };
 
   return (
-    <div className="space-y-16 py-12 text-slate-100 md:space-y-24 md:py-20">
+    <div className="space-y-24 py-12 text-slate-100 md:space-y-32 md:py-16">
       <section
         ref={heroRef}
-        className="relative overflow-hidden rounded-[32px] border border-slate-800/80 bg-gradient-to-br from-slate-950/80 via-slate-900/70 to-slate-900/40 p-10 shadow-[0_40px_120px_-60px_rgba(0,0,0,0.6)]"
+        className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-gradient-to-br from-[#1b2c4f] via-[#121d3a] to-[#0c162c] p-10 text-slate-100 shadow-[0_40px_120px_-60px_rgba(40,120,255,0.35)]"
       >
         <HeroAurora containerRef={heroRef} />
-        <div className="absolute -right-24 top-10 h-64 w-64 rounded-full bg-cyan-300/10 blur-3xl" aria-hidden />
-        <div className="relative z-10 grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+        <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-cyan-300/20 blur-3xl" aria-hidden />
+        <div className="relative z-10 grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(240px,0.8fr)] lg:items-center">
           <div className="space-y-6">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full border border-indigo-400/40 bg-indigo-500/10 px-3 py-1 text-[11px] uppercase tracking-[0.32em] text-indigo-100">
-                {content.hero.badgeLeft}
-              </span>
-              <span className="rounded-full border border-cyan-200/40 bg-cyan-400/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-cyan-100">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.3em] text-slate-50 shadow-sm backdrop-blur">
+              <span>{content.hero.badgeLeft}</span>
+              <span className="rounded-full bg-indigo-300/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-indigo-100">
                 {content.hero.badgeRight}
               </span>
-            </div>
+            </span>
             <h1 className="max-w-3xl text-balance text-4xl font-semibold leading-tight text-white md:text-6xl">
               {content.hero.title}
             </h1>
             <p className="max-w-2xl text-lg text-slate-200 md:text-xl">{content.hero.subtitle}</p>
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="mt-2 flex flex-col gap-3 sm:flex-row">
               <Link
                 ref={primaryCtaRef}
                 href={`/${locale}/${content.hero.primaryCta.href === "home" ? "" : content.hero.primaryCta.href}`.replace(/\/$/, "")}
-                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/40 transition-transform hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center rounded-full bg-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-400/40 transition-transform hover:-translate-y-0.5 hover:shadow-indigo-500/60"
               >
                 {content.hero.primaryCta.label}
               </Link>
               <Link
                 ref={secondaryCtaRef}
                 href={`/${locale}/${content.hero.secondaryCta.href === "home" ? "" : content.hero.secondaryCta.href}`.replace(/\/$/, "")}
-                className="inline-flex items-center justify-center rounded-full border border-indigo-300/60 px-7 py-3 text-sm font-semibold text-indigo-100 transition-transform hover:-translate-y-0.5 hover:border-indigo-200 hover:text-white"
+                className="inline-flex items-center justify-center rounded-full border border-indigo-300/60 px-6 py-3 text-sm font-semibold text-indigo-100 transition-transform hover:-translate-y-0.5 hover:border-indigo-200 hover:text-white"
               >
                 {content.hero.secondaryCta.label}
               </Link>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {content.loops.items.map((loop) => (
-                <div
-                  key={loop.title}
-                  className="rounded-2xl border border-slate-800/80 bg-slate-900/60 px-4 py-3 text-xs uppercase tracking-[0.25em] text-indigo-100"
-                >
-                  <div className="flex items-center gap-2 text-[11px]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" aria-hidden />
-                    {loop.title}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <HeroSoundscape heroRef={heroRef} targets={[primaryCtaRef, secondaryCtaRef]} />
+            <HeroSoundscape
+              heroRef={heroRef}
+              targets={[primaryCtaRef, secondaryCtaRef]}
+            />
             <p className="text-xs uppercase tracking-[0.25em] text-indigo-200">{content.hero.note}</p>
           </div>
-          <figure className="relative mx-auto flex w-full max-w-lg flex-col gap-6 overflow-hidden rounded-3xl border border-indigo-500/40 bg-slate-950/60 p-6 shadow-[0_30px_80px_-50px_rgba(0,0,0,0.8)]">
-            <div className="absolute inset-x-8 top-8 h-28 bg-gradient-to-b from-indigo-400/10 via-transparent to-transparent blur-3xl" aria-hidden />
-            <div className="relative overflow-hidden rounded-2xl border border-indigo-400/40 bg-slate-900/60 p-4">
-              <div aria-hidden className="absolute -inset-6 rounded-full border border-indigo-400/40 opacity-60 animate-spin-slow" />
-              <div aria-hidden className="absolute inset-4 rounded-full bg-gradient-to-br from-indigo-400/20 via-blue-300/10 to-cyan-300/20 blur-2xl animate-pulse" />
-              <div aria-hidden className="absolute inset-0 animate-spin-slower">
-                <svg viewBox="0 0 400 400" className="h-full w-full">
-                  <g stroke="rgba(130,160,255,0.25)" strokeWidth="1" fill="none">
-                    <circle cx="200" cy="200" r="120" />
-                    <circle cx="200" cy="200" r="170" />
-                    <path d="M40 200 Q 200 40 360 200" />
-                    <path d="M40 200 Q 200 360 360 200" />
-                    <path d="M200 40 Q 120 200 200 360" />
-                    <path d="M200 40 Q 280 200 200 360" />
-                  </g>
-                </svg>
-              </div>
-              <div className="relative h-auto w-full">
-                <HeroStoryAnimation className="pointer-events-none" />
-                <Image
-                  src="/images/hero/aika-hero-orb.svg"
-                  alt={content.hero.imageAlt}
-                  width={600}
-                  height={600}
-                  priority
-                  sizes="(min-width: 1280px) 380px, (min-width: 768px) 320px, 240px"
-                  className="relative h-auto w-full"
-                />
-              </div>
+          <figure className="relative mx-auto max-w-sm overflow-hidden rounded-full border border-indigo-500/40 bg-slate-900/60 p-6 shadow-[0_30px_80px_-50px_rgba(30,160,255,0.35)] backdrop-blur">
+            <div aria-hidden className="absolute -inset-3 rounded-full border border-indigo-400/40 opacity-60 animate-spin-slow" />
+            <div
+              aria-hidden
+              className="absolute inset-6 rounded-full bg-gradient-to-br from-indigo-400/20 via-blue-300/10 to-cyan-300/20 blur-2xl animate-pulse"
+            />
+            <div aria-hidden className="absolute inset-0 animate-spin-slower">
+              <svg viewBox="0 0 400 400" className="h-full w-full">
+                <g stroke="rgba(130,160,255,0.25)" strokeWidth="1" fill="none">
+                  <circle cx="200" cy="200" r="120" />
+                  <circle cx="200" cy="200" r="170" />
+                  <path d="M40 200 Q 200 40 360 200" />
+                  <path d="M40 200 Q 200 360 360 200" />
+                  <path d="M200 40 Q 120 200 200 360" />
+                  <path d="M200 40 Q 280 200 200 360" />
+                </g>
+              </svg>
             </div>
             <div className="grid gap-2 rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-sm text-slate-200">
               <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-indigo-200">
@@ -182,51 +158,26 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
         </div>
       </section>
 
-      <RevealSection className="grid gap-8 rounded-[32px] border border-slate-800/80 bg-slate-950/60 p-10 text-sm leading-relaxed text-slate-200 shadow-[0_30px_90px_-70px_rgba(0,0,0,0.7)]">
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-          <div className="space-y-4">
-            <h2 className="text-3xl font-semibold text-white">{content.what.title}</h2>
-            <p className="text-base text-slate-200 md:text-lg">{content.what.description}</p>
-            <div className="grid gap-4 md:grid-cols-2">
-              {content.what.pillars.map((pillar) => (
-                <div
-                  key={pillar.title}
-                  className="rounded-2xl border border-slate-800/80 bg-gradient-to-r from-slate-900/80 to-slate-900/40 p-4 shadow-[0_10px_30px_-20px_rgba(0,0,0,0.6)]"
-                >
-                  <h3 className="text-lg font-semibold text-white">{pillar.title}</h3>
-                  <p className="mt-2 text-sm text-slate-200">{pillar.text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-4 rounded-2xl border border-indigo-500/40 bg-slate-900/70 p-6 shadow-[0_20px_60px_-50px_rgba(0,0,0,0.8)]">
-            <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-indigo-200">
-              <span>{content.loops.title}</span>
-              <span className="rounded-full border border-cyan-300/40 bg-cyan-400/10 px-3 py-1 text-[11px] text-cyan-100">
-                {content.pulse.feedBadge}
-              </span>
-            </div>
-            <p className="text-sm text-slate-200">{content.loops.intro}</p>
-            <div className="space-y-3">
-              {content.loops.items.map((loop) => (
-                <article
-                  key={loop.title}
-                  className="flex items-start gap-3 rounded-xl border border-slate-800/80 bg-slate-950/70 p-4"
-                >
-                  <span className="mt-1 inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300" aria-hidden />
-                  <div className="space-y-1">
-                    <h3 className="text-base font-semibold text-white">{loop.title}</h3>
-                    <p className="text-sm text-slate-200">{loop.text}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
+      <RevealSection className="grid gap-8 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-10 text-sm leading-relaxed text-slate-200 shadow-[0_30px_80px_-60px_rgba(30,140,255,0.3)] backdrop-blur">
+        <div className="space-y-4">
+          <h2 className="text-3xl font-semibold text-white">{content.what.title}</h2>
+          <p className="text-base text-slate-200 md:text-lg">{content.what.description}</p>
         </div>
+        <ul className="grid gap-6 md:grid-cols-4">
+          {content.what.pillars.map((pillar) => (
+            <li
+              key={pillar.title}
+              className="rounded-2xl border border-slate-800/80 bg-gradient-to-br from-[#172642] via-[#131d35] to-[#0d152b] p-6 transition-transform hover:-translate-y-1 hover:shadow-[0_20px_60px_-40px_rgba(30,160,255,0.35)]"
+            >
+              <h3 className="text-lg font-semibold text-white">{pillar.title}</h3>
+              <p className="mt-3 text-sm text-slate-200">{pillar.text}</p>
+            </li>
+          ))}
+        </ul>
       </RevealSection>
 
-      <RevealSection className="space-y-8 rounded-[32px] border border-slate-800/80 bg-gradient-to-br from-slate-950/80 via-slate-900/70 to-slate-950/60 p-10 shadow-[0_30px_90px_-70px_rgba(0,0,0,0.7)]">
-        <div className="space-y-3">
+      <RevealSection className="space-y-10 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-10 shadow-[0_30px_80px_-60px_rgba(30,140,255,0.3)] backdrop-blur">
+        <div className="space-y-4">
           <h2 className="text-3xl font-semibold text-white">{content.factions.title}</h2>
           <p className="max-w-2xl text-base text-slate-200">{content.factions.intro}</p>
         </div>
@@ -234,13 +185,10 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
           {content.factions.items.map((faction) => (
             <article
               key={faction.name}
-              className="group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/60 p-6 shadow-[0_20px_60px_-50px_rgba(0,0,0,0.8)] transition-transform hover:-translate-y-1"
+              className="group relative overflow-hidden rounded-2xl border border-slate-800/80 bg-gradient-to-br from-[#192843] via-[#111b32] to-[#0c152b] p-6 transition-transform hover:-translate-y-1 hover:shadow-[0_24px_70px_-50px_rgba(30,170,255,0.35)]"
             >
-              <div className="absolute -right-14 top-0 h-32 w-32 rounded-full bg-cyan-300/10 blur-3xl transition duration-500 group-hover:scale-110" aria-hidden />
-              <div className="flex items-center justify-between text-xs uppercase tracking-[0.35em] text-indigo-200">
-                <span>{faction.tag}</span>
-                <span className="rounded-full border border-indigo-300/40 bg-indigo-400/10 px-2 py-1 text-[10px] text-indigo-100">Signal</span>
-              </div>
+              <div className="absolute -top-12 right-0 h-32 w-32 rounded-full bg-cyan-300/20 blur-3xl transition-transform duration-500 group-hover:scale-110" aria-hidden />
+              <span className="text-xs uppercase tracking-[0.4em] text-indigo-200">{faction.tag}</span>
               <h3 className="mt-4 text-2xl font-semibold text-white">{faction.name}</h3>
               <p className="mt-3 text-sm text-slate-200">{faction.text}</p>
             </article>
@@ -248,21 +196,16 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
         </div>
       </RevealSection>
 
-      <RevealSection className="space-y-8 rounded-[32px] border border-slate-800/80 bg-slate-950/60 p-10 shadow-[0_30px_90px_-70px_rgba(0,0,0,0.7)]">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-2xl space-y-3">
-            <h2 className="text-3xl font-semibold text-white">{content.builders.title}</h2>
-            <p className="text-base text-slate-200">{content.builders.intro}</p>
-          </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/40 bg-cyan-400/10 px-4 py-2 text-xs uppercase tracking-[0.35em] text-cyan-100">
-            Builder Deck
-          </div>
+      <RevealSection className="space-y-10 rounded-3xl border border-slate-800/80 bg-gradient-to-br from-[#1a2b4a] via-[#131f3b] to-[#0b1428] p-10 shadow-[0_30px_90px_-60px_rgba(40,160,255,0.35)] backdrop-blur">
+        <div className="space-y-4">
+          <h2 className="text-3xl font-semibold text-white">{content.builders.title}</h2>
+          <p className="max-w-2xl text-base text-slate-200">{content.builders.intro}</p>
         </div>
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {content.builders.items.map((feature) => (
             <div
               key={feature.title}
-              className="flex h-full flex-col gap-4 rounded-2xl border border-slate-800/80 bg-slate-900/70 p-6 shadow-[0_16px_50px_-30px_rgba(0,0,0,0.7)] transition-transform hover:-translate-y-1"
+              className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-6 transition-transform hover:-translate-y-1 shadow-[0_16px_50px_-30px_rgba(30,170,255,0.35)]"
             >
               <div className="flex items-center justify-between">
                 <Image
@@ -282,42 +225,69 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
                 <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
                 <p className="text-sm text-slate-200">{feature.text}</p>
               </div>
+              <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
+              <p className="mt-3 text-sm text-slate-200">{feature.text}</p>
             </div>
           ))}
         </div>
       </RevealSection>
 
-      <RevealSection className="grid gap-8 rounded-[32px] border border-slate-800/80 bg-slate-950/60 p-10 shadow-[0_30px_90px_-70px_rgba(0,0,0,0.7)] lg:grid-cols-[1.2fr_1fr]">
-        <div className="space-y-4">
+      <RevealSection className="space-y-8 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-10 shadow-[0_30px_80px_-60px_rgba(30,140,255,0.3)] backdrop-blur">
+        <div className="space-y-3">
           <h2 className="text-3xl font-semibold text-white">{content.pulse.title}</h2>
           <p className="max-w-2xl text-base text-slate-200">{content.pulse.intro}</p>
-          <div className="rounded-2xl border border-cyan-300/40 bg-cyan-400/10 px-4 py-2 text-xs uppercase tracking-[0.35em] text-cyan-100">Live feed</div>
-          <LivePulse {...content.pulse} />
         </div>
-        <div className="flex flex-col gap-4 rounded-3xl border border-slate-800 bg-slate-950/70 p-6">
-          <div className="text-xs uppercase tracking-[0.35em] text-indigo-200">{content.roadmap.title}</div>
-          <p className="text-sm text-slate-200">{content.roadmap.intro}</p>
-          <div className="space-y-3">
-            {content.roadmap.items.map((phase, index) => (
-              <div
-                key={phase.title}
-                className="flex items-start gap-3 rounded-2xl border border-slate-800/80 bg-slate-900/70 p-4"
-              >
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-indigo-300/50 bg-indigo-500/20 text-xs font-semibold text-indigo-100">
-                  {index + 1}
-                </span>
-                <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-white">{phase.title}</h3>
-                  <p className="text-sm text-slate-200">{phase.text}</p>
-                </div>
+        <LivePulse {...content.pulse} />
+      </RevealSection>
+
+      <RevealSection className="space-y-10 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-10 shadow-[0_30px_80px_-60px_rgba(30,140,255,0.3)] backdrop-blur">
+        <div className="space-y-4">
+          <h2 className="text-3xl font-semibold text-white">{content.loops.title}</h2>
+          <p className="max-w-2xl text-base text-slate-200">{content.loops.intro}</p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          {content.loops.items.map((loop) => (
+            <article
+              key={loop.title}
+              className="flex h-full flex-col gap-4 rounded-2xl border border-slate-800/80 bg-gradient-to-br from-[#182640] via-[#121b30] to-[#0c1328] p-6 transition-transform hover:-translate-y-1 hover:shadow-[0_24px_70px_-50px_rgba(30,160,255,0.35)]"
+            >
+              <div>
+                <h3 className="text-xl font-semibold text-white">{loop.title}</h3>
+                <p className="mt-2 text-sm text-slate-200">{loop.text}</p>
               </div>
-            ))}
-          </div>
+              <div className="mt-auto flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-indigo-200">
+                <span className="inline-flex h-2 w-2 rounded-full bg-cyan-300/80" aria-hidden />
+                {content.pulse.feedBadge}
+              </div>
+            </article>
+          ))}
         </div>
       </RevealSection>
 
-      <RevealSection className="rounded-[32px] border border-slate-800/80 bg-gradient-to-br from-slate-950/80 via-slate-900/70 to-slate-900/50 p-10 shadow-[0_30px_90px_-70px_rgba(0,0,0,0.7)]">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+      <RevealSection id="roadmap" className="space-y-10 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-10 shadow-[0_30px_80px_-60px_rgba(30,140,255,0.3)] backdrop-blur">
+        <div>
+          <h2 className="text-3xl font-semibold text-white">{content.roadmap.title}</h2>
+          <p className="mt-3 max-w-2xl text-base text-slate-200">{content.roadmap.intro}</p>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          {content.roadmap.items.map((phase, index) => (
+            <div
+              key={phase.title}
+              className="flex flex-col gap-4 rounded-2xl border border-slate-800/80 bg-gradient-to-br from-[#1a2b4a] via-[#121f3c] to-[#0b152a] p-6 transition-transform hover:-translate-y-1 hover:shadow-[0_24px_70px_-50px_rgba(30,160,255,0.35)]"
+            >
+              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-indigo-300/60 bg-indigo-500/20 px-3 py-1 text-xs uppercase tracking-[0.3em] text-indigo-100">
+                <span className="inline-flex h-2 w-2 rounded-full bg-cyan-300" aria-hidden />
+                {index + 1}
+              </div>
+              <h3 className="text-xl font-semibold text-white">{phase.title}</h3>
+              <p className="text-sm text-slate-200">{phase.text}</p>
+            </div>
+          ))}
+        </div>
+      </RevealSection>
+
+      <RevealSection className="rounded-3xl border border-slate-800/80 bg-gradient-to-br from-[#1b2d4f] via-[#13203b] to-[#0c162b] p-10 shadow-[0_30px_90px_-60px_rgba(40,160,255,0.35)] backdrop-blur">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="max-w-xl space-y-3">
             <h2 className="text-3xl font-semibold text-white">{content.signup.title}</h2>
             <p className="text-base text-slate-200">{content.signup.description}</p>
@@ -325,13 +295,13 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
           </div>
           <form
             onSubmit={handleSubmit}
-            className="relative flex w-full max-w-md flex-col gap-3 rounded-3xl border border-indigo-500/40 bg-slate-950/70 p-4 shadow-lg shadow-indigo-500/20"
+            className="relative flex w-full max-w-md flex-col gap-3 rounded-2xl border border-indigo-500/50 bg-slate-900/60 p-4 shadow-lg shadow-indigo-500/20 backdrop-blur"
           >
             <input
               required
               type="email"
               placeholder={content.signup.placeholder}
-              className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none"
+              className="w-full rounded-full border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none"
               name="email"
               autoComplete="email"
               disabled={isSubmitting || !isConfigured}
@@ -378,8 +348,8 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
               type="submit"
               disabled={isSubmitting || !isConfigured}
               className={cn(
-                "rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 px-4 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5",
-                (isSubmitting || !isConfigured) && "cursor-not-allowed from-indigo-300 to-cyan-300 text-white/80"
+                "rounded-full bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5",
+                (isSubmitting || !isConfigured) && "cursor-not-allowed bg-indigo-300 text-white/80"
               )}
             >
               {isSubmitting ? content.signup.submitting : content.signup.button}
