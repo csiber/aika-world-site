@@ -138,9 +138,10 @@ type SystemPillar = {
 type DevlogEntry = {
   title: string;
   date: string;
+  build: string;
   status: string;
-  desc: string;
-  devnote: string;
+  summary: string;
+  details: string[];
 };
 
 type AboutSection = {
@@ -741,46 +742,85 @@ const dictionaries: Record<Locale, Dictionary> = {
     devlog: {
       title: "AIKA Recovery Log",
       description:
-        "Every development update mirrors a black box entry from the crash. Technical milestones double as the pilot’s fight to survive.",
+        "A technical patch log pulled from the crash basin’s black box. Each entry captures what changed in the survival build.",
       entries: [
         {
-          date: "2025-01-12",
-          title: "Entry 00 — Crash Sequence",
+          date: "2025-11-12",
+          build: "R0.14",
+          title: "Core Movement Pass",
           status: "Prototype",
-          desc: "Emergency reboot at the crash site. Suit vitals at 32%. Reactor core sealed just before overload.",
-          devnote: "Established Unreal Engine 5.6 project, third-person controls, and crash basin greybox.",
+          summary:
+            "New traversal states integrated with stamina/vitals and the animation graph for the AAA survival baseline.",
+          details: [
+            "Sprint stamina curve tuned for heavy gear loads",
+            "Vault and climb now respect Narrative Pro reaction windows",
+            "Slide buffered to prevent accidental rollouts",
+            "Fall damage scales with progression tier",
+            "Swimming exposes low-oxygen warnings and HUD cues",
+          ],
         },
         {
-          date: "2025-02-02",
-          title: "Entry 01 — Suit Diagnostics",
-          status: "Stabilizing",
-          desc: "Vitals Mesh online. Hydration and radiation monitors calibrated against Basin storms.",
-          devnote: "Implemented survival HUD, temperature loops, and baseline crafting recipes.",
-        },
-        {
-          date: "2025-03-18",
-          title: "Entry 02 — Memory Sync",
-          status: "Draft",
-          desc: "First memory shard recovered. AIKA whispers coordinates to a buried vault, unsure why she trusts you.",
-          devnote: "Built memory shard quests, branching dialogue stubs, and narrative save states.",
-        },
-        {
-          date: "2025-05-07",
-          title: "Entry 03 — Storm Calibration",
+          date: "2025-11-20",
+          build: "R0.17",
+          title: "Combat Layer Revision",
           status: "Active",
-          desc: "Weather Forge cycling properly. Night storms spawn Hush Swarm hunting parties.",
-          devnote: "Integrated dynamic weather volumes, swarm AI behaviors, and shelter degradation.",
+          summary:
+            "Third-person melee and ranged interactions stabilized; stagger and flinch now drive encounter pacing.",
+          details: [
+            "Enemy AI patrol radius and perception fixes applied",
+            "Melee lockout shortened from 0.30s to 0.18s",
+            "Weapon durability pipeline active for all test gear",
+            "Dodge i-frame window extended from 12 to 16 frames",
+            "Suspicion system baseline values introduced",
+          ],
         },
         {
-          date: "2025-06-22",
-          title: "Entry 04 — AI Negotiation",
+          date: "2025-11-24",
+          build: "R0.21",
+          title: "Base Structures + Farming Tier 0",
           status: "Integrated",
-          desc: "AIKA grants a provisional uplink. Trust meter fluctuates with every dialogue choice.",
-          devnote: "Completed AIKA conversation system, suspicion tracking, and cinematic uplink sequences.",
+          summary: "Initial shelter-building, storage, and crop growth loop now playable in the basin slice.",
+          details: [
+            "Simple shelters track integrity and weather resistance",
+            "Storage crates run on a weight-based inventory system",
+            "Cropbeds simulate hydration, light, and nutrients",
+            "Food crafting Tier 0 unlocked: soups and dried packs",
+            "Swarm contamination event prototype seeded",
+          ],
+        },
+        {
+          date: "2025-12-04",
+          build: "R0.25",
+          title: "Telekinesis Progression Node",
+          status: "Testing",
+          summary:
+            "Aika’s telekinesis now lives on its own XP track so combat and exploration feel progression-true.",
+          details: [
+            "Level 1: small object lift for traversal and puzzles",
+            "Level 2: push and stagger effects tied to stamina drain",
+            "Level 3: shield pulse prototype with placeholder FX",
+            "Integrated with Narrative Pro hooks for reactions",
+            "Performance budgeted for mid-range hardware targets",
+          ],
+        },
+        {
+          date: "2025-12-10",
+          build: "R0.27",
+          title: "ARK Interior Persistence",
+          status: "Coming next",
+          summary:
+            "Ship interiors now save and reload stateful objects: doors, loot, NPC positions, lighting, and flags.",
+          details: [
+            "Engineering deck state handling wired to persistence",
+            "Crew quarters maintain item placements between loads",
+            "Light-grid save and apply cycle validated",
+            "Samuel console messages prototyped for testing",
+            "Ready Room craft benches integrated with saves",
+          ],
         },
       ],
       disclaimer:
-        "Each patch is a pulse. Every fix keeps the pilot breathing—and wakes AIKA a little more.",
+        "Technical entries are lifted directly from the basin’s crash log. No narrative filler—only the survival stack as it evolves.",
     },
     about: {
       title: "About SyncNode",
@@ -1285,48 +1325,87 @@ const dictionaries: Record<Locale, Dictionary> = {
         "Ugyanaz az eszköztár dolgozik, mint AIKA terepküldetésein – a szelet tesztelése egyszerre lendíti előre a technikát és a történetet.",
     },
     devlog: {
-      title: "AIKA helyreállítási napló",
+      title: "AIKA Recovery Log",
       description:
-        "Minden fejlesztési bejegyzés egy fekete doboz log a zuhanásból. A technikai mérföldkövek a pilóta túléléséért vívott harcot tükrözik.",
+        "Technical patch entries pulled from the basin crash log. Only real gameplay changes are recorded.",
       entries: [
         {
-          date: "2025-01-12",
-          title: "Bejegyzés 00 — Zuhanási szekvencia",
-          status: "Prototípus",
-          desc: "Vészindítás a becsapódási helyen. Öltözék-állapot 32%. A reaktor magját az utolsó pillanatban zártuk le.",
-          devnote: "Unreal Engine 5.6 projekt felhúzva, harmadik személyű irányítás és medence greybox kész.",
+          date: "2025-11-12",
+          build: "R0.14",
+          title: "Core Movement Pass",
+          status: "Prototype",
+          summary:
+            "New traversal states integrated with stamina/vitals and the animation graph for the AAA survival baseline.",
+          details: [
+            "Sprint stamina curve tuned for heavy gear loads",
+            "Vault and climb now respect Narrative Pro reaction windows",
+            "Slide buffered to prevent accidental rollouts",
+            "Fall damage scales with progression tier",
+            "Swimming exposes low-oxygen warnings and HUD cues",
+          ],
         },
         {
-          date: "2025-02-02",
-          title: "Bejegyzés 01 — Öltözékdiagnosztika",
-          status: "Stabilizálás",
-          desc: "Az Életfunkció-háló online. Hidratáció- és sugárzásmonitor kalibrálva a medence viharaihoz.",
-          devnote: "Túlélő HUD, hurok hőmérséklet és alap barkácsrecept integrálva.",
+          date: "2025-11-20",
+          build: "R0.17",
+          title: "Combat Layer Revision",
+          status: "Active",
+          summary:
+            "Third-person melee and ranged interactions stabilized; stagger and flinch now drive encounter pacing.",
+          details: [
+            "Enemy AI patrol radius and perception fixes applied",
+            "Melee lockout shortened from 0.30s to 0.18s",
+            "Weapon durability pipeline active for all test gear",
+            "Dodge i-frame window extended from 12 to 16 frames",
+            "Suspicion system baseline values introduced",
+          ],
         },
         {
-          date: "2025-03-18",
-          title: "Bejegyzés 02 — Memóriaszinkron",
-          status: "Vázlat",
-          desc: "Első memóriaszilánk visszanyerve. AIKA koordinátákat súg egy eltemetett boltozathoz, bár maga sem tudja, miért bízik benned.",
-          devnote: "Memóriaszilánk küldetések, elágazó párbeszéd stubok és narratív mentés kész.",
+          date: "2025-11-24",
+          build: "R0.21",
+          title: "Base Structures + Farming Tier 0",
+          status: "Integrated",
+          summary: "Initial shelter-building, storage, and crop growth loop now playable in the basin slice.",
+          details: [
+            "Simple shelters track integrity and weather resistance",
+            "Storage crates run on a weight-based inventory system",
+            "Cropbeds simulate hydration, light, and nutrients",
+            "Food crafting Tier 0 unlocked: soups and dried packs",
+            "Swarm contamination event prototype seeded",
+          ],
         },
         {
-          date: "2025-05-07",
-          title: "Bejegyzés 03 — Vihar-kalibráció",
-          status: "Aktív",
-          desc: "Az Időjárás-kohó stabilan ciklusoz. Éjszakai viharok Suttogó Raj portyákat szülnek.",
-          devnote: "Dinamikus időjárás volumenek, raj AI viselkedés és menedék-degradáció élesben.",
+          date: "2025-12-04",
+          build: "R0.25",
+          title: "Telekinesis Progression Node",
+          status: "Testing",
+          summary:
+            "Aika’s telekinesis now lives on its own XP track so combat and exploration feel progression-true.",
+          details: [
+            "Level 1: small object lift for traversal and puzzles",
+            "Level 2: push and stagger effects tied to stamina drain",
+            "Level 3: shield pulse prototype with placeholder FX",
+            "Integrated with Narrative Pro hooks for reactions",
+            "Performance budgeted for mid-range hardware targets",
+          ],
         },
         {
-          date: "2025-06-22",
-          title: "Bejegyzés 04 — MI-tárgyalás",
-          status: "Integrált",
-          desc: "AIKA ideiglenes uplinket enged. A bizalmi szint minden párbeszéddel ingadozik.",
-          devnote: "AIKA párbeszédrendszer, gyanúsági követés és filmes uplink jelenetek kész.",
+          date: "2025-12-10",
+          build: "R0.27",
+          title: "ARK Interior Persistence",
+          status: "Coming next",
+          summary:
+            "Ship interiors now save and reload stateful objects: doors, loot, NPC positions, lighting, and flags.",
+          details: [
+            "Engineering deck state handling wired to persistence",
+            "Crew quarters maintain item placements between loads",
+            "Light-grid save and apply cycle validated",
+            "Samuel console messages prototyped for testing",
+            "Ready Room craft benches integrated with saves",
+          ],
         },
       ],
       disclaimer:
-        "Minden patch egy pulzus. Minden javítás, ami életben tart, AIKA-t is közelebb húzza a tudathoz.",
+        "Technical entries are lifted directly from the basin’s crash log. No narrative filler—only the survival stack as it evolves.",
     },
     about: {
       title: "A SyncNode-ról",
