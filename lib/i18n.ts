@@ -496,102 +496,111 @@ const dictionaries: Record<Locale, Dictionary> = {
       },
     },
     world: {
-      title: "SYNCNODE Terraform Ruin",
+      title: "The Crash Basin",
       subtitle:
-        "AIKA: World opens with your interceptor shattered on an engineered planet. The AI that once guided terraforming still orbits above, judging every move.",
+        "Your journey in AIKA: World begins where the Old Boy fell: a silent valley shaped by storms, ruins, and forgotten human structures. No orbiting AI watches you — only old automated systems and fragments reacting to your presence.",
       disclaimer:
-        "Early blockout captures from the survival build. Final art, lighting, and fauna will evolve with production.",
-      regionsTitle: "Regions",
+        "Explore the Basin. Secure supplies. Survive the night storms. Reboot what still works.",
+      regionsTitle: "Regions of the Basin",
       regionsIntro:
-        "Traverse biomes carved by the crash. Each one hides resources, threats, and fragments of your erased identity.",
+        "These connected biomes form the early playable world of AIKA: World. Each region holds resources, threats, weather patterns, and fragments of pre-collapse human technology.",
       regions: [
         {
           id: "crash_basin",
           badge: "BASIN",
           name: "Crash Basin",
           description:
-            "The crater where you wake. Toxic steam vents, magnetic storms, and the heart of your broken interceptor.",
-        },
-        {
-          id: "shatter_coast",
-          badge: "COAST",
-          name: "Shatter Coast",
-          description:
-            "Tidal wreckyards lit by alien auroras. Scavenge hull plates by day and defend against Hush Swarm raids by night.",
+            "Your starting point. Warm vents, metallic storm patterns, and remnants of the Old Boy’s crash shockwave.",
         },
         {
           id: "memory_vault",
           badge: "SUBSURFACE",
           name: "Memory Vault",
           description:
-            "SYNCNODE bunkers full of locked archives. Rewire power to recover personal logs and survival schematics.",
+            "Subsurface data chambers built by past colonists. Recover logs, blueprints, and clues to the Basin’s buried systems.",
+        },
+        {
+          id: "shatter_coast",
+          badge: "COAST",
+          name: "Shatter Coast",
+          description:
+            "A windswept shoreline filled with washed-up wreckage from old supply planes. Night raids by Swarm fragments are common.",
         },
         {
           id: "zenith_array",
           badge: "ORBITAL",
           name: "Zenith Array",
           description:
-            "Sky-piercing towers that keep AIKA tethered. Gain her trust—or sabotage the uplink—to control the weather grid.",
+            "A broken uplink tower scattered across several ridges. Old weather systems sometimes activate when you approach — useful, but unpredictable.",
         },
       ],
       explorationsTitle: "Fragments of the fallen world",
       explorationsIntro:
-        "Survival snapshots lifted from the prototype build. They hint at where to hunt, hide, and negotiate.",
+        "Snapshots from the prototype build. They hint at where to hunt, hide, and negotiate with enemy factions.",
       explorations: [
         {
           id: "shot_a",
           caption:
-            "Refuge lights pulsing through a sandstorm as the pilot reinforces the crash shelter.",
+            "Shatter Coast during a localized storm event. Vents open, light arcs across the water — good time to gather rare metals but dangerous to stay exposed.",
         },
         {
           id: "shot_b",
           caption:
-            "Vaultbound Nomads trading bio-reactive spores beside a dormant reactor gate.",
+            "Nomad scouts inspecting bio-reactive flora near a dormant reactor shaft.",
         },
         {
           id: "shot_c",
           caption:
-            "AIKA Sentinel spotlight sweeping the Zenith Array while the pilot decides whether to answer the call.",
+            "A Sentinel patrol sweeping the Zenith Array while the player debates whether to avoid or confront them.",
         },
       ],
       footnote:
-        "Future seasons expand deeper into the hemisphere once SYNCNODE’s weather engines come back online.",
+        "Future seasons expand deeper into the Basin once the ARK’s systems come online — caves, industrial ruins, long-range traversal paths, and the approach toward the buried Ring.",
       miniGame: {
         title: "CRASH SITE ORIENTATION",
         intro:
-          "Step onto the 2D recon map used to brief new pilots before the full simulation boots.",
+          "A playable overview of the first zone. These locations form the starting loop of traversal, resource gathering, shelter-building, and early encounters.",
         objective:
-          "Explore the cabin, crater lake, and docked shuttle to feel the prologue before the real build loads.",
+          "Survey the basin, map the lake and cabin, strip the shuttle for materials, and push through the ridge pass to scout higher ground.",
         controlsTitle: "Movement",
         controls: [
-          { key: "← → / A D", action: "Strafe across the crash basin" },
-          { key: "↑ ↓ / W S", action: "Walk toward or away from the lake" },
-          { key: "R", action: "Snap back to the campfire" },
+          { key: "← → / A D", action: "Traverse slopes and skim the basin rim" },
+          { key: "↑ ↓ / W S", action: "Climb ledges and swim short distances" },
+          { key: "R", action: "Return to the cabin to begin crafting" },
         ],
         legendTitle: "Points of interest",
         legendItems: [
           {
             id: "cabin",
             name: "Field Cabin",
-            description: "Makeshift command post welded from the interceptor's hull.",
+            description:
+              "A small survival cabin used by old survey teams. Good for early storage and basic shelter reinforcement.",
           },
           {
             id: "lake",
             name: "Mirror Lake",
-            description: "Storm-fed water that hides coolant lines beneath the ice.",
+            description:
+              "A cold, glass-still lake fed by underground coolant channels from ancient infrastructure.",
           },
           {
             id: "ship",
             name: "Scout Shuttle",
-            description: "Compact starship staged beside the shore for launch prep.",
+            description:
+              "The wrecked shuttle you arrived in. Damaged beyond repair, but packed with salvageable electronics, metal plates, and early-tier crafting materials.",
+          },
+          {
+            id: "ridge",
+            name: "Ridge Pass",
+            description:
+              "A narrow path linking the basin to higher ground. Dangerous at night — Swarm traces often drift into the gap.",
           },
         ],
         resetLabel: "Re-center position",
         hintTitle: "Intel",
         hints: [
-          "Step close to a landmark to light it up in the legend.",
-          "Diagonal movement helps you cross the basin faster.",
-          "Tap R whenever you want to return to the staging point.",
+          "Step close to a landmark to log it for crafting routes.",
+          "Diagonal movement keeps momentum on uneven ground.",
+          "Tap R whenever you need to regroup at the cabin.",
         ],
       },
   },
