@@ -3,8 +3,6 @@ import { createSitemapEntries, routeSegments } from "@/lib/seo";
 
 const staticSlugs = [
   { slug: routeSegments.home, priority: 0.9 },
-  { slug: routeSegments.world, priority: 0.8 },
-  { slug: routeSegments["mini-games"], priority: 0.78 },
   { slug: routeSegments.systems, priority: 0.75 },
   { slug: routeSegments.devlog, priority: 0.7, changeFrequency: "weekly" as const },
   { slug: routeSegments.about, priority: 0.6 },
