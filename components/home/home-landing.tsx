@@ -223,6 +223,8 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
                 <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
                 <p className="text-sm text-slate-200">{feature.text}</p>
               </div>
+              <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
+              <p className="mt-3 text-sm text-slate-200">{feature.text}</p>
             </div>
           ))}
         </div>
