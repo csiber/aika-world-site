@@ -1409,22 +1409,22 @@ const dictionaries: Record<Locale, Dictionary> = {
         "A SyncNode Studio független magyar csapat, az AIKA: World készítői. Posztkollapszus sci-fi túlélőtörténetet építünk egy ARK-ról, a crew-ról és egy világról, ami visszaharap. Fókuszunk a feszes játékmenet, a valódi tét és a kézzel épített világ.",
       sections: [
         {
-          title: "Why AIKA: World?",
+          title: "Miért az AIKA: World?",
           body:
             "Olyan játékokat építünk, ahol a történet a mechanikákban él. Az AIKA: World egy hosszú túlélő futam: valós rendszerek, tartós világállapot és karakterközpontú küldetések töltelék nélkül.",
         },
         {
-          title: "How we work",
+          title: "Hogyan dolgozunk",
           body:
             "Mindennap tesztelünk, mindent házon belül építünk. A rendszerek karcsúak maradnak, hogy a világ egyben tartson, amikor új zónák, frakciók és crew-történetek érkeznek.",
         },
         {
-          title: "What comes next",
+          title: "Mi jön ezután",
           body:
             "Bővítjük a nyílt zónákat, mélyítjük az ARK belső tereit, és több karakterküldetést rétegezünk. A következő buildek új biomokat, ellenfél viselkedéseket, telekinetikus fejlődést és történeti eseményeket hoznak.",
         },
         {
-          title: "Studio information",
+          title: "Stúdióinformáció",
           body:
             "SyncNode Studio — Polyák Csaba E.V. | Address: 4324 Kállósemjén, Kölcsey Ferenc út 11 | Phone: +36 20 549 4107 | Registration number: 52193909 | Tax ID: HU68747961",
         },
