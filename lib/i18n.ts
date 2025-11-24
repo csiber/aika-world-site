@@ -823,48 +823,54 @@ const dictionaries: Record<Locale, Dictionary> = {
         "Technical entries are lifted directly from the basin’s crash log. No narrative filler—only the survival stack as it evolves.",
     },
     about: {
-      title: "About SyncNode",
+      title: "About SyncNode Studio",
       subtitle:
-        "SyncNode Interactive is an independent studio building AIKA: World — a third-person survival story about memory, trust, and the last conversation between a pilot and an AI.",
+        "SyncNode Studio is an independent Hungarian game development studio building AIKA: World, a real-anime third-person survival action game set in a post-collapse sci-fi world. We focus on tight gameplay, technical precision, and handcrafted worldbuilding.",
       sections: [
         {
-          title: "Why AIKA: World",
+          title: "Why AIKA: World?",
           body:
-            "We craft single-player adventures that respect your time. This project explores how survival mechanics and narrative consequence can feel inseparable.",
+            "We build games where mechanics and story reinforce each other. AIKA: World is designed as a long-form survival experience: grounded systems, persistent world logic, and character-driven missions tied together without cutscene overdose or filler content.",
         },
         {
           title: "How we work",
           body:
-            "Everything is developed in-house with Unreal Engine 5.6. We prototype quickly, test in-engine daily, and share builds early for honest feedback.",
+            "Everything is developed internally with Unreal Engine 5.6, Narrative Pro, Telekinetic Abilities, the AI Life System, and our own survival stack. We iterate fast, test daily, and keep systems modular so the world remains stable as the project grows.",
         },
         {
           title: "What comes next",
           body:
-            "After the vertical slice, we’ll release documentation and blueprints so other teams can experiment with story-driven survival design.",
+            "As AIKA: World evolves, we continue expanding the open-zone survival structure, the ARK’s persistent interior, and the character mission system. Future builds introduce new biomes, combat behaviors, telekinetic progression, and narrative-side events.",
+        },
+        {
+          title: "Studio information",
+          body:
+            "SyncNode Studio — Polyák Csaba E.V. | Address: 4324 Kállósemjén, Kölcsey Ferenc út 11 | Phone: +36 20 549 4107 | Registration number: 52193909 | Tax ID: HU68747961",
         },
       ],
       team: {
         title: "Team",
         members: [
           {
-            name: "Nova Ardent",
-            role: "Creative Director",
-            focus: "Guides narrative tone, cinematic direction, and world vision.",
+            name: "Csaba “csiber” Polyák",
+            role: "Founder • Lead Developer • Designer • Everything Officer",
+            focus:
+              "Gameplay, systems, environment logic, scripting, UI/UX, tools, worldbuilding, combat, survival stack, deployment, infrastructure, and technical direction.",
           },
           {
-            name: "Mira Juno",
-            role: "Systems Designer",
-            focus: "Connects survival loops with narrative triggers and mission flow.",
+            name: "Fruska",
+            role: "Art & Visual Design",
+            focus: "Concept art, color identity, visual direction, model feedback, promotional graphics.",
           },
           {
-            name: "Tal Verge",
-            role: "Technical Engineer",
-            focus: "Maintains build pipelines, performance budgets, and deployment.",
+            name: "Pozóba",
+            role: "QA Tester",
+            focus: "Gameplay testing, bug reproduction, edge-case hunting, system stress checks, regression passes.",
           },
         ],
       },
       closing:
-        "SyncNode built AIKA to restore worlds. Now we fight alongside her to survive the one that fell apart.",
+        "We build AIKA: World with long-term intent: a living survival game shaped by systems, characters, and the world you fight to rebuild.",
     },
     contact: {
       title: "Contact",
@@ -1408,48 +1414,54 @@ const dictionaries: Record<Locale, Dictionary> = {
         "Technical entries are lifted directly from the basin’s crash log. No narrative filler—only the survival stack as it evolves.",
     },
     about: {
-      title: "A SyncNode-ról",
+      title: "About SyncNode Studio",
       subtitle:
-        "A SyncNode Interactive egy független stúdió, amely az AIKA: Worldöt építi — egy harmadik személyű túlélő történetet az emlékezetről, a bizalomról és egy pilóta utolsó párbeszédéről egy MI-vel.",
+        "SyncNode Studio is an independent Hungarian game development studio building AIKA: World, a real-anime third-person survival action game set in a post-collapse sci-fi world. We focus on tight gameplay, technical precision, and handcrafted worldbuilding.",
       sections: [
         {
-          title: "Miért az AIKA: World",
+          title: "Why AIKA: World?",
           body:
-            "Egyjátékos kalandokat készítünk, amelyek tiszteletben tartják az idődet. A projekt azt kutatja, hogyan fonódhat össze a túlélés és a narratíva.",
+            "We build games where mechanics and story reinforce each other. AIKA: World is designed as a long-form survival experience: grounded systems, persistent world logic, and character-driven missions tied together without cutscene overdose or filler content.",
         },
         {
-          title: "Hogyan dolgozunk",
+          title: "How we work",
           body:
-            "Mindent házon belül fejlesztünk Unreal Engine 5.6-tal. Gyorsan prototipizálunk, naponta tesztelünk, és korán osztunk meg buildeket őszinte visszajelzésért.",
+            "Everything is developed internally with Unreal Engine 5.6, Narrative Pro, Telekinetic Abilities, the AI Life System, and our own survival stack. We iterate fast, test daily, and keep systems modular so the world remains stable as the project grows.",
         },
         {
-          title: "Mi jön ezután",
+          title: "What comes next",
           body:
-            "A vertikális szelet után megnyitjuk a dokumentációkat és blueprint-eket, hogy más csapatok is kísérletezhessenek történetvezérelt túléléssel.",
+            "As AIKA: World evolves, we continue expanding the open-zone survival structure, the ARK’s persistent interior, and the character mission system. Future builds introduce new biomes, combat behaviors, telekinetic progression, and narrative-side events.",
+        },
+        {
+          title: "Studio information",
+          body:
+            "SyncNode Studio — Polyák Csaba E.V. | Address: 4324 Kállósemjén, Kölcsey Ferenc út 11 | Phone: +36 20 549 4107 | Registration number: 52193909 | Tax ID: HU68747961",
         },
       ],
       team: {
-        title: "Csapat",
+        title: "Team",
         members: [
           {
-            name: "Nova Ardent",
-            role: "Kreatív igazgató",
-            focus: "A narratív tónus, a filmes nyelv és a világ víziójának őre.",
+            name: "Csaba “csiber” Polyák",
+            role: "Founder • Lead Developer • Designer • Everything Officer",
+            focus:
+              "Gameplay, systems, environment logic, scripting, UI/UX, tools, worldbuilding, combat, survival stack, deployment, infrastructure, and technical direction.",
           },
           {
-            name: "Mira Juno",
-            role: "Rendszertervező",
-            focus: "A túlélési hurkokat köti össze a narratív triggerekrel és küldésfolyamokkal.",
+            name: "Fruska",
+            role: "Art & Visual Design",
+            focus: "Concept art, color identity, visual direction, model feedback, promotional graphics.",
           },
           {
-            name: "Tal Verge",
-            role: "Technikai mérnök",
-            focus: "A build pipeline-t, a teljesítménykeretet és a deployt felügyeli.",
+            name: "Pozóba",
+            role: "QA Tester",
+            focus: "Gameplay testing, bug reproduction, edge-case hunting, system stress checks, regression passes.",
           },
         ],
       },
       closing:
-        "A SyncNode AIKA-t világok megmentésére hozta létre. Most vele együtt küzdünk, hogy túléljük azt, ami széthullott.",
+        "We build AIKA: World with long-term intent: a living survival game shaped by systems, characters, and the world you fight to rebuild.",
     },
     contact: {
       title: "Kapcsolat",
