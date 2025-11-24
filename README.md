@@ -44,7 +44,7 @@ A projekt nem használ SQLite-ot; a form endpontok és a Turnstile integráció 
 
 | Változó | Szerep |
 | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | Teljes bázis URL (pl. `https://aika.world`), meta tagekhez és sitemaphez. |
+| `NEXT_PUBLIC_SITE_URL` | Teljes bázis URL (pl. `https://aikaworld.com`), meta tagekhez és sitemaphez. |
 | `NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN` | Cloudflare Web Analytics token; ha nincs megadva, a script nem töltődik be. |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site kulcs a kapcsolatfelvételi űrlaphoz és hírlevélhez. |
 | `NEXT_PUBLIC_CONTACT_FORM_ENDPOINT` | Külső endpoint, ahová a kapcsolatfelvételi űrlap POST-olja az adatokat. |
