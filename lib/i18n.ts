@@ -665,78 +665,78 @@ const dictionaries: Record<Locale, Dictionary> = {
     systems: {
       title: "Survival systems overview",
       subtitle:
-        "Every mechanic in the slice runs on the same component chain shipping with the project: Abstract → Basic → Advanced. What you test is the backbone for the finished story mode.",
+        "Every mechanic in AIKA: World runs on a modular Unreal Engine 5.6 stack designed for long-form survival gameplay. This page outlines the active systems in the current build: movement, combat, crafting, farming, base maintenance, and squad logic.",
       modulesTitle: "Subsystem modules",
       pillarsTitle: "Operational pillars",
       modules: [
         {
-          name: "Character system",
+          name: "Character & movement system",
           badge: "PLAYER",
           description:
-            "ALS/Lyra-based movement with sprint, slide, crouch, climb, swim, and contextual animations feeding stamina, noise, and stealth checks.",
-        },
-        {
-          name: "Interaction matrix",
-          badge: "WORLD",
-          description:
-            "Handles door panels, loot caches, and NPC dialogue cues through a unified targeting outliner and voice notify feedback.",
+            "C++-powered movement stack: sprint, climb, vault, swim, stealth, crouch, slide. All movement states integrate with stamina, vitals, and combat reactions through Narrative Pro.",
         },
         {
           name: "Inventory & equipment",
           badge: "GEAR",
           description:
-            "Stackable items, drag-and-drop slots, and stat-altering gear share data with the attribute manager and save system.",
+            "Modular inventory with weight, quick-access slots, durability and repair. Supports weapons, tools, medkits, energy cells, crafting parts, and food items.",
         },
         {
-          name: "Combat pipeline",
-          badge: "THREAT",
-          description:
-            "Melee combos, firearms, and thrown tools use one damage resolver with stamina costs, hit reactions, and voice responses.",
-        },
-        {
-          name: "Builder forge",
+          name: "Builder & structures",
           badge: "SETTLEMENT",
           description:
-            "Place shelters, defenses, and crafting stations directly from inventory blueprints—structures persist between saves and influence AI suspicion.",
+            "Place shelters, storage, crops, generators, water collectors, traps and defenses. Each structure has integrity, weather resistance, and maintenance levels.",
         },
         {
-          name: "Agronomy loop",
-          badge: "FARMING",
-          description:
-            "Plant, water, and harvest crops with time-based growth stages that feed cooking, crafting, and faction contracts.",
-        },
-        {
-          name: "Crafting fabricator",
+          name: "Fabrication & crafting",
           badge: "WORKSHOP",
           description:
-            "Combine recovered materials using recipe tiers. Advanced versions unlock when memory shards reveal SYNCNODE schematics.",
+            "Break down scrap → refine materials → craft tools, weapon parts, modules, ammo and field devices. Advanced recipes unlock by scanning fragments, logs, or recovered tech.",
+        },
+        {
+          name: "Interaction & NPC logic",
+          badge: "WORLD",
+          description:
+            "Unified interaction layer: loot, switches, terminals, vox logs, doors, campfires, crafting benches. NPC conversations use short branching prompts integrated with XP and relationship flags.",
+        },
+        {
+          name: "Combat system",
+          badge: "THREAT",
+          description:
+            "Third-person melee + ranged combat with dodge, parry, stagger, flinch, weak points and weapon conditions. Enemy AI uses perception, patrol grids, reaction windows, and threat escalation influenced by suspicion.",
+        },
+        {
+          name: "Agronomy",
+          badge: "FARMING",
+          description:
+            "Grow crops in tiered soil beds. Plants react to water, light, nutrients, storms, pests and Swarm contamination. Harvest integrates into food, crafting, healing and trade loops.",
         },
         {
           name: "Level & XP core",
           badge: "PROGRESSION",
           description:
-            "Tracks skill ranks, distributes attribute points, and rewards system usage—farming, combat, exploration all feed the same curve.",
+            "XP grants attribute points and passive unlocks. Combat, exploration, crafting, farming and story choices all contribute. Aika’s telekinetic power progresses on a dedicated XP path both narratively and in gameplay.",
         },
       ],
       pillars: [
         {
-          name: "Component clarity",
+          name: "Modular clarity",
           description:
-            "Abstract interfaces make it easy to swap or extend modules. Every gameplay beat you try can be rebuilt without breaking saves.",
+            "Every subsystem is isolated and testable: movement, combat, crafting, farming, AI, persistence. Anything can be updated without breaking other systems thanks to unified component patterns.",
         },
         {
           name: "Shared data flow",
           description:
-            "Stats, audio, animation, and UI read from the same sources. If stamina drops, footsteps, camera sway, and dialogue all react together.",
+            "Movement, combat, AI, UI, logs, crafting and events all read from the same runtime data layer. This allows consistent reactions: weather affects AI, crops, player vitals and structure integrity simultaneously.",
         },
         {
-          name: "Story-first simulation",
+          name: "System-driven storytelling",
           description:
-            "Systems never run in isolation. Building a shelter or crafting a weapon also pushes AIKA’s narrative triggers forward.",
+            "The story doesn’t run cinematics — it reacts to systems. Storms, encounters, resource scarcity, telekinetic upgrades, NPC presence and base conditions feed directly into narrative progression triggers.",
         },
       ],
       footnote:
-        "The toolbox powering AIKA’s field missions is identical here—testing the slice advances both engineering and story planning.",
+        "New systems activate in the survival slice as soon as they reach feature parity with the main campaign. This ensures that gameplay and story evolve together with each update.",
     },
     devlog: {
       title: "AIKA Recovery Log",
