@@ -14,11 +14,11 @@ ENVIRONMENT = "production"
 [[d1_databases]]
 binding = "DB"
 database_name = "aika-world-db"
-database_id = "74736f06-e68b-4872-99e9-4a11b8eb1048"
+database_id = "9857d534-0700-427a-aab7-592e1fe95dbf"
 
 # Secrets (set via: wrangler secret put JWT_SECRET)
 # JWT_SECRET        — a long random string, e.g. openssl rand -hex 32
-# GEMINI_API_KEY    — Google Gemini API key (ingyenes: aistudio.google.com)
+# OPENROUTER_API_KEY — OpenRouter API key (ingyenes: openrouter.ai)
 
 # Custom domain (optional)
 # [[routes]]
@@ -29,3 +29,8 @@ database_id = "74736f06-e68b-4872-99e9-4a11b8eb1048"
 name = "aika-world-preview"
 [env.preview.vars]
 ENVIRONMENT = "preview"
+
+[observability]
+[observability.logs]
+enabled = false
+invocation_logs = true

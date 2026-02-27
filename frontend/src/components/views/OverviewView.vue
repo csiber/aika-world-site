@@ -152,7 +152,11 @@ async function sendToAika() {
       })
     });
     const data = await res.json();
-    aikaChatLog.value.push({ role: 'assistant', text: data.reply || 'Hiba történt.' });
+    if (!res.ok) {
+      aikaChatLog.value.push({ role: 'assistant', text: `⚠️ ${data.error || 'Ismeretlen hiba'}` });
+    } else {
+      aikaChatLog.value.push({ role: 'assistant', text: data.reply || 'Hiba történt.' });
+    }
   } catch (e) {
     aikaChatLog.value.push({ role: 'assistant', text: '⚠️ Kapcsolati hiba. Kérlek próbáld újra.' });
   }
