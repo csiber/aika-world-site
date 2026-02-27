@@ -1,69 +1,59 @@
-# AIKA: World – fejlesztői útmutató
+# AIKA COLONY — Cloudflare Workers Deploy
 
-A projekt egy Next.js alapú, többnyelvű marketing oldal, amely Cloudflare Pages + Workers környezetre van optimalizálva. Az alábbi leírás célja, hogy új fejlesztő legfeljebb 10 perc alatt be tudja indítani a rendszert és átlássa az alapvető működést.
+## Fájlstruktúra
 
-## Fejlesztői gyorsindító
+```
+aika-colony-worker/
+├── worker.js        ← A Cloudflare Worker szkript (belépési pont)
+├── index.html       ← A teljes játékalkalmazás (HTML + CSS + JS)
+├── wrangler.toml    ← Cloudflare Workers konfiguráció
+├── package.json     ← npm csomagkezelő fájl
+└── README.md        ← Ez a fájl
+```
 
-1. Node 18+ és npm szükséges (a lockfile npm-hez készült).
-2. Telepítés: `npm install`
-3. Fejlesztői szerver indítása: `npm run dev`
-4. Böngészőben nyisd meg a `http://localhost:3000` címet.
+## Telepítés lépései
 
-A projekt nem használ SQLite-ot; a form endpontok és a Turnstile integráció külső szolgáltatásokhoz csatlakoznak, így lokális adatbázis beállításra nincs szükség.
+### 1. Előfeltételek
+- [Node.js](https://nodejs.org/) (v18+)
+- [Cloudflare fiók](https://dash.cloudflare.com/sign-up)
 
-## Hasznos npm parancsok
+### 2. Wrangler telepítése
+```bash
+npm install
+```
 
-| Parancs | Leírás |
-| --- | --- |
-| `npm run dev` | Next.js fejlesztői mód, hot reloaddal. |
-| `npm run build` | Production build Cloudflare Pages számára (statikus export + edge runtime). |
-| `npm run start` | Preview szerver a buildelt kimenet ellenőrzésére. |
-| `npm run lint` | Statikus ellenőrzés a projekt ESLint szabályaival. |
+### 3. Cloudflare bejelentkezés
+```bash
+npx wrangler login
+```
 
-## Build és deploy folyamat
+### 4. Helyi fejlesztés (opcionális)
+```bash
+npm run dev
+# → http://localhost:8787
+```
 
-1. `npm run build` lokálisan ellenőrzi, hogy a Next.js alkalmazás statikusan előállítható.
-2. Cloudflare Pages-en a build parancs ugyanaz (`npm run build`), az outputot az `.open-next` konfiguráció írja le.
-3. A Workers funkciókat a `wrangler.jsonc` és az `open-next.config.ts` fájlok szabályozzák.
-4. Élesítés előtt érdemes Lighthouse-t futtatni (Chrome DevTools) és ellenőrizni, hogy a Performance + SEO legalább 90 pont.
+### 5. Deploy Cloudflare-re
+```bash
+npm run deploy
+```
 
-## I18n struktúra
+A deploy után megkapod a `*.workers.dev` URL-t ahol az alkalmazás él.
 
-- A kulcsok és szövegek a `lib/i18n.ts` fájlban találhatók.
-- A `Dictionary` típus határozza meg az elérhető tartalmi blokkokat; minden új komponenshez itt kell felvenni a lokalizált szöveget.
-- A nyelvi útvonalak (`/en`, `/hu`) fixen statikusan generálódnak az `app/[lang]` mappában.
+## Konfiguráció
 
-## UI komponensek
+A `wrangler.toml` fájlban testreszabható:
+- `name` — a Worker neve (ez lesz az URL: `name.your-subdomain.workers.dev`)
+- `[[routes]]` — egyedi domain beállítása (kommentes sorokat aktiváld)
+- `[[kv_namespaces]]` — jövőbeli KV alapú mentési rendszer
 
-- Minden nagyobb UI elem a `components/` könyvtárban él.
-- A marketing szakaszok animációit Tailwind és egyedi CSS animációk biztosítják (`components/home/home-landing.tsx`).
-- A Cloudflare Turnstile widget újrafelhasználható verziója: `components/turnstile-widget.tsx`.
-- Az analitika hozzájárulási sáv: `components/analytics-consent.tsx`.
+## Hogyan működik?
 
-## Környezeti változók
+A `worker.js` importálja az `index.html` fájlt szövegként (Wrangler `Text` rule segítségével), majd minden HTTP kérésre visszaadja azt a megfelelő fejlécekkel. Az alkalmazás teljesen kliens-oldali (JavaScript), nincs szükség szerveroldali logikára.
 
-| Változó | Szerep |
-| --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | Teljes bázis URL (pl. `https://aikaworld.com`), meta tagekhez és sitemaphez. |
-| `NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN` | Cloudflare Web Analytics token; ha nincs megadva, a script nem töltődik be. |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site kulcs a kapcsolatfelvételi űrlaphoz és hírlevélhez. |
-| `NEXT_PUBLIC_CONTACT_FORM_ENDPOINT` | Külső endpoint, ahová a kapcsolatfelvételi űrlap POST-olja az adatokat. |
-| `NEXT_PUBLIC_NEWSLETTER_FORM_ENDPOINT` | Külső endpoint a hírlevél feliratkozáshoz. |
+## Jövőbeli fejlesztési lehetőségek
 
-Éles környezetben minden értéket a Cloudflare Pages projekt environment-jében kell felvenni.
-
-## Kódstílus és minőség
-
-- TypeScript minden fájlban kötelező.
-- A Tailwind utility osztályok preferáltak, saját CSS csak a `app/globals.css` fájlban található változókkal történjen.
-- A képi assetek SVG formátumban élnek a `public/images` és `public/og` mappákban; PNG feltöltése kerülendő.
-
-## Ellenőrzőlista élesítés előtt
-
-- [ ] `npm run build` hibamentesen lefut.
-- [ ] Lighthouse desktop: Performance ≥ 90, SEO ≥ 90.
-- [ ] Cloudflare Web Analytics token aktív és a consent banner megjelenik.
-- [ ] Hreflang és canonical tagek ellenőrizve (View Source).
-- [ ] `sitemap.xml` és `robots.txt` kiszolgálva van (`npm run start` után ellenőrizhető).
-
-További üzemeltetési részletek az `OPS_NOTES.md` fájlban találhatók.
+- **KV Store**: Játékállás mentése Cloudflare KV-ban
+- **Durable Objects**: Valós idejű multiplayer szinkronizáció
+- **R2**: Képek és asetek tárolása
+- **D1**: SQLite alapú ranglisták és felhasználói adatok
