@@ -13,10 +13,26 @@
 
 import { jsonResponse, jsonError } from '../utils/response.js';
 
+async function tableExists(env, name) {
+  try {
+    await env.DB.prepare(`SELECT 1 FROM ${name} LIMIT 1`).first();
+    return true;
+  } catch { return false; }
+}
+
 export async function handleAlliance(request, env, url, user) {
   const userId = user.sub;
   const path = url.pathname;
   const method = request.method;
+
+  // Check if tables exist (migration might not have run yet)
+  const tablesReady = await tableExists(env, 'alliances');
+  if (!tablesReady) {
+    if (path === '/api/alliance/my' && method === 'GET') {
+      return jsonResponse({ ok: true, alliance: null }, 200, request);
+    }
+    return jsonError(503, 'Szövetség funkció még nem érhető el. Futtasd a migration.sql-t!', request);
+  }
 
   // ── GET /api/alliance/list ───────────────────────────────
   if (path === '/api/alliance/list' && method === 'GET') {

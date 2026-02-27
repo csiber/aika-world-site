@@ -10,38 +10,132 @@
 
 import { jsonResponse, jsonError } from '../utils/response.js';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Game formulas ─────────────────────────────────────────────────────────────
 
 function buildCost(building) {
   const mult = Math.pow(1.5, building.level);
   return {
-    metal: Math.floor(building.baseCost.metal * mult),
+    metal:   Math.floor(building.baseCost.metal   * mult),
     crystal: Math.floor(building.baseCost.crystal * mult),
   };
 }
 
-function researchCost(research) {
+function researchCost(r) {
   return {
-    metal: Math.floor(200 * Math.pow(2, research.level)),
-    crystal: Math.floor(400 * Math.pow(2, research.level)),
+    metal:   Math.floor(200 * Math.pow(2, r.level)),
+    crystal: Math.floor(400 * Math.pow(2, r.level)),
   };
 }
 
-function buildTime(level, base = 30) {
-  return Math.floor((level * 90) + base);
+/** Build time in seconds — reduced by Robotics level */
+function buildTime(level, roboticsLevel = 1) {
+  const base = Math.floor((level * 90) + 30);
+  const reduction = Math.max(0.2, 1 - (roboticsLevel - 1) * 0.07); // -7% per level, min 20%
+  return Math.floor(base * reduction);
 }
+
+/** Research time in seconds — reduced by Lab level */
+function researchTime(level, labLevel = 1) {
+  const base = (level + 1) * 120;
+  const reduction = Math.max(0.2, 1 - (labLevel - 1) * 0.07);
+  return Math.floor(base * reduction);
+}
+
+/** Fleet build time — reduced by Shipyard level */
+function fleetBuildTime(amount, shipCostTotal, shipyardLevel = 1) {
+  const base = Math.floor(3600 * amount * 0.5);
+  const reduction = Math.max(0.15, 1 - (shipyardLevel - 1) * 0.08);
+  return Math.floor(base * reduction);
+}
+
+/** Storage capacity — base + storage building levels + Hyper tech */
+function calcStorage(buildings, research) {
+  const storageMetal   = buildings.find(b => b.id === 'storage_metal')?.level   || 1;
+  const storageCrystal = buildings.find(b => b.id === 'storage_crystal')?.level || 1;
+  const hyperLevel     = research.find(r => r.id === 'hyper')?.level            || 0;
+  const hyperBonus = 1 + hyperLevel * 0.15;
+  return {
+    metal:   Math.floor(50000 * Math.pow(2, storageMetal - 1)   * hyperBonus),
+    crystal: Math.floor(25000 * Math.pow(2, storageCrystal - 1) * hyperBonus),
+    energy:  999999,
+    deus:    Math.floor(5000  * (1 + hyperLevel * 0.2)),
+  };
+}
+
+/** Production rates — buildings + research bonuses */
+function recalcRates(buildings, research) {
+  const metalMine   = buildings.find(b => b.id === 'metal_mine')?.level   || 1;
+  const crystalMine = buildings.find(b => b.id === 'crystal_mine')?.level || 1;
+  const solar       = buildings.find(b => b.id === 'solar')?.level        || 1;
+  const deusium     = buildings.find(b => b.id === 'deusium')?.level      || 1;
+
+  const energyTech  = research?.find(r => r.id === 'energy_tech')?.level  || 0;
+  const energyBonus = 1 + energyTech * 0.08;
+
+  // Energy production & demand
+  const energyProd  = Math.floor(20 * Math.pow(1.12, solar - 1) * energyBonus);
+  const metalDemand = Math.floor(metalMine   * 8);
+  const crystalDemand = Math.floor(crystalMine * 6);
+  const deusDemand  = Math.floor(deusium * 3);
+  const totalDemand = metalDemand + crystalDemand + deusDemand;
+
+  // Energy efficiency (0.5x - 1.0x) — affects all production if energy deficit
+  const energyEff = totalDemand > 0 ? Math.min(1, energyProd / totalDemand) : 1;
+
+  return {
+    metal:   Math.floor(30 * Math.pow(1.1, metalMine   - 1) * energyEff),
+    crystal: Math.floor(20 * Math.pow(1.1, crystalMine - 1) * energyEff),
+    energy:  energyProd,
+    deus:    Math.floor(2  * Math.pow(1.15, deusium - 1) * energyEff),
+    energyProd,
+    energyDemand: totalDemand,
+    energyEff: Math.round(energyEff * 100),
+  };
+}
+
+/** Combat power — takes research levels into account */
+export function calcCombatPower(fleet, research) {
+  const combatLevel = research?.find(r => r.id === 'combat')?.level  || 0;
+  const laserLevel  = research?.find(r => r.id === 'laser')?.level   || 0;
+  const plasmaLevel = research?.find(r => r.id === 'plasma')?.level  || 0;
+  const shieldLevel = research?.find(r => r.id === 'shield')?.level  || 0;
+
+  const attackBonus = 1 + combatLevel * 0.10 + laserLevel * 0.05 + plasmaLevel * 0.12;
+  const shieldBonus = 1 + shieldLevel * 0.10;
+
+  const attack = fleet.reduce((s, f) => s + (f.attack * f.count * attackBonus), 0);
+  const shield = fleet.reduce((s, f) => s + (f.shield * f.count * shieldBonus), 0);
+  const cargo  = fleet.reduce((s, f) => s + (f.cargo  * f.count), 0);
+  const ships  = fleet.reduce((s, f) => s + f.count, 0);
+
+  return { attack: Math.floor(attack), shield: Math.floor(shield), cargo, ships };
+}
+
+/** Fleet mission travel time — based on slowest ship + drive tech */
+function missionTravelTime(fleet, research, baseSeconds = 300) {
+  const driveLevel = research?.find(r => r.id === 'drive')?.level || 0;
+  const driveBonus = 1 + driveLevel * 0.15;
+  const activShips = fleet.filter(f => f.count > 0);
+  const minSpeed = activShips.length > 0
+    ? Math.min(...activShips.map(f => f.speed || 5000))
+    : 5000;
+  const timeReduction = Math.min(0.85, (minSpeed / 10000) * driveBonus);
+  return Math.floor(baseSeconds * (1 - timeReduction) + 60);
+}
+
+// ── DB helpers ────────────────────────────────────────────────────────────────
 
 async function getState(env, userId) {
   const row = await env.DB.prepare('SELECT * FROM game_state WHERE user_id = ?').bind(userId).first();
   if (!row) return null;
   return {
     resources: JSON.parse(row.resources),
-    rates: JSON.parse(row.rates),
+    rates:     JSON.parse(row.rates),
     buildings: JSON.parse(row.buildings),
-    research: JSON.parse(row.research),
-    fleet: JSON.parse(row.fleet),
-    planets: JSON.parse(row.planets),
-    score: row.score,
+    research:  JSON.parse(row.research),
+    fleet:     JSON.parse(row.fleet),
+    planets:   JSON.parse(row.planets),
+    score:     row.score,
     updatedAt: row.updated_at,
   };
 }
@@ -52,24 +146,18 @@ async function saveState(env, userId, state) {
     SET resources=?, rates=?, buildings=?, research=?, fleet=?, planets=?, score=?, updated_at=unixepoch()
     WHERE user_id=?
   `).bind(
-    JSON.stringify(state.resources),
-    JSON.stringify(state.rates),
-    JSON.stringify(state.buildings),
-    JSON.stringify(state.research),
-    JSON.stringify(state.fleet),
-    JSON.stringify(state.planets),
-    state.score,
-    userId
+    JSON.stringify(state.resources), JSON.stringify(state.rates),
+    JSON.stringify(state.buildings), JSON.stringify(state.research),
+    JSON.stringify(state.fleet),     JSON.stringify(state.planets),
+    state.score, userId
   ).run();
 }
 
-/** Process finished queue items and apply their effects to state */
 async function processQueue(env, userId, state) {
   const now = Math.floor(Date.now() / 1000);
   const finished = await env.DB.prepare(
     'SELECT * FROM build_queue WHERE user_id = ? AND finish_at <= ?'
   ).bind(userId, now).all();
-
   if (!finished.results.length) return state;
 
   for (const item of finished.results) {
@@ -77,52 +165,45 @@ async function processQueue(env, userId, state) {
       const b = state.buildings.find(x => x.id === item.item_id);
       if (b) {
         b.level = item.target_level;
-        // Recalculate rates based on building levels
-        state.rates = recalcRates(state.buildings);
+        state.rates = recalcRates(state.buildings, state.research);
         state.score += 50;
       }
     } else if (item.item_type === 'research') {
       const r = state.research.find(x => x.id === item.item_id);
-      if (r) { r.level = item.target_level; state.score += 100; }
+      if (r) {
+        r.level = item.target_level;
+        // Recalc rates if energy tech changed
+        if (item.item_id === 'energy_tech') {
+          state.rates = recalcRates(state.buildings, state.research);
+        }
+        state.score += 100;
+      }
     } else if (item.item_type === 'fleet') {
       const f = state.fleet.find(x => x.id === item.item_id);
       if (f) { f.count += item.target_level; state.score += 20 * item.target_level; }
     }
   }
 
-  // Delete processed items
   const ids = finished.results.map(r => `'${r.id}'`).join(',');
   await env.DB.prepare(`DELETE FROM build_queue WHERE id IN (${ids})`).run();
-
-  // Update rankings
   await env.DB.prepare('UPDATE rankings SET score=?, updated_at=unixepoch() WHERE user_id=?')
     .bind(state.score, userId).run();
 
   return state;
 }
 
-function recalcRates(buildings) {
-  const metalMine    = buildings.find(b => b.id === 'metal_mine');
-  const crystalMine  = buildings.find(b => b.id === 'crystal_mine');
-  const solar        = buildings.find(b => b.id === 'solar');
-  const deusium      = buildings.find(b => b.id === 'deusium');
-  return {
-    metal:   Math.floor(30 * Math.pow(1.1, (metalMine?.level || 1) - 1)),
-    crystal: Math.floor(20 * Math.pow(1.1, (crystalMine?.level || 1) - 1)),
-    energy:  Math.floor(10 * Math.pow(1.1, (solar?.level || 1) - 1)),
-    deus:    Math.floor(2  * Math.pow(1.15, (deusium?.level || 1) - 1)),
-  };
-}
-
-/** Add accrued resources since last sync */
 function accrueResources(state) {
   const now = Math.floor(Date.now() / 1000);
-  const elapsed = Math.min(now - state.updatedAt, 3600 * 8); // max 8h offline gain
+  const elapsed = Math.min(now - state.updatedAt, 3600 * 8);
   if (elapsed <= 0) return state;
-  state.resources.metal   += (state.rates.metal   / 3600) * elapsed;
-  state.resources.crystal += (state.rates.crystal / 3600) * elapsed;
-  state.resources.energy  += (state.rates.energy  / 3600) * elapsed;
-  state.resources.deus    += (state.rates.deus    / 3600) * elapsed;
+
+  const storage = calcStorage(state.buildings, state.research);
+
+  state.resources.metal   = Math.min(storage.metal,   state.resources.metal   + (state.rates.metal   / 3600) * elapsed);
+  state.resources.crystal = Math.min(storage.crystal, state.resources.crystal + (state.rates.crystal / 3600) * elapsed);
+  state.resources.energy  = Math.min(storage.energy,  state.resources.energy  + (state.rates.energy  / 3600) * elapsed);
+  state.resources.deus    = Math.min(storage.deus,    state.resources.deus    + (state.rates.deus    / 3600) * elapsed);
+
   return state;
 }
 
@@ -130,7 +211,7 @@ function accrueResources(state) {
 
 export async function handleGame(request, env, url, user) {
   const userId = user.sub;
-  const path = url.pathname;
+  const path   = url.pathname;
   const method = request.method;
 
   // ── GET /api/game/state ───────────────────────────────────
@@ -142,12 +223,12 @@ export async function handleGame(request, env, url, user) {
     state = await processQueue(env, userId, state);
     await saveState(env, userId, state);
 
-    // Attach active queue
-    const queue = await env.DB.prepare(
+    const storage = calcStorage(state.buildings, state.research);
+    const queue   = await env.DB.prepare(
       'SELECT * FROM build_queue WHERE user_id = ? ORDER BY finish_at ASC'
     ).bind(userId).all();
 
-    return jsonResponse({ ok: true, state, queue: queue.results }, 200, request);
+    return jsonResponse({ ok: true, state, queue: queue.results, storage }, 200, request);
   }
 
   // ── GET /api/game/queue ───────────────────────────────────
@@ -171,7 +252,16 @@ export async function handleGame(request, env, url, user) {
     const b = state.buildings.find(x => x.id === buildingId);
     if (!b) return jsonError(404, 'Building not found', request);
 
-    // Check if already in queue
+    // Queue limit: max 2 concurrent builds (robotics unlocks 3rd slot at level 5)
+    const roboticsLevel = state.buildings.find(x => x.id === 'robotics')?.level || 1;
+    const maxQueue = roboticsLevel >= 5 ? 3 : 2;
+    const activeBuilds = await env.DB.prepare(
+      'SELECT COUNT(*) as cnt FROM build_queue WHERE user_id = ? AND item_type = ?'
+    ).bind(userId, 'building').first();
+    if (activeBuilds.cnt >= maxQueue) {
+      return jsonError(400, `Maximum ${maxQueue} épület fejleszthető egyszerre (Robotika Szint ${roboticsLevel})`, request);
+    }
+
     const inQueue = await env.DB.prepare(
       'SELECT id FROM build_queue WHERE user_id = ? AND item_id = ? AND item_type = ?'
     ).bind(userId, buildingId, 'building').first();
@@ -184,7 +274,8 @@ export async function handleGame(request, env, url, user) {
 
     state.resources.metal   -= cost.metal;
     state.resources.crystal -= cost.crystal;
-    const seconds = buildTime(b.level);
+    const robotics = state.buildings.find(x => x.id === 'robotics')?.level || 1;
+    const seconds  = buildTime(b.level, robotics);
     const finishAt = Math.floor(Date.now() / 1000) + seconds;
 
     await env.DB.batch([
@@ -194,7 +285,8 @@ export async function handleGame(request, env, url, user) {
     ]);
 
     await saveState(env, userId, state);
-    return jsonResponse({ ok: true, finishAt, cost, state }, 200, request);
+    const storage = calcStorage(state.buildings, state.research);
+    return jsonResponse({ ok: true, finishAt, cost, seconds, state, storage }, 200, request);
   }
 
   // ── POST /api/game/research ──────────────────────────────
@@ -211,10 +303,17 @@ export async function handleGame(request, env, url, user) {
     if (!r) return jsonError(404, 'Research not found', request);
     if (r.level >= r.max) return jsonError(400, 'Már maximum szinten van', request);
 
-    const inQueue = await env.DB.prepare(
-      'SELECT id FROM build_queue WHERE user_id = ? AND item_id = ? AND item_type = ?'
-    ).bind(userId, researchId, 'research').first();
-    if (inQueue) return jsonError(409, 'Ez a kutatás már folyamatban van', request);
+    // Plasma requires Laser 10
+    if (researchId === 'plasma') {
+      const laserLevel = state.research.find(x => x.id === 'laser')?.level || 0;
+      if (laserLevel < 10) return jsonError(400, 'Plazma Technológiához Lézer Technológia Szint 10 szükséges!', request);
+    }
+
+    // Only 1 research at a time
+    const activeResearch = await env.DB.prepare(
+      'SELECT COUNT(*) as cnt FROM build_queue WHERE user_id = ? AND item_type = ?'
+    ).bind(userId, 'research').first();
+    if (activeResearch.cnt >= 1) return jsonError(409, 'Már fut egy kutatás', request);
 
     const cost = researchCost(r);
     if (state.resources.metal < cost.metal || state.resources.crystal < cost.crystal) {
@@ -223,7 +322,8 @@ export async function handleGame(request, env, url, user) {
 
     state.resources.metal   -= cost.metal;
     state.resources.crystal -= cost.crystal;
-    const seconds = (r.level + 1) * 120;
+    const labLevel = state.buildings.find(x => x.id === 'lab')?.level || 1;
+    const seconds  = researchTime(r.level, labLevel);
     const finishAt = Math.floor(Date.now() / 1000) + seconds;
 
     await env.DB.batch([
@@ -233,7 +333,7 @@ export async function handleGame(request, env, url, user) {
     ]);
 
     await saveState(env, userId, state);
-    return jsonResponse({ ok: true, finishAt, cost, state }, 200, request);
+    return jsonResponse({ ok: true, finishAt, cost, seconds, state }, 200, request);
   }
 
   // ── POST /api/game/fleet/build ───────────────────────────
@@ -250,6 +350,14 @@ export async function handleGame(request, env, url, user) {
     const ship = state.fleet.find(x => x.id === shipId);
     if (!ship) return jsonError(404, 'Ship type not found', request);
 
+    // Shipyard check — need level 1+ to build, higher level for advanced ships
+    const shipyardLevel = state.buildings.find(b => b.id === 'shipyard')?.level || 1;
+    const shipTier = { fighter_s: 1, miner: 1, fighter_l: 2, colony: 2, cruiser: 3, battleship: 4 };
+    const requiredShipyard = shipTier[shipId] || 1;
+    if (shipyardLevel < requiredShipyard) {
+      return jsonError(400, `${ship.name} építéséhez Hajógyár Szint ${requiredShipyard} szükséges (jelenlegi: ${shipyardLevel})`, request);
+    }
+
     const totalCost = {
       metal:   ship.cost.metal   * amount,
       crystal: ship.cost.crystal * amount,
@@ -260,7 +368,8 @@ export async function handleGame(request, env, url, user) {
 
     state.resources.metal   -= totalCost.metal;
     state.resources.crystal -= totalCost.crystal;
-    const seconds = Math.floor(3600 * amount * 0.5);
+    const shipyard = state.buildings.find(b => b.id === 'shipyard')?.level || 1;
+    const seconds  = fleetBuildTime(amount, totalCost, shipyard);
     const finishAt = Math.floor(Date.now() / 1000) + seconds;
 
     await env.DB.batch([
@@ -270,7 +379,7 @@ export async function handleGame(request, env, url, user) {
     ]);
 
     await saveState(env, userId, state);
-    return jsonResponse({ ok: true, finishAt, cost: totalCost, state }, 200, request);
+    return jsonResponse({ ok: true, finishAt, cost: totalCost, seconds, state }, 200, request);
   }
 
   // ── POST /api/game/sync ──────────────────────────────────
@@ -280,17 +389,18 @@ export async function handleGame(request, env, url, user) {
     state = await processQueue(env, userId, state);
     await saveState(env, userId, state);
 
-    // Update galaxy_map with latest planet/score info
-    const mainPlanet = state.planets?.[0];
-    if (mainPlanet) {
-      await env.DB.prepare(
-        'UPDATE galaxy_map SET planet_name=?, planet_emoji=?, coords=?, score=?, updated_at=unixepoch() WHERE user_id=?'
-      ).bind(mainPlanet.name, mainPlanet.emoji || '🌍', mainPlanet.coords, state.score, userId).run();
-    }
+    try {
+      const mainPlanet = state.planets?.[0];
+      if (mainPlanet) {
+        await env.DB.prepare(
+          'UPDATE galaxy_map SET planet_name=?, planet_emoji=?, coords=?, score=?, updated_at=unixepoch() WHERE user_id=?'
+        ).bind(mainPlanet.name, mainPlanet.emoji || '🌍', mainPlanet.coords, state.score, userId).run();
+      }
+    } catch (e) { console.warn('galaxy_map update skipped:', e.message); }
 
-    return jsonResponse({ ok: true, state }, 200, request);
+    const storage = calcStorage(state.buildings, state.research);
+    return jsonResponse({ ok: true, state, storage }, 200, request);
   }
-
 
   // ── POST /api/game/planet/rename ─────────────────────────
   if (path === '/api/game/planet/rename' && method === 'POST') {
@@ -308,11 +418,12 @@ export async function handleGame(request, env, url, user) {
 
     await saveState(env, userId, state);
 
-    // Update galaxy_map if it's the main planet
     if (planetIdx === 0) {
-      await env.DB.prepare(
-        'UPDATE galaxy_map SET planet_name=?, planet_emoji=?, updated_at=unixepoch() WHERE user_id=?'
-      ).bind(state.planets[0].name, state.planets[0].emoji, userId).run();
+      try {
+        await env.DB.prepare(
+          'UPDATE galaxy_map SET planet_name=?, planet_emoji=?, updated_at=unixepoch() WHERE user_id=?'
+        ).bind(state.planets[0].name, state.planets[0].emoji, userId).run();
+      } catch (e) { console.warn('galaxy_map rename skipped:', e.message); }
     }
 
     return jsonResponse({ ok: true, planets: state.planets }, 200, request);

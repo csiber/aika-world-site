@@ -6,6 +6,13 @@
 
 import { jsonResponse, jsonError } from '../utils/response.js';
 
+async function tableExists(env, name) {
+  try {
+    await env.DB.prepare(`SELECT 1 FROM ${name} LIMIT 1`).first();
+    return true;
+  } catch { return false; }
+}
+
 export async function handleProfile(request, env, url, user) {
   const userId = user.sub;
   const path = url.pathname;
@@ -28,9 +35,12 @@ export async function handleProfile(request, env, url, user) {
       'SELECT COUNT(*)+1 as rank FROM rankings WHERE score > (SELECT score FROM rankings WHERE user_id = ?)'
     ).bind(userId).first();
 
-    const membership = await env.DB.prepare(
-      'SELECT a.name, a.tag, am.role FROM alliance_members am JOIN alliances a ON a.id = am.alliance_id WHERE am.user_id = ?'
-    ).bind(userId).first();
+    let membership = null;
+    try {
+      membership = await env.DB.prepare(
+        'SELECT a.name, a.tag, am.role FROM alliance_members am JOIN alliances a ON a.id = am.alliance_id WHERE am.user_id = ?'
+      ).bind(userId).first();
+    } catch (e) { /* alliance tables not migrated yet */ }
 
     const queueCount = await env.DB.prepare(
       'SELECT COUNT(*) as cnt FROM build_queue WHERE user_id = ?'
@@ -68,9 +78,12 @@ export async function handleProfile(request, env, url, user) {
       'SELECT COUNT(*)+1 as rank FROM rankings WHERE score > ?'
     ).bind(r?.score || 0).first();
 
-    const membership = await env.DB.prepare(
-      'SELECT a.name, a.tag FROM alliance_members am JOIN alliances a ON a.id = am.alliance_id WHERE am.user_id = ?'
-    ).bind(u.id).first();
+    let membership = null;
+    try {
+      membership = await env.DB.prepare(
+        'SELECT a.name, a.tag FROM alliance_members am JOIN alliances a ON a.id = am.alliance_id WHERE am.user_id = ?'
+      ).bind(u.id).first();
+    } catch (e) { /* alliance tables not migrated yet */ }
 
     return jsonResponse({
       ok: true,

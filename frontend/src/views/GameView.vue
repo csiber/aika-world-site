@@ -12,10 +12,10 @@
       </div>
 
       <div class="resource-bar">
-        <ResourceItem icon="⚙️" label="Fém"     :value="resources.metal"   :rate="rates.metal"   color="var(--metal)" />
-        <ResourceItem icon="💎" label="Kristály" :value="resources.crystal" :rate="rates.crystal" color="var(--crystal)" />
+        <ResourceItem icon="⚙️" label="Fém"     :value="resources.metal"   :rate="rates.metal"   color="var(--metal)"    :maxVal="gameStore.storage.metal" />
+        <ResourceItem icon="💎" label="Kristály" :value="resources.crystal" :rate="rates.crystal" color="var(--crystal)"  :maxVal="gameStore.storage.crystal" />
         <ResourceItem icon="⚡" label="Energia"  :value="resources.energy"  :rate="rates.energy"  color="var(--energy)" />
-        <ResourceItem icon="🔮" label="Déusium"  :value="resources.deus"    :rate="rates.deus"    color="var(--accent)" />
+        <ResourceItem icon="🔮" label="Déusium"  :value="resources.deus"    :rate="rates.deus"    color="var(--accent)"   :maxVal="gameStore.storage.deus" />
       </div>
 
       <div class="user-area">
@@ -44,6 +44,13 @@
       </button>
     </nav>
 
+    <!-- ── ENERGY WARNING ── -->
+    <Transition name="slide-down">
+      <div v-if="gameStore.energyWarning" class="energy-banner" :class="gameStore.energyWarning.level">
+        {{ gameStore.energyWarning.msg }}
+      </div>
+    </Transition>
+
     <!-- ── PLANET BAR ── -->
     <div class="planet-bar">
       <div
@@ -71,6 +78,7 @@
       <RankingsView  v-if="activeTab === 'rankings'"  />
       <MessagesView  v-if="activeTab === 'messages'"  />
       <ProfileView   v-if="activeTab === 'profile'"   />
+      <GuideView     v-if="activeTab === 'guide'"     />
     </main>
   </div>
 
@@ -103,6 +111,7 @@ import AllianceView  from '@/components/views/AllianceView.vue';
 import RankingsView  from '@/components/views/RankingsView.vue';
 import MessagesView  from '@/components/views/MessagesView.vue';
 import ProfileView   from '@/components/views/ProfileView.vue';
+import GuideView    from '@/components/views/GuideView.vue';
 
 const router        = useRouter();
 const auth          = useAuthStore();
@@ -128,6 +137,7 @@ const tabs = [
   { id: 'messages',  label: '✉️ Üzenetek' },
   { id: 'rankings',  label: '🏆 Rangsor' },
   { id: 'profile',   label: '👤 Profil' },
+  { id: 'guide',     label: '📖 Útmutató' },
 ];
 
 function onLogout() {
@@ -196,4 +206,10 @@ onUnmounted(() => {
 .loading-icon { font-size: 64px; animation: pulse 2s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(0,200,255,0.5)); }
 .loading-text { font-family: 'Orbitron', sans-serif; font-size: 14px; color: var(--accent); letter-spacing: 2px; }
 @keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } }
+
+.energy-banner { padding: 5px 14px; font-size: 11px; text-align: center; font-family: 'Exo 2', sans-serif; }
+.energy-banner.warning  { background: rgba(255,165,0,0.15); border-bottom: 1px solid rgba(255,165,0,0.3); color: #ffaa00; }
+.energy-banner.critical { background: rgba(255,58,122,0.15); border-bottom: 1px solid rgba(255,58,122,0.3); color: var(--accent2); animation: pulse 1.5s ease-in-out infinite; }
+.slide-down-enter-active, .slide-down-leave-active { transition: all 0.3s ease; }
+.slide-down-enter-from, .slide-down-leave-to { opacity: 0; transform: translateY(-8px); }
 </style>

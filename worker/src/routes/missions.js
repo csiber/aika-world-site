@@ -200,17 +200,40 @@ export async function handleMissions(request, env, url, user) {
     const targetState = await getState(env, targetUserId);
     if (!targetState) return jsonError(404, 'Célpont nem található', request);
 
-    const attackPower = state.fleet.reduce((s, f) => s + (f.attack * f.count), 0);
-    const defPower    = targetState.fleet.reduce((s, f) => s + (f.shield * f.count), 0) +
-                        (targetState.buildings.find(b => b.id === 'defense')?.level || 0) * 500;
+    // Research-aware combat calculation
+    function calcPower(fleet, research, side) {
+      const combatLevel = research?.find(r => r.id === 'combat')?.level || 0;
+      const laserLevel  = research?.find(r => r.id === 'laser')?.level  || 0;
+      const plasmaLevel = research?.find(r => r.id === 'plasma')?.level || 0;
+      const shieldLevel = research?.find(r => r.id === 'shield')?.level || 0;
+      const attackBonus = 1 + combatLevel * 0.10 + laserLevel * 0.05 + plasmaLevel * 0.12;
+      const shieldBonus = 1 + shieldLevel * 0.10;
+      const attack = fleet.reduce((s, f) => s + (f.attack * f.count * attackBonus), 0);
+      const shield = fleet.reduce((s, f) => s + (f.shield * f.count * shieldBonus), 0);
+      const cargo  = fleet.reduce((s, f) => s + (f.cargo  * f.count), 0);
+      return { attack: Math.floor(attack), shield: Math.floor(shield), cargo };
+    }
 
-    const attackerWins = attackPower > defPower * 0.7; // some randomness baked in
+    const atkPow = calcPower(state.fleet, state.research, 'attacker');
+    const defFleetPow = calcPower(targetState.fleet, targetState.research, 'defender');
+    const defBuildingBonus = (targetState.buildings?.find(b => b.id === 'defense')?.level || 0) * 500;
+    const attackPower = atkPow.attack;
+    const defPower    = defFleetPow.shield + defBuildingBonus;
+
+    const rand = 0.85 + Math.random() * 0.3; // 0.85-1.15 randomness
+    const attackerWins = attackPower * rand > defPower;
     let loot = { metal: 0, crystal: 0 };
     let scoreGain = 0;
 
     if (attackerWins) {
-      loot.metal   = Math.floor(Math.min(targetState.resources.metal   * 0.5, 50000));
-      loot.crystal = Math.floor(Math.min(targetState.resources.crystal * 0.5, 30000));
+      // Loot limited by attacker's cargo capacity
+      const maxLoot = atkPow.cargo;
+      const rawMetal   = Math.floor(targetState.resources.metal   * 0.5);
+      const rawCrystal = Math.floor(targetState.resources.crystal * 0.5);
+      const totalRaw   = rawMetal + rawCrystal;
+      const cargoRatio = totalRaw > 0 ? Math.min(1, maxLoot / totalRaw) : 0;
+      loot.metal   = Math.floor(rawMetal   * cargoRatio);
+      loot.crystal = Math.floor(rawCrystal * cargoRatio);
       scoreGain = 50;
 
       // Deduct from target
@@ -230,7 +253,7 @@ export async function handleMissions(request, env, url, user) {
       ).run();
     }
 
-    const result = { attackerWins, loot, attackPower: Math.floor(attackPower), defPower: Math.floor(defPower), scoreGain };
+    const result = { attackerWins, loot, attackPower: Math.floor(attackPower), defPower: Math.floor(defPower), scoreGain, cargoUsed: loot.metal + loot.crystal, cargoTotal: atkPow.cargo };
     const arriveAt = Math.floor(Date.now() / 1000) + travelTime(180);
 
     await env.DB.prepare(
