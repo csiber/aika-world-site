@@ -10,6 +10,18 @@ import { cn } from "@/lib/utils";
 import { HeroAurora } from "./hero-aurora";
 import { HeroSoundscape } from "./hero-soundscape";
 
+const RESOURCE_RATES = {
+  metal: 120,
+  crystal: 82,
+  energy: 68,
+} as const;
+
+const INITIAL_RESOURCES = {
+  metal: 18240,
+  crystal: 10560,
+  energy: 6840,
+};
+
 type HomeLandingProps = {
   locale: Locale;
   content: Dictionary["home"];
@@ -36,6 +48,27 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
     : !turnstileSiteKey
       ? content.signup.turnstileError
       : null;
+
+  const [tick, setTick] = useState(27);
+  const [resources, setResources] = useState(INITIAL_RESOURCES);
+  const [tickAlerts, setTickAlerts] = useState<string[]>(["Tick 27: Command net stable."]);
+
+  const handleAdvanceTick = () => {
+    const nextTick = tick + 1;
+    setResources((previous) => ({
+      metal: previous.metal + RESOURCE_RATES.metal,
+      crystal: previous.crystal + RESOURCE_RATES.crystal,
+      energy: previous.energy + RESOURCE_RATES.energy,
+    }));
+    setTickAlerts((previous) => {
+      const message =
+        nextTick % 4 === 0
+          ? "Storm lattice recalibrated to protect the outer hull."
+          : "Command net steady; scouting drones report nominal behavior.";
+      return [`Tick ${nextTick}: ${message}`, ...previous].slice(0, 3);
+    });
+    setTick(nextTick);
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -142,15 +175,13 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
                 </g>
               </svg>
             </div>
-            <div className="grid gap-2 rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-sm text-slate-200">
+            <div className="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-sm text-slate-200">
               <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-indigo-200">
                 <span>{content.pulse.feedBadge}</span>
-                <span className="inline-flex items-center gap-2 text-cyan-100">
-                  <span className="h-2 w-2 rounded-full bg-emerald-300 animate-pulse" aria-hidden />
-                  Live signal
-                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-200">Tick {tick}</span>
               </div>
-              <p className="text-sm text-slate-100">{content.pulse.intro}</p>
+              <p className="text-sm text-slate-100">{content.pulse.graphCaption}</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">{content.pulse.intro}</p>
             </div>
           </figure>
         </div>
@@ -165,7 +196,7 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
           {content.what.pillars.map((pillar) => (
             <li
               key={pillar.title}
-              className="rounded-2xl border border-slate-800/80 bg-gradient-to-br from-[#172642] via-[#131d35] to-[#0d152b] p-6 transition-transform hover:-translate-y-1 hover:shadow-[0_20px_60px_-40px_rgba(30,160,255,0.35)]"
+              className="rounded-2xl border border-slate-800/80 bg-gradient-to-br from-[#172642] via-[#131d35] to-[#0d152b] p-6"
             >
               <h3 className="text-lg font-semibold text-white">{pillar.title}</h3>
               <p className="mt-3 text-sm text-slate-200">{pillar.text}</p>
@@ -174,60 +205,133 @@ export function HomeLanding({ locale, content }: HomeLandingProps) {
         </ul>
       </RevealSection>
 
-      <RevealSection className="space-y-10 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-10 shadow-[0_30px_80px_-60px_rgba(30,140,255,0.3)] backdrop-blur">
+      <RevealSection className="space-y-10 rounded-3xl border border-slate-800/80 bg-slate-950/70 p-10 text-slate-100 shadow-[0_30px_80px_-60px_rgba(0,0,0,0.8)]">
         <div className="space-y-4">
           <h2 className="text-3xl font-semibold text-white">{content.factions.title}</h2>
           <p className="max-w-2xl text-base text-slate-200">{content.factions.intro}</p>
         </div>
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2">
           {content.factions.items.map((faction) => (
             <article
               key={faction.name}
-              className="group relative overflow-hidden rounded-2xl border border-slate-800/80 bg-gradient-to-br from-[#192843] via-[#111b32] to-[#0c152b] p-6 transition-transform hover:-translate-y-1 hover:shadow-[0_24px_70px_-50px_rgba(30,170,255,0.35)]"
+              className="rounded-3xl border border-slate-800/80 bg-gradient-to-br from-[#1a243f] via-[#0e1426] to-[#050817] p-6 text-slate-100 shadow-[0_24px_70px_-50px_rgba(30,140,255,0.35)]"
             >
-              <div className="absolute -top-12 right-0 h-32 w-32 rounded-full bg-cyan-300/20 blur-3xl transition-transform duration-500 group-hover:scale-110" aria-hidden />
-              <span className="text-xs uppercase tracking-[0.4em] text-indigo-200">{faction.tag}</span>
-              <h3 className="mt-4 text-2xl font-semibold text-white">{faction.name}</h3>
+              <span className="text-[11px] uppercase tracking-[0.35em] text-indigo-200">{faction.tag}</span>
+              <h3 className="mt-3 text-2xl font-semibold text-white">{faction.name}</h3>
               <p className="mt-3 text-sm text-slate-200">{faction.text}</p>
             </article>
           ))}
         </div>
       </RevealSection>
 
-      <RevealSection className="space-y-10 rounded-3xl border border-slate-800/80 bg-gradient-to-br from-[#1a2b4a] via-[#131f3b] to-[#0b1428] p-10 shadow-[0_30px_90px_-60px_rgba(40,160,255,0.35)] backdrop-blur">
+      <RevealSection className="space-y-10 rounded-3xl border border-slate-800/80 bg-slate-950/70 p-10 text-slate-100 shadow-[0_30px_80px_-60px_rgba(0,0,0,0.8)]">
         <div className="space-y-4">
           <h2 className="text-3xl font-semibold text-white">{content.builders.title}</h2>
           <p className="max-w-2xl text-base text-slate-200">{content.builders.intro}</p>
         </div>
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {content.builders.items.map((feature) => (
-            <div
+            <article
               key={feature.title}
-              className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-6 transition-transform hover:-translate-y-1 shadow-[0_16px_50px_-30px_rgba(30,170,255,0.35)]"
+              className="rounded-3xl border border-slate-800/80 bg-slate-900/40 p-6 text-slate-100 shadow-[0_16px_60px_-30px_rgba(30,170,255,0.35)]"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <Image
                   src={`/images/features/${feature.icon}.svg`}
                   alt={feature.title}
-                  width={144}
-                  height={144}
+                  width={120}
+                  height={120}
                   loading="lazy"
-                  sizes="(min-width: 1280px) 140px, (min-width: 768px) 120px, 96px"
-                  className="h-16 w-16 shrink-0 md:h-20 md:w-20"
+                  priority={false}
+                  className="h-12 w-12 shrink-0"
                 />
                 <span className="rounded-full border border-indigo-300/30 bg-indigo-400/10 px-3 py-1 text-[11px] uppercase tracking-[0.3em] text-indigo-100">
-                  Core
+                  Deck
                 </span>
               </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
-                <p className="text-sm text-slate-200">{feature.text}</p>
-              </div>
-              <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
-              <p className="mt-3 text-sm text-slate-200">{feature.text}</p>
+              <h3 className="mt-4 text-xl font-semibold text-white">{feature.title}</h3>
+              <p className="mt-2 text-sm text-slate-200">{feature.text}</p>
+            </article>
+          ))}
+        </div>
+      </RevealSection>
+
+      <RevealSection className="space-y-6 rounded-3xl border border-slate-800/80 bg-gradient-to-br from-[#0d111f]/70 via-[#05060f]/70 to-[#05060f]/90 p-10 text-slate-100 shadow-[0_30px_80px_-60px_rgba(40,160,255,0.35)]">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-3xl font-semibold text-white">{content.pulse.title}</h2>
+            <p className="text-base text-slate-200 md:text-lg">{content.pulse.intro}</p>
+          </div>
+          <span className="text-xs uppercase tracking-[0.4em] text-indigo-200">{content.pulse.feedBadge}</span>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            { label: "Metal", value: resources.metal, rate: RESOURCE_RATES.metal },
+            { label: "Crystal", value: resources.crystal, rate: RESOURCE_RATES.crystal },
+            { label: "Energy", value: resources.energy, rate: RESOURCE_RATES.energy },
+          ].map((card) => (
+            <div key={card.label} className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-4">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{card.label}</p>
+              <p className="text-3xl font-semibold text-white">{card.value.toLocaleString()}</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">+{card.rate}/tick</p>
             </div>
           ))}
         </div>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{content.pulse.graphCaption}</p>
+            <div className="flex flex-wrap gap-2">
+              {content.pulse.filters.map((filter) => (
+                <span
+                  key={filter.key}
+                  className="rounded-full border border-slate-800/60 px-3 py-1 text-[10px] uppercase tracking-[0.35em] text-slate-200"
+                >
+                  {filter.label}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs uppercase tracking-[0.35em] text-indigo-200">Tick {tick}</span>
+            <button
+              type="button"
+              onClick={handleAdvanceTick}
+              className="rounded-full bg-indigo-500 px-5 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-white transition hover:bg-indigo-400"
+            >
+              Advance tick
+            </button>
+          </div>
+        </div>
+        <ul className="space-y-1 text-sm text-slate-300">
+          {tickAlerts.map((alert, index) => (
+            <li key={`${alert}-${index}`} className="rounded-2xl border border-slate-800/80 bg-slate-950/40 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-200">
+              {alert}
+            </li>
+          ))}
+        </ul>
+      </RevealSection>
+
+      <RevealSection className="space-y-6 rounded-3xl border border-slate-800/80 bg-slate-950/70 p-10 text-slate-100 shadow-[0_30px_80px_-60px_rgba(0,0,0,0.8)]">
+        <div className="space-y-4">
+          <h2 className="text-3xl font-semibold text-white">{content.loops.title}</h2>
+          <p className="text-base text-slate-200">{content.loops.intro}</p>
+        </div>
+        <ul className="space-y-4">
+          {content.loops.items.map((loop, index) => (
+            <li
+              key={loop.title}
+              className="rounded-2xl border border-slate-800/80 bg-gradient-to-br from-[#11172c] via-[#080b1a] to-[#020409] p-6 text-sm text-slate-200 shadow-[0_20px_60px_-50px_rgba(30,160,255,0.35)]"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white">{loop.title}</h3>
+                <span className="text-[10px] uppercase tracking-[0.4em] text-indigo-200">
+                  ETA {3 + index * 2} ticks
+                </span>
+              </div>
+              <p className="mt-3 text-slate-300">{loop.text}</p>
+            </li>
+          ))}
+        </ul>
       </RevealSection>
 
       <RevealSection className="rounded-3xl border border-slate-800/80 bg-gradient-to-br from-[#1b2d4f] via-[#13203b] to-[#0c162b] p-10 shadow-[0_30px_90px_-60px_rgba(40,160,255,0.35)] backdrop-blur">

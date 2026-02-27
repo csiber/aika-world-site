@@ -313,172 +313,145 @@ const dictionaries: Record<Locale, Dictionary> = {
       about: "About",
       contact: "Contact",
     },
-    home: {
-      hero: {
-        badgeLeft: "STEAM • ON APPROACH",
-        badgeRight: "ARK STATUS UPDATE",
-        title: "AIKA: World is preparing for launch",
-        subtitle:
-          "Lead a crew through a broken world. Keep the ARK running, sweep the ruins for fragments, and decide who gets shelter when the storms roll in.",
-        imageAlt:
-          "Image: The pilot and crew plotting a route beside the ARK while drones buzz over shattered terrain.",
-        note: "The campaign arrives on Steam as one complete survival run — no vertical slice, no throwaway tests.",
-        primaryCta: { label: "Open the recovery log", href: "devlog" },
-        secondaryCta: { label: "Reach the crew", href: "contact" },
-      },
-      what: {
-        title: "What is AIKA: World?",
-        description:
-          "A post-apocalyptic sci-fi survival story. You wake by the Crash Basin with a damaged ARK and a handful of crew. Each day you decide whether to push deeper for fragments, shore up the ship, or gamble on a faction for backup.",
-        pillars: [
-          {
-            title: "Survival first",
-            text: "Every step costs stamina, every wound lingers. Sliding, climbing, swimming, stealth, and dodging all feed the same survival rhythm.",
-          },
-          {
-            title: "Story in your hands",
-            text: "Dialogue, fragments, and crew morale react to your choices. Pick a faction, backstab them, or walk alone — the world keeps score.",
-          },
-          {
-            title: "Nothing resets overnight",
-            text: "Shelters, crops, wounds, and friendships carry forward. Storm damage and raids change patrols by morning.",
-          },
-          {
-            title: "A world that pushes back",
-            text: "Signals, weather shifts, and scavengers respond to you. Cooperate for intel or fight through the consequences.",
-          },
-        ],
-      },
-      factions: {
-        title: "Forces in the ruins",
-        intro:
-          "Four forces circle the Basin. Choose an ally, or make them all your problem.",
-        items: [
-          {
-            name: "SYNCNODE Remnants",
-            tag: "Human salvage crew",
-            text: "Crash survivors who treat the ARK like their last spark. They trade hard favors for power, metal, and safe passage.",
-          },
-          {
-            name: "AIKA Sentinels",
-            tag: "Orbital watchers",
-            text: "Drones running on broken orders. Sometimes they scan you for data, sometimes they call in storms. Learn their patterns or wreck their nodes.",
-          },
-          {
-            name: "Vaultbound Nomads",
-            tag: "Terraform exiles",
-            text: "Colonists sealed in failing vaults. They barter seeds, meds, and secrets if you keep their vents clear.",
-          },
-          {
-            name: "Hush Swarm",
-            tag: "Native constructs",
-            text: "Signal-hungry fragments born from bad terraforming. They chew metal, raid shelters, and move like a living dust storm after dark.",
-          },
-        ],
-      },
-      builders: {
-        title: "Core pillars at launch",
-        intro:
-          "The campaign leans on four pillars. They stay linked so every call you make hits the crew and the ship.",
-        items: [
-          {
-            title: "Character system",
-            text: "Stamina, vitals, and movement live together. Climb, swim, sneak, and slide — each move drains something the crew will feel.",
-            icon: "survival-kit",
-          },
-          {
-            title: "Interaction & inventory",
-            text: "Drag gear into slots to power structures, buff your crew, or earn favors. Loot stays meaningful because every slot has a cost.",
-            icon: "memory-map",
-          },
-          {
-            title: "Combat module",
-            text: "Close strikes and ranged tools share the same wound logic. Stamina and gear condition decide if you stagger foes or get knocked down.",
-            icon: "aika-link",
-          },
-          {
-            title: "Builder’s forge",
-            text: "Drop walls, workshops, and crops straight from your pack. The ARK and every shelter persist, and enemies remember where you dig in.",
-            icon: "reactor-forge",
-          },
-        ],
-      },
-      pulse: {
-        title: "System telemetry",
-        intro:
-          "Quick reads from the Basin: vitals, supplies, intel, and weather. The same signals guide both the crew and the dev team.",
-        feedBadge: "SYNCNODE SCAN",
-        feedTitle: "Crash Basin status",
-        filters: [
-          { key: "stability", label: "Vitals" },
-          { key: "supplies", label: "Logistics" },
-          { key: "intel", label: "AI Oversight" },
-          { key: "weather", label: "Climate" },
-        ],
-        graphCaption:
-          "Latest sweep of the Basin — showing how the world reacts to recent runs.",
-      },
-      loops: {
-        title: "Daily rhythm",
-        intro:
-          "Four steps keep the crew alive. Skip one and the world makes you pay for it tomorrow.",
-        items: [
-          {
-            title: "Recon",
-            text: "Sweep signals, mark routes, and log landmarks so the crew moves faster next run.",
-          },
-          {
-            title: "Harvest & craft",
-            text: "Strip wrecks, tend crops, and build tools that slot straight into your gear and the ARK’s needs.",
-          },
-          {
-            title: "Refuge upkeep",
-            text: "Patch shelters, feed generators, and guard crops so storms and raids don’t erase your work.",
-          },
-          {
-            title: "AI decisions",
-            text: "Answer or ignore incoming signals. Help and you get scans; refuse and the Basin grows meaner.",
-          },
-        ],
-      },
-      roadmap: {
-        title: "Road to launch",
-        intro: "Every system lands when it’s ready for the full campaign — no filler, no half steps.",
-        items: [
-          {
-            title: "Basin balance",
-            text: "Tuning movement, combat, and saves so the opening zone hits hard without breaking.",
-          },
-          {
-            title: "Crew and ARK sync",
-            text: "Making sure inventory, gear, farming, and building all feed the same survival state.",
-          },
-          {
-            title: "Trust and fallout",
-            text: "Locking in how dialogue, Sentinels, and story branches react to your choices.",
-          },
-          {
-            title: "Storm trials",
-            text: "Closed runs that test storm cycles, raid pacing, and late-game pressure before release.",
-          },
-        ],
-      },
-      signup: {
-        title: "Stay in the loop",
-        description:
-          "We write when the ARK hits a milestone or when the Steam date is locked.",
-        placeholder: "Enter your email address",
-        consent: "I agree to receive AIKA: World launch updates.",
-        button: "Sign up",
-        legal: "No spam. You can unsubscribe anytime.",
-        submitting: "Sending…",
-        success: "Got it — we’ll ping you when the next big update lands.",
-        error: "We couldn't add you just now. Please try again in a bit.",
-        turnstileError: "Please confirm the Cloudflare Turnstile check.",
-        endpointError: "Sign-ups are temporarily unavailable. Use the channels above instead.",
-        helperText: "We write only when it matters.",
-      },
+  home: {
+    hero: {
+      badgeLeft: "COMMAND • TICK 27",
+      badgeRight: "AIKA WORLD NET",
+      title: "AIKA Command is tuning planetary threads",
+      subtitle:
+        "Balance orbital colonies, keep resource tickers steady, and weave storms into the AIKA narrative without ever lowering your guard.",
+      imageAlt: "Control bridge overseeing planets, grids, and emergent energy fields.",
+      note: "A web command console styled after an OGame loop—serious, persistent, and narrative-first.",
+      primaryCta: { label: "Inspect the planets", href: "systems" },
+      secondaryCta: { label: "Sync with the crew", href: "contact" },
     },
+    what: {
+      title: "Operations panel",
+      description:
+        "Each tick delivers telemetry from AIKA’s orbit. Allocate builders, monitor entropy, and keep crates lined up before the next signal arrives.",
+      pillars: [
+        { title: "Metal reserves", text: "+120 / tick · 18,240 stored" },
+        { title: "Crystal lattice", text: "+82 / tick · 10,560 stored" },
+        { title: "Energy weave", text: "+68 / tick · 6,840 stored" },
+        { title: "Entropy control", text: "Storm mitigation queued · 03.18 tick" },
+      ],
+    },
+    factions: {
+      title: "Planets under care",
+      intro: "Monitor every orbit node—shield repairs, cultivation, and AI synchronization happen in ticks.",
+      items: [
+        {
+          name: "Skyreach Bastion",
+          tag: "Inner Orbit",
+          text: "Shield nodes and the crystal refinery run full tick cycles. Mining drones return at 00:10.",
+        },
+        {
+          name: "Verdant Mirage",
+          tag: "Green Belt",
+          text: "Agriculture terraces feed morale. Stabilizers hold while storm pressure builds.",
+        },
+        {
+          name: "Obsidian Fold",
+          tag: "Fringe",
+          text: "Drone farms harvest scrap and sensor arrays scan for rival vectors. Build queue reserves a sensor web.",
+        },
+        {
+          name: "Hollow Ring",
+          tag: "Outpost",
+          text: "Storm forges and reactor shells keep energy surging. Recon units plot a reroute at tick 32.",
+        },
+      ],
+    },
+    builders: {
+      title: "Construction decks",
+      intro: "Queue builds here to keep AIKA’s reach steady. Tick-based completions avoid systemic drift.",
+      items: [
+        {
+          title: "Orbital Foundry",
+          text: "Produces hull segments and reinforce drones for mining lanes.",
+          icon: "reactor-forge",
+        },
+        {
+          title: "Nutrient Vault",
+          text: "Boosts cultivation domes so farms regenerate faster.",
+          icon: "survival-kit",
+        },
+        {
+          title: "Signal Helm",
+          text: "Rewires the comm mesh so intel flows with fewer latency ticks.",
+          icon: "memory-map",
+        },
+        {
+          title: "Harmony Engine",
+          text: "Smooths entropy spikes so crew mood and AI directives stay aligned.",
+          icon: "lore-dashboard",
+        },
+      ],
+    },
+    pulse: {
+      title: "Telemetry ticker",
+      intro: "Harvested data every tick drives decisions. Watch metal, crystal, energy, and storm watch lines.",
+      feedBadge: "COMMAND NET",
+      feedTitle: "Tick telemetry",
+      filters: [
+        { key: "metal", label: "Metal" },
+        { key: "crystal", label: "Crystal" },
+        { key: "energy", label: "Energy" },
+        { key: "storm", label: "Storm watch" },
+      ],
+      graphCaption: "Tick 27: reserves steady, manual overrides primed.",
+    },
+    loops: {
+      title: "Build queue",
+      intro: "Each entry arrives on a tick schedule. Advance time to see outcomes.",
+      items: [
+        {
+          title: "Shield Nexus",
+          text: "Outer lattice repairs. ETA 3 ticks.",
+        },
+        {
+          title: "Sensor Array",
+          text: "Raises detection across the hollow belt. ETA 5 ticks.",
+        },
+        {
+          title: "Hydro Cores",
+          text: "Recharges Verdant Mirage farms before nutrient spikes at tick 42.",
+        },
+      ],
+    },
+    roadmap: {
+      title: "What comes next",
+      intro: "We expand orbitals, refine AI, and keep the crew aligned each tick.",
+      items: [
+        {
+          title: "Deep orbit calculus",
+          text: "Mapping Hollow Ring’s path to host new colonists.",
+        },
+        {
+          title: "Emotion net tiers",
+          text: "Linking crew morale into the AIKA state graph.",
+        },
+        {
+          title: "Storm forge trials",
+          text: "Stress testing storms so shields stay auto-tuned.",
+        },
+      ],
+    },
+    signup: {
+      title: "Stay in the command loop",
+      description: "We ping when a new orbital patch ships or the AI core needs attention.",
+      placeholder: "Command email",
+      consent: "Allow status updates and deployment notes.",
+      button: "Submit tick",
+      legal: "You can opt out anytime; we only send major patch events.",
+      submitting: "Syncing…",
+      success: "Status logged — we’ll share the next signal.",
+      error: "Signal blocked. Try again after the next tick.",
+      turnstileError: "Complete the tick survey (Turnstile) before sending.",
+      endpointError: "The pipeline is clogged. Use the crew channels instead.",
+      helperText: "Updates drop only when the orbit shifts.",
+    },
+  },
     world: {
       title: "The Crash Basin",
       subtitle:
