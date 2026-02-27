@@ -1,12 +1,16 @@
 {
-  "name": "aika-colony",
-  "version": "1.0.0",
-  "description": "AIKA COLONY — Galactic Expansion browser game on Cloudflare Workers",
+  "name": "aika-colony-v2",
+  "version": "2.0.0",
   "private": true,
+  "description": "AIKA COLONY — Full-stack Cloudflare Workers + Vue 3 + D1",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "tail": "wrangler tail"
+    "dev:worker": "wrangler dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "deploy": "npm run build && wrangler deploy",
+    "db:create": "wrangler d1 create aika-colony-db",
+    "db:migrate": "wrangler d1 execute aika-colony-db --file=./db/schema.sql",
+    "db:migrate:preview": "wrangler d1 execute aika-colony-db --local --file=./db/schema.sql"
   },
   "devDependencies": {
     "wrangler": "^3.0.0"

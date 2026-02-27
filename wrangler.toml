@@ -1,24 +1,30 @@
 name = "aika-colony"
-main = "worker.js"
-compatibility_date = "2024-01-01"
+main = "worker/src/index.js"
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-# Rules to bundle static HTML as a module import
-[[rules]]
-type = "Text"
-globs = ["**/*.html"]
-fallthrough = true
+# Serve the built Vue app as static assets
+[assets]
+directory = "./frontend/dist"
 
 [vars]
 ENVIRONMENT = "production"
 
-# Optional: Custom domain routing
-# [[routes]]
-# pattern = "aikacolony.example.com/*"
-# zone_name = "example.com"
+# D1 Database
+[[d1_databases]]
+binding = "aika_colony_db"
+database_name = "aika-colony-db"
+database_id = "74736f06-e68b-4872-99e9-4a11b8eb1048"
 
-# Optional: KV namespace for future game state persistence
-# [[kv_namespaces]]
-# binding = "GAME_STATE"
-# id = "YOUR_KV_NAMESPACE_ID"
-# preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"
+# Secrets (set via: wrangler secret put JWT_SECRET)
+# JWT_SECRET — a long random string, e.g. openssl rand -hex 32
+
+# Custom domain (optional)
+# [[routes]]
+# pattern = "aikacolony.yourdomain.com/*"
+# zone_name = "yourdomain.com"
+
+[env.preview]
+name = "aika-colony-preview"
+[env.preview.vars]
+ENVIRONMENT = "preview"
