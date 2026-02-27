@@ -7,7 +7,7 @@
         <span class="logo-icon">🌌</span>
         <div>
           <div class="logo-title">AIKA</div>
-          <div class="logo-sub">COLONY</div>
+          <div class="logo-sub">WORLD</div>
         </div>
       </div>
 
@@ -37,7 +37,7 @@
         @click="activeTab = tab.id"
       >
         {{ tab.label }}
-        <span v-if="tab.id === 'messages'" class="badge badge-red" style="margin-left:4px;">3</span>
+        <span v-if="tab.id === 'messages' && msgStore.unreadCount > 0" class="badge badge-red" style="margin-left:4px;">{{ msgStore.unreadCount }}</span>
       </button>
     </nav>
 
@@ -88,6 +88,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth.js';
 import { useGameStore } from '@/stores/game.js';
+import { useMessagesStore } from '@/stores/messages.js';
 import ResourceItem  from '@/components/ResourceItem.vue';
 import OverviewView  from '@/components/views/OverviewView.vue';
 import BuildingsView from '@/components/views/BuildingsView.vue';
@@ -100,6 +101,7 @@ import MessagesView  from '@/components/views/MessagesView.vue';
 const router    = useRouter();
 const auth      = useAuthStore();
 const gameStore = useGameStore();
+const msgStore  = useMessagesStore();
 
 const activeTab    = ref('overview');
 const activePlanet = ref(0);
@@ -129,6 +131,7 @@ let tickTimer, syncTimer;
 
 onMounted(async () => {
   await gameStore.loadState();
+  await msgStore.loadMessages();
   // Client-side resource interpolation every second
   tickTimer = setInterval(() => gameStore.tickResources(), 1000);
   // Server sync every 60s

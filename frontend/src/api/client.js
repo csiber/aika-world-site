@@ -46,4 +46,10 @@ export const api = {
 
   // Rankings
   getRankings: (page = 1) => request('GET', `/rankings?page=${page}`),
+
+  // Messages
+  getMessages: () => request('GET', '/messages'),
+  getUnreadCount: () => request('GET', '/messages/unread'),
+  markRead: (id) => request('POST', `/messages/${id}/read`),
+  deleteMessage: (id) => request('DELETE', `/messages/${id}`),
 };

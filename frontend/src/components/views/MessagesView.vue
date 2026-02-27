@@ -1,33 +1,36 @@
 <template>
   <div class="msg-layout">
     <div class="panel msg-list-panel">
-      <div class="panel-header"><span class="panel-icon">✉️</span><h3>Üzenetek</h3></div>
+      <div class="panel-header"><span class="panel-icon">✉️</span><h3>Üzenetek</h3>
+        <span v-if="store.unreadCount > 0" class="unread-badge">{{ store.unreadCount }}</span>
+      </div>
       <div>
+        <div v-if="store.loading" class="empty-msg" style="padding:12px;">Betöltés...</div>
+        <div v-else-if="!store.messages.length" class="empty-msg" style="padding:12px;">Nincs üzeneted.</div>
         <div
-          v-for="(msg, idx) in messages"
-          :key="idx"
+          v-for="msg in store.messages"
+          :key="msg.id"
           class="msg-item"
-          :class="{ active: selected === idx, unread: !msg.read }"
-          @click="open(idx)"
+          :class="{ active: selected?.id === msg.id, unread: !msg.is_read }"
+          @click="open(msg)"
         >
-          <div class="msg-from">{{ msg.from }}</div>
+          <div class="msg-from">{{ msg.from_name }}</div>
           <div class="msg-subject">{{ msg.subject }}</div>
-          <div class="msg-time">{{ msg.time }}</div>
+          <div class="msg-time">{{ timeAgo(msg.created_at) }}</div>
         </div>
       </div>
     </div>
 
-    <div class="panel msg-reader" v-if="selected !== null">
+    <div class="panel msg-reader" v-if="selected">
       <div class="panel-header">
         <span class="panel-icon">📩</span>
-        <h3>{{ messages[selected].subject }}</h3>
+        <h3>{{ selected.subject }}</h3>
       </div>
       <div class="panel-body">
-        <div class="msg-meta">Feladó: {{ messages[selected].from }}</div>
-        <div class="msg-body">{{ messages[selected].body }}</div>
+        <div class="msg-meta">Feladó: {{ selected.from_name }}</div>
+        <div class="msg-body">{{ selected.body }}</div>
         <div class="msg-actions">
-          <button class="btn-primary" @click="game.notify('Válasz elküldve!', 'green')">↩️ Válasz</button>
-          <button class="btn-primary" style="border-color:var(--accent2);color:var(--accent2);" @click="deleteMsg">🗑️ Törlés</button>
+          <button class="btn-primary" style="border-color:var(--accent2);color:var(--accent2);" @click="doDelete">🗑️ Törlés</button>
         </div>
       </div>
     </div>
@@ -38,37 +41,41 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
-import { useGameStore } from '@/stores/game.js';
+import { ref, onMounted } from 'vue';
+import { useMessagesStore } from '@/stores/messages.js';
 
-const game = useGameStore();
+const store = useMessagesStore();
 const selected = ref(null);
 
-const messages = reactive([
-  { from: '⚔️ StarVoid', subject: 'Harci jelentés — támadás visszaverve', time: '2ó', read: false,
-    body: 'Az ellenség 47 kis vadásszal támadta Nexus Prime-t. Légvédelmi rakétáink és 12 nagy vadászod visszaverte a támadást. Veszteség: 3 kis vadász. Zsákmány: 0.' },
-  { from: '🤝 AstroLeague', subject: 'Szövetség meghívó', time: '5ó', read: false,
-    body: 'Üdvözöljük!\n\nAz AstroLeague szövetség örömmel invitálja Önt tagjaink közé. 24 aktív tagunk van, szektorvédelmet biztosítunk, és hetente közös támadási koordináció van.' },
-  { from: '⚙️ Rendszer', subject: 'Kutatás befejezve: Ionhajtómű III', time: '8ó', read: true,
-    body: 'Az Ionhajtómű III. szintű kutatása sikeresen befejeződött.\n\nEredmény: Flottád sebessége +15%-kal nőtt.\n\nPontszám: +100' },
-  { from: '🌐 Rendszer', subject: 'Üdvözöllek az AIKA Colony-ban!', time: '1n', read: true,
-    body: 'Szia!\n\nSikeresen regisztráltál az AIKA Colony galaktikus terjeszkedési játékba. Kezdj épületeket fejleszteni, kutass technológiákat, és terjeszd ki birodalmad!\n\nJó játékot!' },
-]);
-
-function open(idx) {
-  selected.value = idx;
-  messages[idx].read = true;
+async function open(msg) {
+  selected.value = msg;
+  if (!msg.is_read) {
+    await store.markRead(msg.id);
+  }
 }
 
-function deleteMsg() {
-  messages.splice(selected.value, 1);
+async function doDelete() {
+  if (!selected.value) return;
+  const id = selected.value.id;
   selected.value = null;
+  await store.deleteMessage(id);
 }
+
+function timeAgo(ts) {
+  const diff = Math.floor(Date.now() / 1000) - ts;
+  if (diff < 60)    return 'most';
+  if (diff < 3600)  return `${Math.floor(diff / 60)}p`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}ó`;
+  return `${Math.floor(diff / 86400)}n`;
+}
+
+onMounted(() => store.loadMessages());
 </script>
 
 <style scoped>
 .msg-layout { display: grid; grid-template-columns: 280px 1fr; gap: 10px; min-height: 500px; }
 .msg-list-panel { overflow: hidden; }
+.unread-badge { margin-left: auto; background: var(--accent2); color: white; border-radius: 10px; padding: 1px 7px; font-size: 10px; font-family: 'Orbitron', sans-serif; }
 
 .msg-item { padding: 10px 12px; border-bottom: 1px solid rgba(26,42,74,0.4); cursor: pointer; transition: background 0.15s; position: relative; }
 .msg-item:hover { background: rgba(255,255,255,0.02); }

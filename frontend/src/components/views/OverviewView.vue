@@ -54,12 +54,17 @@
         <div class="panel-header"><span class="panel-icon">🤖</span><h3>AIKA Asszisztens</h3></div>
         <div class="panel-body">
           <div class="aika-chat">
-            <div class="aika-bubble">
-              <div class="aika-text">{{ currentAikaMsg }}</div>
+            <div class="aika-messages">
+              <div v-for="(msg, i) in aikaChatLog" :key="i" class="aika-bubble" :class="msg.role">
+                <div class="aika-text">{{ msg.text }}</div>
+              </div>
+              <div v-if="aikaLoading" class="aika-bubble assistant">
+                <div class="aika-text aika-typing">● ● ●</div>
+              </div>
             </div>
             <div class="aika-input-row">
-              <input v-model="aikaInput" class="aika-input" placeholder="Kérdezd meg Aikát..." @keydown.enter="sendToAika" />
-              <button class="aika-send" @click="sendToAika">KÜLD</button>
+              <input v-model="aikaInput" class="aika-input" placeholder="Kérdezd meg Aikát..." @keydown.enter="sendToAika" :disabled="aikaLoading" />
+              <button class="aika-send" @click="sendToAika" :disabled="aikaLoading">KÜLD</button>
             </div>
           </div>
         </div>
@@ -120,24 +125,38 @@ const activePlanet = computed(() => planets.value[0] || { name: 'Ismeretlen', co
 const totalShips    = computed(() => fleet.value.reduce((s, f) => s + f.count, 0));
 
 const aikaInput = ref('');
-const aikaMessages = [
-  'Termelésed optimális. A fémolvasztó fejlesztése prioritás.',
-  'Figyelem: egy ellenséges játékos közeledik. Erősítsd a védelmet!',
-  'A Déusium Reaktor szintjének növelése nyitja meg a fejlettebb kutatásokat.',
-  'Javaslom az Asztrofizika kutatást — egy negyedik bolygó gyarmatosítható lenne.',
-  'Kristálytermelésed alacsony. Fontold meg a kristálybánya fejlesztését.',
-  'A flottád optimálisan konfiguráltnak tűnik az aktuális szintedhez képest.',
-  'Szövetségbe lépés erősen ajánlott a te szinteden.',
-];
-let aikaIdx = 0;
-const currentAikaMsg = ref(aikaMessages[0]);
+const aikaLoading = ref(false);
+const aikaChatLog = ref([
+  { role: 'assistant', text: 'Üdvözöllek! Én vagyok AIKA, galaktikus asszisztensed. Kérdezz bármit a stratégiáról, épületekről vagy kutatásokról!' }
+]);
 
-function sendToAika() {
-  if (!aikaInput.value.trim()) return;
+async function sendToAika() {
+  const msg = aikaInput.value.trim();
+  if (!msg || aikaLoading.value) return;
   aikaInput.value = '';
-  aikaIdx = (aikaIdx + 1) % aikaMessages.length;
-  currentAikaMsg.value = aikaMessages[aikaIdx];
-  game.notify('💬 Aika válaszolt', 'blue');
+  aikaChatLog.value.push({ role: 'user', text: msg });
+  aikaLoading.value = true;
+  try {
+    const res = await fetch('/api/aika-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('aika_token')}` },
+      body: JSON.stringify({
+        message: msg,
+        context: {
+          resources: game.state?.resources,
+          rates: game.state?.rates,
+          score: game.state?.score,
+          buildingsCount: game.buildings.length,
+          fleetTotal: game.fleet.reduce((s, f) => s + f.count, 0),
+        }
+      })
+    });
+    const data = await res.json();
+    aikaChatLog.value.push({ role: 'assistant', text: data.reply || 'Hiba történt.' });
+  } catch (e) {
+    aikaChatLog.value.push({ role: 'assistant', text: '⚠️ Kapcsolati hiba. Kérlek próbáld újra.' });
+  }
+  aikaLoading.value = false;
 }
 </script>
 
@@ -184,13 +203,19 @@ function sendToAika() {
 .empty-msg { font-size: 11px; color: var(--text-dim); padding: 8px 0; }
 
 .aika-chat { background: rgba(0,0,0,0.4); border: 1px solid rgba(0,200,255,0.2); border-radius: 4px; padding: 10px; }
-.aika-bubble { margin-bottom: 8px; }
-.aika-text { background: rgba(0,200,255,0.08); border: 1px solid rgba(0,200,255,0.2); border-radius: 4px; padding: 6px 10px; font-size: 11px; color: var(--text); line-height: 1.5; }
+.aika-messages { max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.aika-bubble { }
+.aika-bubble.assistant .aika-text { background: rgba(0,200,255,0.08); border: 1px solid rgba(0,200,255,0.2); border-radius: 4px; padding: 6px 10px; font-size: 11px; color: var(--text); line-height: 1.5; }
+.aika-bubble.user .aika-text { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 6px 10px; font-size: 11px; color: var(--text-dim); line-height: 1.5; text-align: right; }
+.aika-typing { letter-spacing: 3px; animation: blink 1.2s infinite; }
+@keyframes blink { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
 .aika-input-row { display: flex; gap: 6px; margin-top: 6px; }
 .aika-input { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; font-size: 11px; border-radius: 3px; font-family: 'Exo 2', sans-serif; outline: none; transition: border-color 0.2s; }
 .aika-input:focus { border-color: var(--accent); }
+.aika-input:disabled { opacity: 0.5; }
 .aika-send { padding: 5px 12px; background: rgba(0,200,255,0.15); border: 1px solid var(--accent); color: var(--accent); border-radius: 3px; cursor: pointer; font-size: 11px; font-family: 'Orbitron', sans-serif; transition: all 0.2s; }
 .aika-send:hover { background: rgba(0,200,255,0.3); }
+.aika-send:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .stat-block { display: flex; flex-direction: column; gap: 4px; }
 .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid rgba(26,42,74,0.3); font-size: 11px; color: var(--text); }

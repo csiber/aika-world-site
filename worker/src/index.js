@@ -1,11 +1,13 @@
 /**
- * AIKA COLONY — Cloudflare Worker API
- * Routes: /api/auth/*, /api/game/*, /api/rankings
+ * AIKA WORLD — Cloudflare Worker API
+ * Routes: /api/auth/*, /api/game/*, /api/rankings, /api/messages/*
  */
 
 import { handleAuth } from './routes/auth.js';
 import { handleGame } from './routes/game.js';
 import { handleRankings } from './routes/rankings.js';
+import { handleMessages } from './routes/messages.js';
+import { handleAikaChat } from './routes/aika.js';
 import { corsHeaders, jsonError } from './utils/response.js';
 import { verifyJWT } from './utils/jwt.js';
 
@@ -39,6 +41,14 @@ export default {
 
         if (url.pathname === '/api/rankings') {
           return await handleRankings(request, env, url, user);
+        }
+
+        if (url.pathname.startsWith('/api/messages')) {
+          return await handleMessages(request, env, url, user);
+        }
+
+        if (url.pathname === '/api/aika-chat') {
+          return await handleAikaChat(request, env, url, user);
         }
 
         return jsonError(404, 'Not found', request);

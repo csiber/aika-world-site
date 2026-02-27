@@ -41,9 +41,27 @@
             </div>
           </div>
           <div class="cd-actions" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn-primary" @click="game.notify('Kém küldetés indítva!', 'blue')">🔍 Kémkedés</button>
-            <button class="btn-primary" v-if="selected.type === 'enemy'" @click="game.notify('Flotta küldése...', 'blue')">⚔️ Támadás</button>
-            <button class="btn-primary" v-if="selected.type === 'empty'" @click="game.notify('Gyarmatosító hajót kell küldeni!', 'blue')">🌍 Gyarmatosítás</button>
+            <button
+              class="btn-primary"
+              :disabled="actionBusy"
+              @click="doSpy"
+            >{{ actionBusy === 'spy' ? '...' : '🔍 Kémkedés' }}</button>
+            <button
+              class="btn-primary"
+              v-if="selected.type === 'enemy'"
+              :disabled="actionBusy"
+              @click="doAttack"
+            >{{ actionBusy === 'attack' ? '...' : '⚔️ Támadás' }}</button>
+            <button
+              class="btn-primary"
+              v-if="selected.type === 'empty'"
+              :disabled="actionBusy || !hasColonyShip"
+              @click="doColonize"
+              :title="!hasColonyShip ? 'Szükséges: Gyarmatosító hajó' : ''"
+            >{{ actionBusy === 'colony' ? '...' : '🌍 Gyarmatosítás' }}</button>
+          </div>
+          <div v-if="!hasColonyShip && selected.type === 'empty'" class="action-hint">
+            ⚠️ Gyarmatosító hajó szükséges
           </div>
         </div>
       </div>
@@ -59,36 +77,89 @@ import { useAuthStore } from '@/stores/auth.js';
 const game = useGameStore();
 const auth = useAuthStore();
 const selected = ref(null);
+const actionBusy = ref(null);
 
 const typeLabel = (t) => ({ own: 'Saját bolygó', enemy: 'Ellenséges', neutral: 'Semleges', empty: 'Üres rendszer' })[t] || t;
 
-// Generate a deterministic galaxy grid
+const hasColonyShip = computed(() => {
+  const ship = game.fleet.find(f => f.id === 'colony');
+  return ship && ship.count > 0;
+});
+
+// Deterministic seeded random based on auth user id + cell index
+function seededRand(seed, idx) {
+  const s = seed + idx * 2654435761;
+  return ((s ^ (s >>> 16)) * 0x45d9f3b) % 1 === 0
+    ? Math.abs(Math.sin(s)) % 1
+    : Math.abs(Math.sin(seed * idx + 1)) % 1;
+}
+
 const galaxyCells = computed(() => {
+  const seed = auth.username ? auth.username.charCodeAt(0) * 31 : 42;
   const cells = [];
-  const ownPlanets = game.planets.map((p, i) => ({ idx: Math.floor(Math.random() * 100), planet: p }));
+  const ownPlanets = game.planets;
+
   for (let i = 0; i < 100; i++) {
-    const r = Math.random();
+    const r = seededRand(seed, i);
     let type = 'empty';
     let emoji = '';
-    let name = `Rendszer ${i + 1}`;
-    let tooltip = `[${Math.floor(i/10)+1}:${(i%10)+1}:${Math.ceil(Math.random()*15)}]`;
+    const row = Math.floor(i / 10) + 1;
+    const col = (i % 10) + 1;
+    const slot = Math.floor(seededRand(seed + 7, i) * 15) + 1;
+    const coords = `[${row}:${col}:${slot}]`;
+    let name = `Rendszer ${row}:${col}`;
 
-    if (i < 3) { // own planets
+    // Place own planets at their actual coordinates or first slots
+    const ownIdx = ownPlanets.findIndex((p, pi) => {
+      const targetI = pi * 11 + 3; // deterministic placement
+      return targetI === i;
+    });
+
+    if (ownIdx >= 0) {
       type = 'own';
-      emoji = game.planets[i]?.emoji || '🌍';
-      name  = game.planets[i]?.name  || name;
+      emoji = ownPlanets[ownIdx].emoji || '🌍';
+      name = ownPlanets[ownIdx].name;
     } else if (r < 0.12) {
-      type = 'enemy'; emoji = ['🔴','🌑','⭕'][Math.floor(Math.random()*3)];
+      type = 'enemy';
+      emoji = ['🔴','🌑','⭕'][Math.floor(seededRand(seed + 3, i) * 3)];
     } else if (r < 0.22) {
-      type = 'neutral'; emoji = ['🟡','🟠','🟤'][Math.floor(Math.random()*3)];
+      type = 'neutral';
+      emoji = ['🟡','🟠','🟤'][Math.floor(seededRand(seed + 5, i) * 3)];
     }
 
-    cells.push({ id: i, type, emoji, name, coords: tooltip, tooltip: `${name} ${tooltip}` });
+    cells.push({ id: i, type, emoji, name, coords, tooltip: `${name} ${coords}` });
   }
   return cells;
 });
 
 function selectCell(cell) { selected.value = cell; }
+
+async function doSpy() {
+  if (!selected.value) return;
+  actionBusy.value = 'spy';
+  // TODO: POST /api/fleet/spy when mission system is implemented
+  await new Promise(r => setTimeout(r, 600));
+  game.notify('🔍 Kém úton van... (hamarosan elérhető)', 'blue');
+  actionBusy.value = null;
+}
+
+async function doAttack() {
+  if (!selected.value) return;
+  actionBusy.value = 'attack';
+  // TODO: POST /api/fleet/attack when mission system is implemented
+  await new Promise(r => setTimeout(r, 600));
+  game.notify('⚔️ Flottaküldés hamarosan elérhető!', 'blue');
+  actionBusy.value = null;
+}
+
+async function doColonize() {
+  if (!selected.value || !hasColonyShip.value) return;
+  actionBusy.value = 'colony';
+  // TODO: POST /api/fleet/colonize when mission system is implemented
+  await new Promise(r => setTimeout(r, 600));
+  game.notify('🌍 Gyarmatosítás hamarosan elérhető!', 'blue');
+  actionBusy.value = null;
+}
 </script>
 
 <style scoped>
@@ -112,6 +183,7 @@ function selectCell(cell) { selected.value = cell; }
 .text-enemy   { color: var(--accent2); }
 .text-neutral { color: var(--accent4); }
 .text-empty   { color: var(--text-dim); }
+.action-hint { font-size: 10px; color: var(--accent4); margin-top: 6px; }
 
 .slide-enter-active, .slide-leave-active { transition: all 0.3s ease; }
 .slide-enter-from, .slide-leave-to { opacity: 0; transform: translateY(-10px); }

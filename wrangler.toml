@@ -1,4 +1,4 @@
-name = "aika-colony"
+name = "aika-world"
 main = "worker/src/index.js"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
@@ -12,19 +12,20 @@ ENVIRONMENT = "production"
 
 # D1 Database
 [[d1_databases]]
-binding = "aika_colony_db"
-database_name = "aika-colony-db"
+binding = "DB"
+database_name = "aika-world-db"
 database_id = "74736f06-e68b-4872-99e9-4a11b8eb1048"
 
 # Secrets (set via: wrangler secret put JWT_SECRET)
-# JWT_SECRET — a long random string, e.g. openssl rand -hex 32
+# JWT_SECRET        — a long random string, e.g. openssl rand -hex 32
+# GEMINI_API_KEY    — Google Gemini API key (ingyenes: aistudio.google.com)
 
 # Custom domain (optional)
 # [[routes]]
-# pattern = "aikacolony.yourdomain.com/*"
+# pattern = "aikaworld.yourdomain.com/*"
 # zone_name = "yourdomain.com"
 
 [env.preview]
-name = "aika-colony-preview"
+name = "aika-world-preview"
 [env.preview.vars]
 ENVIRONMENT = "preview"

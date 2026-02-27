@@ -1,6 +1,6 @@
 -- ============================================================
--- AIKA COLONY — Cloudflare D1 Schema
--- Run: wrangler d1 execute aika-colony-db --file=./db/schema.sql
+-- AIKA WORLD — Cloudflare D1 Schema
+-- Run: wrangler d1 execute aika-world-db --file=./db/schema.sql
 -- ============================================================
 
 -- Users table
@@ -46,6 +46,20 @@ CREATE TABLE IF NOT EXISTS rankings (
   rank        INTEGER,
   updated_at  INTEGER NOT NULL DEFAULT (unixepoch())
 );
+
+-- Messages (in-game inbox)
+CREATE TABLE IF NOT EXISTS messages (
+  id          TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  from_name   TEXT NOT NULL,
+  subject     TEXT NOT NULL,
+  body        TEXT NOT NULL,
+  msg_type    TEXT NOT NULL DEFAULT 'system',  -- 'system' | 'combat' | 'alliance' | 'player'
+  is_read     INTEGER NOT NULL DEFAULT 0,
+  created_at  INTEGER NOT NULL DEFAULT (unixepoch())
+);
+
+CREATE INDEX IF NOT EXISTS idx_messages_user ON messages(user_id, created_at DESC);
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_users_email    ON users(email);

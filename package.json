@@ -13,6 +13,6 @@
     "db:migrate:preview": "wrangler d1 execute aika-colony-db --local --file=./db/schema.sql"
   },
   "devDependencies": {
-    "wrangler": "^3.0.0"
+    "wrangler": "^4.69.0"
   }
 }

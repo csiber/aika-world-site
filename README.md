@@ -56,6 +56,7 @@ aika-colony-v2/
 ## Telepítés
 
 ### 1. Előfeltételek
+
 - Node.js 18+
 - Cloudflare fiók
 
@@ -76,6 +77,7 @@ npm run db:create
 ```
 
 Másold ki a kapott database_id-t és illeszd be a `wrangler.toml`-ba:
+
 ```toml
 [[d1_databases]]
 database_id = "IDE_ILLESZD_A_KAPOTT_ID-T"
@@ -91,11 +93,13 @@ npm run db:migrate:preview
 npm run db:migrate
 ```
 
-### 5. JWT secret beállítása
+### 5. JWT és GEMINI secret beállítása
 
 ```bash
 wrangler secret put JWT_SECRET
 # Adj meg egy hosszú, random stringet (pl. openssl rand -hex 32)
+
+wrangler secret put GEMINI_API_KEY
 ```
 
 ### 6. Lokális fejlesztés
@@ -121,25 +125,28 @@ Ez először buildeli a Vue appot (`frontend/dist/`), majd feltölti az egészet
 ## API Végpontok
 
 ### Auth (publikus)
-| Metódus | Endpoint | Leírás |
-|---------|----------|--------|
-| POST | `/api/auth/register` | Regisztráció (username, email, password) |
-| POST | `/api/auth/login` | Bejelentkezés (email, password) → JWT |
-| GET  | `/api/auth/me` | Saját profil (JWT szükséges) |
+
+| Metódus | Endpoint             | Leírás                                   |
+| ------- | -------------------- | ---------------------------------------- |
+| POST    | `/api/auth/register` | Regisztráció (username, email, password) |
+| POST    | `/api/auth/login`    | Bejelentkezés (email, password) → JWT    |
+| GET     | `/api/auth/me`       | Saját profil (JWT szükséges)             |
 
 ### Game (JWT szükséges)
-| Metódus | Endpoint | Leírás |
-|---------|----------|--------|
-| GET  | `/api/game/state` | Teljes játékállapot + sor |
-| POST | `/api/game/sync` | Szerver szinkronizáció |
-| POST | `/api/game/upgrade` | Épület fejlesztés `{ buildingId }` |
-| POST | `/api/game/research` | Kutatás indítás `{ researchId }` |
-| POST | `/api/game/fleet/build` | Hajógyártás `{ shipId, amount }` |
+
+| Metódus | Endpoint                | Leírás                             |
+| ------- | ----------------------- | ---------------------------------- |
+| GET     | `/api/game/state`       | Teljes játékállapot + sor          |
+| POST    | `/api/game/sync`        | Szerver szinkronizáció             |
+| POST    | `/api/game/upgrade`     | Épület fejlesztés `{ buildingId }` |
+| POST    | `/api/game/research`    | Kutatás indítás `{ researchId }`   |
+| POST    | `/api/game/fleet/build` | Hajógyártás `{ shipId, amount }`   |
 
 ### Rankings (JWT szükséges)
-| Metódus | Endpoint | Leírás |
-|---------|----------|--------|
-| GET | `/api/rankings?page=1` | Rangsor (50/oldal) |
+
+| Metódus | Endpoint               | Leírás             |
+| ------- | ---------------------- | ------------------ |
+| GET     | `/api/rankings?page=1` | Rangsor (50/oldal) |
 
 ## Jövőbeli fejlesztési lehetőségek
 
