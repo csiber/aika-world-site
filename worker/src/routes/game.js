@@ -184,8 +184,9 @@ async function processQueue(env, userId, state) {
     }
   }
 
-  const ids = finished.results.map(r => `'${r.id}'`).join(',');
-  await env.DB.prepare(`DELETE FROM build_queue WHERE id IN (${ids})`).run();
+  await env.DB.batch(
+    finished.results.map(r => env.DB.prepare('DELETE FROM build_queue WHERE id = ?').bind(r.id))
+  );
   await env.DB.prepare('UPDATE rankings SET score=?, updated_at=unixepoch() WHERE user_id=?')
     .bind(state.score, userId).run();
 

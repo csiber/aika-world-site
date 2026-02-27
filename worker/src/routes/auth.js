@@ -38,8 +38,10 @@ export async function handleAuth(request, env, url) {
       const defResearch  = await env.DB.prepare('SELECT data FROM default_research LIMIT 1').first();
       const defFleet     = await env.DB.prepare('SELECT data FROM default_fleet LIMIT 1').first();
 
+      const firstPlanetCoords = `[1:${Math.ceil(Math.random()*9)}:${Math.ceil(Math.random()*15)}]`;
+      const firstPlanetName   = `${username}'s Prime`;
       const defaultPlanets = JSON.stringify([
-        { name: `${username}'s Prime`, emoji: '🌍', coords: `[1:${Math.ceil(Math.random()*9)}:${Math.ceil(Math.random()*15)}]` }
+        { name: firstPlanetName, emoji: '🌍', coords: firstPlanetCoords }
       ]);
 
       await env.DB.batch([
@@ -53,6 +55,8 @@ export async function handleAuth(request, env, url) {
           .bind(crypto.randomUUID(), userId, '🌐 Rendszer', 'Üdvözöllek az AIKA World-ben!',
             `Szia ${username}!\n\nSikeresen regisztráltál az AIKA World galaktikus terjeszkedési játékba. Kezdj épületeket fejleszteni, kutass technológiákat, és terjeszd ki birodalmad!\n\nJó játékot!`,
             'system'),
+        env.DB.prepare('INSERT INTO galaxy_map (user_id, username, planet_name, planet_emoji, coords, score) VALUES (?, ?, ?, ?, ?, 0)')
+          .bind(userId, username, firstPlanetName, '🌍', firstPlanetCoords),
       ]);
 
       const token = await signJWT({ sub: userId, username }, env.JWT_SECRET);

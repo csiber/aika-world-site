@@ -97,7 +97,8 @@ function canAffordShip(ship) {
 async function onBuild(ship) {
   const amt = Math.max(1, amounts[ship.id] || 1);
   busy.value = ship.id;
-  await game.buildFleet(ship.id, amt);
+  const ok = await game.buildFleet(ship.id, amt);
+  if (ok) amounts[ship.id] = 1;
   busy.value = null;
 }
 </script>

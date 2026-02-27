@@ -61,7 +61,12 @@ const hasCrystal = computed(() => game.resources.crystal >= cost.value.crystal);
 const canAfford = computed(() => hasMetal.value && hasCrystal.value);
 const inQueue   = computed(() => game.queueItemIsActive(props.building.id));
 const levelPct  = computed(() => Math.min(100, (props.building.level / 20) * 100));
-const buildSeconds = computed(() => Math.floor(props.building.level * 90 + 30));
+const roboticsLevel = computed(() => game.buildings.find(b => b.id === 'robotics')?.level || 1);
+const buildSeconds  = computed(() => {
+  const base      = Math.floor(props.building.level * 90 + 30);
+  const reduction = Math.max(0.2, 1 - (roboticsLevel.value - 1) * 0.07);
+  return Math.floor(base * reduction);
+});
 
 function formatTime(s) {
   const h = Math.floor(s / 3600);

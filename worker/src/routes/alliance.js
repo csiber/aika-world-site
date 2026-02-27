@@ -246,6 +246,7 @@ export async function handleAlliance(request, env, url, user) {
     ).bind(targetUserId, membership.alliance_id).first();
     if (!target) return jsonError(404, 'Tag nem található', request);
     if (target.role === 'leader') return jsonError(403, 'A vezető nem rúgható ki', request);
+    if (membership.role === 'officer' && target.role === 'officer') return jsonError(403, 'Tiszt nem rúghat ki másik tisztet', request);
 
     await env.DB.prepare('DELETE FROM alliance_members WHERE user_id = ? AND alliance_id = ?')
       .bind(targetUserId, membership.alliance_id).run();

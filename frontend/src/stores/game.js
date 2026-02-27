@@ -149,10 +149,10 @@ export const useGameStore = defineStore('game', () => {
     const rt = state.value.rates;
     const s  = storage.value;
     state.value.resources = {
-      metal:   Math.min(s.metal,   r.metal   + rt.metal   / 3600),
-      crystal: Math.min(s.crystal, r.crystal + rt.crystal / 3600),
-      energy:  Math.min(s.energy,  r.energy  + rt.energy  / 3600),
-      deus:    Math.min(s.deus,    r.deus    + rt.deus    / 3600),
+      metal:   Math.min(s.metal,   r.metal   + (rt.metal   || 0) / 3600),
+      crystal: Math.min(s.crystal, r.crystal + (rt.crystal || 0) / 3600),
+      energy:  Math.min(s.energy,  r.energy  + (rt.energy  || 0) / 3600),
+      deus:    Math.min(s.deus,    r.deus    + (rt.deus    || 0) / 3600),
     };
   }
 

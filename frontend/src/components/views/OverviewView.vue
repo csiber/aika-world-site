@@ -111,6 +111,8 @@ import { useGameStore } from '@/stores/game.js';
 import BuildingItem from '@/components/BuildingItem.vue';
 import QueueItem    from '@/components/QueueItem.vue';
 
+const props = defineProps({ activePlanetIdx: { type: Number, default: 0 } });
+
 const game = useGameStore();
 const prodBuildings  = computed(() => game.prodBuildings);
 const infraBuildings = computed(() => game.infraBuildings);
@@ -121,7 +123,7 @@ const fleet     = computed(() => game.fleet);
 const score     = computed(() => game.score);
 const planets   = computed(() => game.planets);
 const queue     = computed(() => game.queue);
-const activePlanet = computed(() => planets.value[0] || { name: 'Ismeretlen', coords: '[?:?:?]' });
+const activePlanet = computed(() => planets.value[props.activePlanetIdx] || planets.value[0] || { name: 'Ismeretlen', coords: '[?:?:?]' });
 const totalShips    = computed(() => fleet.value.reduce((s, f) => s + f.count, 0));
 
 const aikaInput = ref('');

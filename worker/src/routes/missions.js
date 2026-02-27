@@ -98,8 +98,6 @@ export async function handleMissions(request, env, url, user) {
           await saveState(env, userId, state);
           await env.DB.prepare('UPDATE rankings SET score=?, updated_at=unixepoch() WHERE user_id=?')
             .bind(state.score, userId).run();
-          // Remove colony ship
-          state.fleet.find(f => f.id === 'colony') && state.fleet.find(f => f.id === 'colony').count--;
         }
       }
 

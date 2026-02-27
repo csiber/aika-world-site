@@ -69,7 +69,7 @@
 
     <!-- ── VIEWS ── -->
     <main class="main-content">
-      <OverviewView  v-if="activeTab === 'overview'"  />
+      <OverviewView  v-if="activeTab === 'overview'"  :activePlanetIdx="activePlanet" />
       <BuildingsView v-if="activeTab === 'buildings'" />
       <ResearchView  v-if="activeTab === 'research'"  />
       <FleetView     v-if="activeTab === 'fleet'"     />
