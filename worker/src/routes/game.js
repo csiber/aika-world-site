@@ -279,7 +279,43 @@ export async function handleGame(request, env, url, user) {
     state = accrueResources(state);
     state = await processQueue(env, userId, state);
     await saveState(env, userId, state);
+
+    // Update galaxy_map with latest planet/score info
+    const mainPlanet = state.planets?.[0];
+    if (mainPlanet) {
+      await env.DB.prepare(
+        'UPDATE galaxy_map SET planet_name=?, planet_emoji=?, coords=?, score=?, updated_at=unixepoch() WHERE user_id=?'
+      ).bind(mainPlanet.name, mainPlanet.emoji || '🌍', mainPlanet.coords, state.score, userId).run();
+    }
+
     return jsonResponse({ ok: true, state }, 200, request);
+  }
+
+
+  // ── POST /api/game/planet/rename ─────────────────────────
+  if (path === '/api/game/planet/rename' && method === 'POST') {
+    let body;
+    try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    const { planetIdx, name, emoji } = body;
+    if (typeof planetIdx !== 'number') return jsonError(400, 'planetIdx szükséges', request);
+    if (name && (name.length < 1 || name.length > 30)) return jsonError(400, 'Név 1-30 karakter legyen', request);
+
+    let state = await getState(env, userId);
+    if (!state?.planets?.[planetIdx]) return jsonError(404, 'Bolygó nem található', request);
+
+    if (name)  state.planets[planetIdx].name  = name.trim();
+    if (emoji) state.planets[planetIdx].emoji = emoji;
+
+    await saveState(env, userId, state);
+
+    // Update galaxy_map if it's the main planet
+    if (planetIdx === 0) {
+      await env.DB.prepare(
+        'UPDATE galaxy_map SET planet_name=?, planet_emoji=?, updated_at=unixepoch() WHERE user_id=?'
+      ).bind(state.planets[0].name, state.planets[0].emoji, userId).run();
+    }
+
+    return jsonResponse({ ok: true, planets: state.planets }, 200, request);
   }
 
   return jsonError(404, 'Game endpoint not found', request);

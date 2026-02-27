@@ -133,6 +133,19 @@ export const useGameStore = defineStore('game', () => {
     }, 3500);
   }
 
+
+  async function renamePlanet(planetIdx, name, emoji) {
+    try {
+      const data = await api.renamePlanet(planetIdx, name, emoji);
+      if (state.value) state.value.planets = data.planets;
+      notify('✏️ Bolygó sikeresen átnevezve!', 'green');
+      return true;
+    } catch (e) {
+      notify(`❌ ${e.message}`, 'red');
+      return false;
+    }
+  }
+
   function queueItemIsActive(itemId) {
     return queue.value.some(q => q.item_id === itemId);
   }
@@ -162,7 +175,7 @@ export const useGameStore = defineStore('game', () => {
     state, queue, loading, error, notifications,
     resources, rates, buildings, research, fleet, planets, score,
     prodBuildings, infraBuildings,
-    loadState, upgradeBuilding, startResearch, buildFleet, syncResources,
+    loadState, upgradeBuilding, startResearch, buildFleet, syncResources, renamePlanet,
     tickResources, notify, queueItemIsActive, getBuildCost, getResearchCost, canAfford,
   };
 });
