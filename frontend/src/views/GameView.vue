@@ -83,6 +83,7 @@
       <MessagesView  v-if="activeTab === 'messages'"  />
       <ProfileView   v-if="activeTab === 'profile'"   />
       <GuideView     v-if="activeTab === 'guide'"     />
+      <AdminView     v-if="activeTab === 'admin'"     />
     </main>
 
     <BotPanel />
@@ -109,6 +110,7 @@ import { useAuthStore }     from '@/stores/auth.js';
 import { useGameStore }     from '@/stores/game.js';
 import { useMessagesStore } from '@/stores/messages.js';
 import { useAllianceStore } from '@/stores/alliance.js';
+import { useBotStore }      from '@/stores/bot.js';
 import ResourceItem  from '@/components/ResourceItem.vue';
 import OverviewView  from '@/components/views/OverviewView.vue';
 import BuildingsView from '@/components/views/BuildingsView.vue';
@@ -119,7 +121,8 @@ import AllianceView  from '@/components/views/AllianceView.vue';
 import RankingsView  from '@/components/views/RankingsView.vue';
 import MessagesView  from '@/components/views/MessagesView.vue';
 import ProfileView   from '@/components/views/ProfileView.vue';
-import GuideView      from '@/components/views/GuideView.vue';
+import GuideView     from '@/components/views/GuideView.vue';
+import AdminView     from '@/components/views/AdminView.vue';
 import BotPanel       from '@/components/BotPanel.vue';
 import LangSwitch     from '@/components/LangSwitch.vue';
 import ChangelogModal from '@/components/ChangelogModal.vue';
@@ -142,18 +145,24 @@ const rates     = computed(() => gameStore.rates);
 const planets   = computed(() => gameStore.planets);
 const score     = computed(() => gameStore.score);
 
-const tabs = computed(() => [
-  { id: 'overview',  label: L.t('nav.overview')  },
-  { id: 'buildings', label: L.t('nav.buildings') },
-  { id: 'research',  label: L.t('nav.research')  },
-  { id: 'fleet',     label: L.t('nav.fleet')     },
-  { id: 'galaxy',    label: L.t('nav.galaxy')    },
-  { id: 'alliance',  label: L.t('nav.alliance')  },
-  { id: 'messages',  label: L.t('nav.messages')  },
-  { id: 'rankings',  label: L.t('nav.rankings')  },
-  { id: 'profile',   label: L.t('nav.profile')   },
-  { id: 'guide',     label: L.t('nav.guide')     },
-]);
+const tabs = computed(() => {
+  const t = [
+    { id: 'overview',  label: L.t('nav.overview')  },
+    { id: 'buildings', label: L.t('nav.buildings') },
+    { id: 'research',  label: L.t('nav.research')  },
+    { id: 'fleet',     label: L.t('nav.fleet')     },
+    { id: 'galaxy',    label: L.t('nav.galaxy')    },
+    { id: 'alliance',  label: L.t('nav.alliance')  },
+    { id: 'messages',  label: L.t('nav.messages')  },
+    { id: 'rankings',  label: L.t('nav.rankings')  },
+    { id: 'profile',   label: L.t('nav.profile')   },
+    { id: 'guide',     label: L.t('nav.guide')     },
+  ];
+  if (auth.isAdmin) {
+    t.push({ id: 'admin', label: '⚙️ Admin' });
+  }
+  return t;
+});
 
 function onLogout() {
   auth.logout();
@@ -191,7 +200,8 @@ onUnmounted(() => {
 .logo-title { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 900; color: var(--accent); letter-spacing: 2px; text-shadow: 0 0 12px var(--accent); }
 .logo-sub   { font-size: 8px; color: var(--text-dim); letter-spacing: 3px; font-family: 'Orbitron', sans-serif; }
 
-.resource-bar { display: flex; align-items: center; flex: 1; height: 100%; padding: 0 8px; }
+.resource-bar { display: flex; align-items: center; flex: 1; height: 100%; padding: 0 8px; overflow-x: auto; scrollbar-width: none; }
+.resource-bar::-webkit-scrollbar { display: none; }
 
 .user-area { display: flex; align-items: center; gap: 8px; padding: 0 14px; border-left: 1px solid var(--border); height: 100%; }
 .user-info  { text-align: right; }
@@ -221,6 +231,82 @@ onUnmounted(() => {
 .add-planet:hover { opacity: 0.8; }
 
 .main-content { flex: 1; padding: 10px; position: relative; z-index: 1; }
+
+/* ── Mobile & Tablet Optimization ── */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0 4px;
+    justify-content: space-between;
+  }
+  .logo-area {
+    min-width: auto;
+    padding: 0 8px;
+    border-right: none;
+  }
+  .logo-title, .logo-sub {
+    display: none;
+  }
+  .resource-bar {
+    padding: 0 4px;
+    mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%);
+  }
+  .user-area {
+    padding: 0 4px;
+    border-left: none;
+  }
+  .user-name {
+    display: none;
+  }
+  
+  /* Bottom Navigation */
+  .nav {
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: #050c1c;
+    border-top: 1px solid var(--border);
+    border-bottom: none;
+    padding: 0;
+    z-index: 1000;
+    justify-content: flex-start;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+  }
+  .nav-btn {
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    padding: 0 16px;
+    min-width: 70px;
+    font-size: 10px;
+    gap: 4px;
+    border: none;
+    border-top: 2px solid transparent;
+    border-radius: 0;
+  }
+  .nav-btn.active {
+    border-color: var(--accent);
+    background: linear-gradient(180deg, rgba(0,200,255,0.05) 0%, transparent 100%);
+    box-shadow: none;
+  }
+  
+  /* Adjust Planet Bar sticky position */
+  .planet-bar {
+    top: 48px;
+    z-index: 90;
+    padding: 4px 8px;
+  }
+  .planet-slot {
+    min-width: 70px;
+    padding: 2px 6px;
+  }
+  
+  .main-content {
+    padding-bottom: 80px;
+  }
+}
 
 .loading-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; position: relative; z-index: 1; }
 .loading-icon { font-size: 64px; animation: pulse 2s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(0,200,255,0.5)); }
