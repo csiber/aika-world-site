@@ -32,7 +32,7 @@ const fillPct   = computed(() => props.maxVal ? Math.min(100, Math.floor(props.v
 const isFull    = computed(() => props.maxVal && props.value >= props.maxVal);
 const tooltip   = computed(() => props.maxVal
   ? `${Math.floor(props.value).toLocaleString('hu')} / ${props.maxVal.toLocaleString('hu')} (${fillPct.value}%)`
-  : label
+  : props.label
 );
 </script>
 

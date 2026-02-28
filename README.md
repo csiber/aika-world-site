@@ -1,57 +1,65 @@
-# AIKA COLONY v2 — Full-Stack Cloudflare Workers + Vue 3 + D1
+# AIKA COLONY v2.1.0 — Full-Stack Cloudflare Workers + Vue 3 + D1
+
+Galaktikus stratégiai játék Cloudflare Workers (FaaS), D1 (SQLite) és Vue 3 technológiákkal.
+
+## Újdonságok (v2.1.0)
+
+- **📱 Mobil-első Élmény:** Teljesen újratervezett reszponzív felület, rögzített alsó navigációval és optimalizált érintési célokkal.
+- **⚡ PWA Integráció:** Telepíthető alkalmazásként (Progressive Web App), offline gyorsítótárazással és natív app érzettel.
+- **🛡️ Adminisztrációs Panel:** Új dashboard a rendszergazdáknak (statisztikák, felhasználókezelés, erőforrás-adományozás).
+- **🤖 AIKA Asszisztens:** Beépített AI alapú segítő a stratégiai döntésekhez.
 
 ## Architektúra
 
 ```
 aika-colony-v2/
-├── frontend/                    ← Vue 3 + Vite frontend
+├── frontend/                    ← Vue 3 + Vite frontend (PWA + Mobil optimalizált)
 │   ├── src/
 │   │   ├── api/client.js        ← API kliens (fetch wrapper)
 │   │   ├── components/          ← Újrafelhasználható Vue komponensek
-│   │   │   ├── views/           ← Tab-specifikus nézetek
+│   │   │   ├── views/           ← Tab-specifikus nézetek (AdminView, OverviewView, stb.)
 │   │   │   ├── BuildingCard.vue
 │   │   │   ├── BuildingItem.vue
 │   │   │   ├── QueueItem.vue
 │   │   │   └── ResourceItem.vue
 │   │   ├── router/index.js      ← Vue Router (auth guard)
 │   │   ├── stores/
-│   │   │   ├── auth.js          ← Pinia auth store (JWT)
+│   │   │   ├── auth.js          ← Pinia auth store (JWT + Admin role)
 │   │   │   └── game.js          ← Pinia game state store
 │   │   ├── views/
 │   │   │   ├── LoginView.vue
 │   │   │   ├── RegisterView.vue
-│   │   │   └── GameView.vue     ← Fő játék shell
+│   │   │   └── GameView.vue     ← Fő játék shell (Dynamic Tabs)
 │   │   ├── App.vue
 │   │   └── main.js
-│   ├── index.html
-│   ├── package.json
-│   └── vite.config.js
 ├── worker/
 │   └── src/
-│       ├── index.js             ← Worker belépési pont + routing
+│       ├── index.js             ← Worker belépési pont + routing (Admin routes)
 │       ├── routes/
 │       │   ├── auth.js          ← /api/auth/* (register, login, me)
+│       │   ├── admin.js         ← /api/admin/* (stats, users, resources)
 │       │   ├── game.js          ← /api/game/* (state, upgrade, research, fleet)
 │       │   └── rankings.js      ← /api/rankings
 │       └── utils/
-│           ├── jwt.js           ← PBKDF2 hash + HS256 JWT (Web Crypto API)
+│           ├── jwt.js           ← PBKDF2 hash + HS256 JWT (Admin claim)
 │           └── response.js      ← JSON response helpers + CORS
 ├── db/
-│   └── schema.sql               ← D1 SQLite séma + seed adatok
-├── package.json
-├── wrangler.toml
+│   ├── schema.sql               ← D1 SQLite alap séma
+│   └── migration.sql            ← Admin oszlop migráció
+├── package.json                 ← Root config (v2.1.0)
 └── README.md
 ```
 
 ## Funkciók
 
-- **Regisztráció / Bejelentkezés** — email + jelszó, PBKDF2 hash, JWT session
+- **Regisztráció / Bejelentkezés** — email + jelszó, PBKDF2 hash, JWT session (is_admin support)
+- **Progresszív Web App (PWA)** — Kezdőképernyőhöz adható, teljes képernyős mód
 - **Épület fejlesztés** — valós D1 adatbázisba ment, build queue
 - **Kutatás** — 10 kutatási ág, szintenkénti fejlesztés
 - **Flotta gyártás** — 6 hajótípus, mennyiség megadható
+- **Admin Eszközök** — Globális statisztikák és játékos-segítő funkciók
 - **Rangsor** — valós játékosok pontszáma, oldalpozíció kiemelés
 - **Offline termelés** — max 8 óra offline nyersanyag-gyűjtés szinkronizálásnál
-- **Kliens-oldali tick** — folyamatos erőforrás-animáció szerver szinkron között
 
 ## Telepítés
 
@@ -65,86 +73,53 @@ aika-colony-v2/
 # Gyökér (wrangler)
 npm install
 
-# Frontend (Vue + Vite)
+# Frontend (Vue + Vite + PWA)
 cd frontend && npm install && cd ..
 ```
 
-### 3. D1 adatbázis létrehozása
+### 3. D1 adatbázis beállítása
 
+1. Hozd létre az adatbázist: `npm run db:create`
+2. Másold ki a kapott `database_id`-t a `wrangler.toml`-ba.
+3. Futtasd a sémát és a migrációt:
 ```bash
-npm run db:create
+# Séma
+wrangler d1 execute aika-world-db --file=./db/schema.sql
+
+# Admin migráció (v2.1.0 esetén szükséges)
+wrangler d1 execute aika-world-db --file=./db/migration.sql
 ```
 
-Másold ki a kapott database_id-t és illeszd be a `wrangler.toml`-ba:
-```toml
-[[d1_databases]]
-database_id = "IDE_ILLESZD_A_KAPOTT_ID-T"
-```
+### 4. Admin kinevezése
 
-### 4. Séma futtatása
-
+Futtasd a következő parancsot az első admin kinevezéséhez:
 ```bash
-# Lokális fejlesztéshez:
-npm run db:migrate:preview
-
-# Éles D1-re:
-npm run db:migrate
+wrangler d1 execute aika-world-db --command="UPDATE users SET is_admin = 1 WHERE username = 'SAJAT_FELHASZNALONEV';"
 ```
-
-### 5. JWT secret beállítása
-
-```bash
-wrangler secret put JWT_SECRET
-# Adj meg egy hosszú, random stringet (pl. openssl rand -hex 32)
-```
-
-### 6. Lokális fejlesztés
-
-```bash
-# Terminal 1 — Vue dev server (port 5173)
-npm run dev:frontend
-
-# Terminal 2 — Cloudflare Worker (port 8787, API proxy)
-npm run dev:worker
-```
-
-A frontend Vite-ban a `/api/*` kéréseket proxyzza a Worker-re (8787).
-
-### 7. Deploy
-
-```bash
-npm run deploy
-```
-
-Ez először buildeli a Vue appot (`frontend/dist/`), majd feltölti az egészet Cloudflare-re.
 
 ## API Végpontok
 
-### Auth (publikus)
+### Auth (publikus / JWT)
 | Metódus | Endpoint | Leírás |
 |---------|----------|--------|
-| POST | `/api/auth/register` | Regisztráció (username, email, password) |
-| POST | `/api/auth/login` | Bejelentkezés (email, password) → JWT |
-| GET  | `/api/auth/me` | Saját profil (JWT szükséges) |
+| POST | `/api/auth/register` | Regisztráció + Turnstile ellenőrzés |
+| POST | `/api/auth/login` | Bejelentkezés → JWT (isAdmin claim) |
+| GET  | `/api/auth/me` | Saját profil adatai |
+
+### Admin (Csak admin JWT-vel)
+| Metódus | Endpoint | Leírás |
+|---------|----------|--------|
+| GET  | `/api/admin/stats` | Globális játék statisztikák |
+| GET  | `/api/admin/users` | Felhasználók listázása |
+| POST | `/api/admin/update-resources` | Erőforrás adományozás |
 
 ### Game (JWT szükséges)
 | Metódus | Endpoint | Leírás |
 |---------|----------|--------|
 | GET  | `/api/game/state` | Teljes játékállapot + sor |
 | POST | `/api/game/sync` | Szerver szinkronizáció |
-| POST | `/api/game/upgrade` | Épület fejlesztés `{ buildingId }` |
-| POST | `/api/game/research` | Kutatás indítás `{ researchId }` |
-| POST | `/api/game/fleet/build` | Hajógyártás `{ shipId, amount }` |
+| POST | `/api/game/upgrade` | Épület fejlesztés |
+| POST | `/api/game/research` | Kutatás indítás |
 
-### Rankings (JWT szükséges)
-| Metódus | Endpoint | Leírás |
-|---------|----------|--------|
-| GET | `/api/rankings?page=1` | Rangsor (50/oldal) |
-
-## Jövőbeli fejlesztési lehetőségek
-
-- **Durable Objects** — valós idejű multiplayer, flotta ütközések
-- **Queues** — aszinkron értesítések (email, push)
-- **D1 trigger** — automatikus rangsor frissítés
-- **WebSocket** — élő chat, szövetségi koordináció
-- **R2** — játékos avatárok, bolygó képek
+## License
+MIT

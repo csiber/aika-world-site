@@ -66,8 +66,8 @@ export async function handleAuth(request, env, url) {
       ]);
 
       await env.DB.batch([
-        env.DB.prepare('INSERT INTO users (id, username, email, password) VALUES (?, ?, ?, ?)')
-          .bind(userId, username, email.toLowerCase(), passwordHash),
+        env.DB.prepare('INSERT INTO users (id, username, email, password, is_admin) VALUES (?, ?, ?, ?, ?)')
+          .bind(userId, username, email.toLowerCase(), passwordHash, 0),
         env.DB.prepare(`INSERT INTO game_state (user_id, buildings, research, fleet, planets) VALUES (?, ?, ?, ?, ?)`)
           .bind(userId, defBuildings?.data || '[]', defResearch?.data || '[]', defFleet?.data || '[]', defaultPlanets),
         env.DB.prepare('INSERT INTO rankings (user_id, username, score) VALUES (?, ?, 0)')
@@ -80,8 +80,8 @@ export async function handleAuth(request, env, url) {
           .bind(userId, username, firstPlanetName, '🌍', firstPlanetCoords),
       ]);
 
-      const token = await signJWT({ sub: userId, username }, env.JWT_SECRET);
-      return jsonResponse({ ok: true, token, username, userId }, 201, request);
+      const token = await signJWT({ sub: userId, username, isAdmin: 0 }, env.JWT_SECRET);
+      return jsonResponse({ ok: true, token, username, userId, isAdmin: false }, 201, request);
     } catch (error) {
       console.error('Register error:', error);
       return jsonError(500, 'Regisztráció sikertelen. Kérjük,próbálja újra később.', request);
@@ -95,28 +95,47 @@ export async function handleAuth(request, env, url) {
 
     const { email, password, tsToken } = body;
 
+    console.log('Login attempt for:', email);
+    if (!env.TURNSTILE_SECRET) console.error('MISSING TURNSTILE_SECRET');
+    if (!env.JWT_SECRET) console.error('MISSING JWT_SECRET');
+
     const tsOk = await verifyTurnstile(tsToken, env.TURNSTILE_SECRET);
-    if (!tsOk) return jsonError(400, 'Biztonsági ellenőrzés sikertelen. Próbáld újra!', request);
+    if (!tsOk) {
+      console.warn('Turnstile verification failed');
+      return jsonError(400, 'Biztonsági ellenőrzés sikertelen. Próbáld újra!', request);
+    }
 
     if (!email || !password) return jsonError(400, 'Email és jelszó megadása kötelező', request);
 
     try {
+      console.log('Querying database for user...');
       const user = await env.DB.prepare(
-        'SELECT id, username, email, password FROM users WHERE email = ?'
+        'SELECT id, username, email, password, is_admin FROM users WHERE email = ?'
       ).bind(email.toLowerCase()).first();
 
-      if (!user) return jsonError(401, 'Hibás email vagy jelszó', request);
+      if (!user) {
+        console.warn('User not found:', email);
+        return jsonError(401, 'Hibás email vagy jelszó', request);
+      }
 
+      console.log('Verifying password...');
       const valid = await verifyPassword(password, user.password);
-      if (!valid) return jsonError(401, 'Hibás email vagy jelszó', request);
+      if (!valid) {
+        console.warn('Invalid password for:', email);
+        return jsonError(401, 'Hibás email vagy jelszó', request);
+      }
 
+      console.log('Updating last login...');
       await env.DB.prepare('UPDATE users SET last_login = unixepoch() WHERE id = ?').bind(user.id).run();
 
-      const token = await signJWT({ sub: user.id, username: user.username }, env.JWT_SECRET);
-      return jsonResponse({ ok: true, token, username: user.username, userId: user.id }, 200, request);
+      console.log('Signing JWT...');
+      const token = await signJWT({ sub: user.id, username: user.username, isAdmin: user.is_admin }, env.JWT_SECRET);
+      
+      console.log('Login successful');
+      return jsonResponse({ ok: true, token, username: user.username, userId: user.id, isAdmin: !!user.is_admin }, 200, request);
     } catch (error) {
-      console.error('Login error:', error);
-      return jsonError(500, 'Bejelentkezés sikertelen. Kérjük, próbálja újra később.', request);
+      console.error('CRITICAL LOGIN ERROR:', error.message, error.stack);
+      return jsonError(500, `Szerver hiba: ${error.message}`, request);
     }
   }
 
@@ -124,12 +143,12 @@ export async function handleAuth(request, env, url) {
   if (path === '/api/auth/me' && request.method === 'GET') {
     const authResult = await verifyJWT(request, env);
     if (!authResult.ok) return jsonError(401, authResult.error, request);
-    const { sub: userId, username } = authResult.user;
+    const { sub: userId } = authResult.user;
     
     try {
-      const user = await env.DB.prepare('SELECT id, username, email, created_at, last_login FROM users WHERE id = ?').bind(userId).first();
+      const user = await env.DB.prepare('SELECT id, username, email, is_admin, created_at, last_login FROM users WHERE id = ?').bind(userId).first();
       if (!user) return jsonError(404, 'User not found', request);
-      return jsonResponse({ ok: true, user }, 200, request);
+      return jsonResponse({ ok: true, user: { ...user, is_admin: !!user.is_admin } }, 200, request);
     } catch (error) {
       console.error('Me endpoint error:', error);
       return jsonError(500, 'Profil betöltése sikertelen. Kérjük, próbálja újra később.', request);

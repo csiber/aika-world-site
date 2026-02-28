@@ -10,6 +10,7 @@ import { handleAikaChat } from './routes/aika.js';
 import { handleMissions } from './routes/missions.js';
 import { handleAlliance } from './routes/alliance.js';
 import { handleProfile }  from './routes/profile.js';
+import { handleAdmin }    from './routes/admin.js';
 import { corsHeaders, jsonError } from './utils/response.js';
 import { verifyJWT } from './utils/jwt.js';
 
@@ -25,6 +26,10 @@ export default {
       if (url.pathname.startsWith('/api/')) {
         if (url.pathname.startsWith('/api/auth/')) {
           return await handleAuth(request, env, url);
+        }
+
+        if (url.pathname.startsWith('/api/admin/')) {
+          return await handleAdmin(request, env, url);
         }
 
         const authResult = await verifyJWT(request, env);

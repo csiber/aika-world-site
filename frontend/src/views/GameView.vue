@@ -79,6 +79,7 @@
       <MessagesView  v-if="activeTab === 'messages'"  />
       <ProfileView   v-if="activeTab === 'profile'"   />
       <GuideView     v-if="activeTab === 'guide'"     />
+      <AdminView     v-if="activeTab === 'admin'"     />
     </main>
 
     <BotPanel />
@@ -113,7 +114,8 @@ import AllianceView  from '@/components/views/AllianceView.vue';
 import RankingsView  from '@/components/views/RankingsView.vue';
 import MessagesView  from '@/components/views/MessagesView.vue';
 import ProfileView   from '@/components/views/ProfileView.vue';
-import GuideView    from '@/components/views/GuideView.vue';
+import GuideView     from '@/components/views/GuideView.vue';
+import AdminView     from '@/components/views/AdminView.vue';
 import BotPanel     from '@/components/BotPanel.vue';
 
 const router        = useRouter();
@@ -130,18 +132,24 @@ const rates     = computed(() => gameStore.rates);
 const planets   = computed(() => gameStore.planets);
 const score     = computed(() => gameStore.score);
 
-const tabs = [
-  { id: 'overview',  label: '🌐 Áttekintés' },
-  { id: 'buildings', label: '🏗️ Épületek' },
-  { id: 'research',  label: '🔬 Kutatás' },
-  { id: 'fleet',     label: '🚀 Flotta' },
-  { id: 'galaxy',    label: '🌌 Galaxis' },
-  { id: 'alliance',  label: '🤝 Szövetség' },
-  { id: 'messages',  label: '✉️ Üzenetek' },
-  { id: 'rankings',  label: '🏆 Rangsor' },
-  { id: 'profile',   label: '👤 Profil' },
-  { id: 'guide',     label: '📖 Útmutató' },
-];
+const tabs = computed(() => {
+  const t = [
+    { id: 'overview',  label: '🌐 Áttekintés' },
+    { id: 'buildings', label: '🏗️ Épületek' },
+    { id: 'research',  label: '🔬 Kutatás' },
+    { id: 'fleet',     label: '🚀 Flotta' },
+    { id: 'galaxy',    label: '🌌 Galaxis' },
+    { id: 'alliance',  label: '🤝 Szövetség' },
+    { id: 'messages',  label: '✉️ Üzenetek' },
+    { id: 'rankings',  label: '🏆 Rangsor' },
+    { id: 'profile',   label: '👤 Profil' },
+    { id: 'guide',     label: '📖 Útmutató' },
+  ];
+  if (auth.isAdmin) {
+    t.push({ id: 'admin', label: '⚙️ Admin' });
+  }
+  return t;
+});
 
 function onLogout() {
   auth.logout();
