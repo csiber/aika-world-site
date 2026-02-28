@@ -13,8 +13,13 @@ import { handleProfile }  from './routes/profile.js';
 import { handleAdmin }    from './routes/admin.js';
 import { corsHeaders, jsonError } from './utils/response.js';
 import { verifyJWT } from './utils/jwt.js';
+import { simulateBots } from './utils/bots.js';
 
 export default {
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(simulateBots(env));
+  },
+
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 

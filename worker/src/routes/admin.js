@@ -1,5 +1,6 @@
 import { jsonResponse, jsonError } from '../utils/response.js';
 import { verifyJWT } from '../utils/jwt.js';
+import { seedBots, simulateBots, listBots } from '../utils/bots.js';
 
 export async function handleAdmin(request, env, url) {
   const authResult = await verifyJWT(request, env);
@@ -58,6 +59,24 @@ export async function handleAdmin(request, env, url) {
       .run();
       
     return jsonResponse({ ok: true, message: 'Resources updated' }, 200, request);
+  }
+
+  // POST /api/admin/bots/seed — create missing NPC bots (idempotent)
+  if (path === '/api/admin/bots/seed' && method === 'POST') {
+    const result = await seedBots(env);
+    return jsonResponse({ ok: true, ...result }, 200, request);
+  }
+
+  // POST /api/admin/bots/simulate — run one growth tick for all bots
+  if (path === '/api/admin/bots/simulate' && method === 'POST') {
+    const result = await simulateBots(env);
+    return jsonResponse({ ok: true, ...result }, 200, request);
+  }
+
+  // GET /api/admin/bots/list — list all bots with current scores
+  if (path === '/api/admin/bots/list' && method === 'GET') {
+    const bots = await listBots(env);
+    return jsonResponse({ ok: true, bots }, 200, request);
   }
 
   return jsonError(404, 'Admin endpoint not found', request);

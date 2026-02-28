@@ -390,12 +390,19 @@ export async function handleGame(request, env, url, user) {
     state = await processQueue(env, userId, state);
     await saveState(env, userId, state);
 
+    // Rankings always up-to-date after sync
+    await env.DB.prepare('UPDATE rankings SET score=?, updated_at=unixepoch() WHERE user_id=?')
+      .bind(state.score, userId).run();
+
     try {
       const mainPlanet = state.planets?.[0];
       if (mainPlanet) {
+        // Update score on all user planets, name/emoji only on main planet
+        await env.DB.prepare('UPDATE galaxy_map SET score=?, updated_at=unixepoch() WHERE user_id=?')
+          .bind(state.score, userId).run();
         await env.DB.prepare(
-          'UPDATE galaxy_map SET planet_name=?, planet_emoji=?, coords=?, score=?, updated_at=unixepoch() WHERE user_id=?'
-        ).bind(mainPlanet.name, mainPlanet.emoji || '🌍', mainPlanet.coords, state.score, userId).run();
+          'UPDATE galaxy_map SET planet_name=?, planet_emoji=?, updated_at=unixepoch() WHERE user_id=? AND is_main=1'
+        ).bind(mainPlanet.name, mainPlanet.emoji || '🌍', userId).run();
       }
     } catch (e) { console.warn('galaxy_map update skipped:', e.message); }
 
@@ -419,13 +426,12 @@ export async function handleGame(request, env, url, user) {
 
     await saveState(env, userId, state);
 
-    if (planetIdx === 0) {
-      try {
-        await env.DB.prepare(
-          'UPDATE galaxy_map SET planet_name=?, planet_emoji=?, updated_at=unixepoch() WHERE user_id=?'
-        ).bind(state.planets[0].name, state.planets[0].emoji, userId).run();
-      } catch (e) { console.warn('galaxy_map rename skipped:', e.message); }
-    }
+    const renamedPlanet = state.planets[planetIdx];
+    try {
+      await env.DB.prepare(
+        'UPDATE galaxy_map SET planet_name=?, planet_emoji=?, updated_at=unixepoch() WHERE user_id=? AND coords=?'
+      ).bind(renamedPlanet.name, renamedPlanet.emoji, userId, renamedPlanet.coords).run();
+    } catch (e) { console.warn('galaxy_map rename skipped:', e.message); }
 
     return jsonResponse({ ok: true, planets: state.planets }, 200, request);
   }

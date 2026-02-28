@@ -125,14 +125,43 @@ export async function handleAuth(request, env, url) {
         return jsonError(401, 'Hibás email vagy jelszó', request);
       }
 
+      // Daily login bonus — check before updating last_login
+      const nowSec = Math.floor(Date.now() / 1000);
+      const lastLoginDay = user.last_login ? Math.floor(user.last_login / 86400) : -1;
+      const todayDay     = Math.floor(nowSec / 86400);
+      let dailyBonus = null;
+      if (todayDay > lastLoginDay) {
+        const bonus = { metal: 5000, crystal: 2500, deus: 50 };
+        try {
+          const stateRow = await env.DB.prepare('SELECT resources FROM game_state WHERE user_id = ?').bind(user.id).first();
+          if (stateRow) {
+            const res = JSON.parse(stateRow.resources);
+            res.metal   += bonus.metal;
+            res.crystal += bonus.crystal;
+            res.deus    += bonus.deus;
+            await env.DB.prepare('UPDATE game_state SET resources=? WHERE user_id=?')
+              .bind(JSON.stringify(res), user.id).run();
+            await env.DB.prepare(
+              'INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)'
+            ).bind(
+              crypto.randomUUID(), user.id,
+              '🎁 Rendszer', 'Napi bejelentkezési jutalom!',
+              `Üdvözlünk vissza, ${user.username}!\n\n⚙️ Fém: +${bonus.metal.toLocaleString('hu')}\n💎 Kristály: +${bonus.crystal.toLocaleString('hu')}\n🔮 Déusium: +${bonus.deus}\n\nHolnap is visszatérsz?`,
+              'system'
+            ).run();
+            dailyBonus = bonus;
+          }
+        } catch (e) { console.warn('Daily bonus error:', e.message); }
+      }
+
       console.log('Updating last login...');
       await env.DB.prepare('UPDATE users SET last_login = unixepoch() WHERE id = ?').bind(user.id).run();
 
       console.log('Signing JWT...');
       const token = await signJWT({ sub: user.id, username: user.username, isAdmin: user.is_admin }, env.JWT_SECRET);
-      
+
       console.log('Login successful');
-      return jsonResponse({ ok: true, token, username: user.username, userId: user.id, isAdmin: !!user.is_admin }, 200, request);
+      return jsonResponse({ ok: true, token, username: user.username, userId: user.id, isAdmin: !!user.is_admin, dailyBonus }, 200, request);
     } catch (error) {
       console.error('CRITICAL LOGIN ERROR:', error.message, error.stack);
       return jsonError(500, `Szerver hiba: ${error.message}`, request);

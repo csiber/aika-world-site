@@ -111,6 +111,11 @@ export async function handleMissions(request, env, url, user) {
           await saveState(env, userId, state);
           await env.DB.prepare('UPDATE rankings SET score=?, updated_at=unixepoch() WHERE user_id=?')
             .bind(state.score, userId).run();
+          // Register colony on the galaxy map
+          await env.DB.prepare(
+            `INSERT OR IGNORE INTO galaxy_map (user_id, username, planet_name, planet_emoji, coords, score, is_main)
+             VALUES (?, ?, ?, ?, ?, ?, 0)`
+          ).bind(userId, user.username, result.planetName, result.emoji, mission.target_coords, state.score).run();
         }
       }
 
@@ -122,6 +127,23 @@ export async function handleMissions(request, env, url, user) {
           state.resources.crystal += result.loot.crystal || 0;
           state.score += result.scoreGain || 0;
           await saveState(env, userId, state);
+        }
+        // Bot retaliation — bot sends a message back to the attacker
+        if (mission.target_user_id) {
+          const botTarget = await env.DB.prepare(
+            'SELECT is_bot, username FROM users WHERE id = ?'
+          ).bind(mission.target_user_id).first();
+          if (botTarget?.is_bot) {
+            await env.DB.prepare(
+              'INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)'
+            ).bind(
+              crypto.randomUUID(), userId,
+              `⚔️ ${botTarget.username}`,
+              `${botTarget.username} üzenete`,
+              botRetaliationMessage(botTarget.username, result.attackerWins),
+              'combat'
+            ).run();
+          }
         }
       }
 
@@ -234,6 +256,24 @@ export async function handleMissions(request, env, url, user) {
 
     const rand = 0.85 + Math.random() * 0.3; // 0.85-1.15 randomness
     const attackerWins = attackPower * rand > defPower;
+
+    // Fleet losses — both sides take losses proportional to opponent's strength
+    const attackerLossPct = attackerWins
+      ? Math.min(0.40, 0.05 + (defPower / Math.max(1, attackPower)) * 0.30)
+      : Math.min(0.85, 0.30 + (defPower / Math.max(1, attackPower)) * 0.50);
+    const defenderLossPct = attackerWins
+      ? Math.min(0.85, 0.35 + (attackPower / Math.max(1, defPower)) * 0.40)
+      : Math.min(0.25, 0.03 + (attackPower / Math.max(1, defPower)) * 0.20);
+
+    const attackerLosses = applyFleetLosses(state.fleet, attackerLossPct);
+    const defenderLosses = applyFleetLosses(targetState.fleet, defenderLossPct);
+
+    // Persist fleet losses immediately (targeted update — no updated_at reset)
+    await env.DB.prepare('UPDATE game_state SET fleet=? WHERE user_id=?')
+      .bind(JSON.stringify(state.fleet), userId).run();
+    await env.DB.prepare('UPDATE game_state SET fleet=? WHERE user_id=?')
+      .bind(JSON.stringify(targetState.fleet), targetUserId).run();
+
     let loot = { metal: 0, crystal: 0 };
     let scoreGain = 0;
 
@@ -252,20 +292,31 @@ export async function handleMissions(request, env, url, user) {
       targetState.resources.metal   -= loot.metal;
       targetState.resources.crystal -= loot.crystal;
       await saveState(env, targetUserId, targetState);
-
-      // Send defeat message to target
-      await env.DB.prepare(
-        'INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)'
-      ).bind(
-        crypto.randomUUID(), targetUserId,
-        `⚔️ ${user.username}`,
-        `Támadás: ${user.username} megtámadta bolygódat!`,
-        `⚔️ HARCI JELENTÉS\n\nTámadó: ${user.username}\nCél: ${targetName}\n\nEredmény: VERESÉG\n\nElveszített nyersanyag:\n⚙️ Fém: ${loot.metal.toLocaleString('hu')}\n💎 Kristály: ${loot.crystal.toLocaleString('hu')}\n\nErősítsd meg védelmedet!`,
-        'combat'
-      ).run();
     }
 
-    const result = { attackerWins, loot, attackPower: Math.floor(attackPower), defPower: Math.floor(defPower), scoreGain, cargoUsed: loot.metal + loot.crystal, cargoTotal: atkPow.cargo };
+    // Defender message (includes fleet losses)
+    const defLossText = defenderLosses.length
+      ? `\n\nElveszített flotta:\n${defenderLosses.map(l => `${l.icon} ${l.name}: -${l.lost}`).join('\n')}`
+      : '';
+    const defenderMsgBody = attackerWins
+      ? `⚔️ HARCI JELENTÉS\n\nTámadó: ${user.username}\nCél: ${targetName}\n\nEredmény: VERESÉG\n\nElveszített nyersanyag:\n⚙️ Fém: ${loot.metal.toLocaleString('hu')}\n💎 Kristály: ${loot.crystal.toLocaleString('hu')}${defLossText}\n\nErősítsd meg védelmedet!`
+      : `⚔️ HARCI JELENTÉS\n\nTámadó: ${user.username} megtámadta bolygódat!\n\nEredmény: VÉDELMED TARTOTT! ✅${defLossText}`;
+
+    await env.DB.prepare(
+      'INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)'
+    ).bind(
+      crypto.randomUUID(), targetUserId,
+      `⚔️ ${user.username}`,
+      `Támadás: ${user.username} megtámadta bolygódat!`,
+      defenderMsgBody, 'combat'
+    ).run();
+
+    const result = {
+      attackerWins, loot,
+      attackPower: Math.floor(attackPower), defPower: Math.floor(defPower),
+      scoreGain, cargoUsed: loot.metal + loot.crystal, cargoTotal: atkPow.cargo,
+      attackerLosses, defenderLosses,
+    };
     const fromCoords = state.planets[0]?.coords || '[1:1:1]';
     const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(fromCoords, targetCoords, state, 180);
 
@@ -368,7 +419,14 @@ function formatMissionResult(mission, result) {
 
   if (mission.mission_type === 'attack') {
     const r = result;
-    return `⚔️ HARCI JELENTÉS\n\nCél: ${mission.target_name} ${mission.target_coords}\n\nTámadóerő: ${r.attackPower?.toLocaleString('hu')}\nVédelmi erő: ${r.defPower?.toLocaleString('hu')}\n\nEredmény: ${r.attackerWins ? '✅ GYŐZELEM' : '❌ VERESÉG'}\n\n${r.attackerWins ? `Zsákmány:\n⚙️ Fém: ${r.loot?.metal?.toLocaleString('hu')}\n💎 Kristály: ${r.loot?.crystal?.toLocaleString('hu')}` : 'Flottád visszavonult.'}`;
+    let report = `⚔️ HARCI JELENTÉS\n\nCél: ${mission.target_name} ${mission.target_coords}\n\nTámadóerő: ${r.attackPower?.toLocaleString('hu')}\nVédelmi erő: ${r.defPower?.toLocaleString('hu')}\n\nEredmény: ${r.attackerWins ? '✅ GYŐZELEM' : '❌ VERESÉG'}\n\n`;
+    report += r.attackerWins
+      ? `Zsákmány:\n⚙️ Fém: ${r.loot?.metal?.toLocaleString('hu')}\n💎 Kristály: ${r.loot?.crystal?.toLocaleString('hu')}\n`
+      : `Flottád visszavonult.\n`;
+    if (r.attackerLosses?.length) {
+      report += `\nSaját veszteségek:\n${r.attackerLosses.map(l => `${l.icon} ${l.name}: -${l.lost}`).join('\n')}\n`;
+    }
+    return report;
   }
 
   if (mission.mission_type === 'colonize') {
@@ -378,4 +436,39 @@ function formatMissionResult(mission, result) {
   }
 
   return 'Küldetés befejezve.';
+}
+
+// ── Fleet loss helper ──────────────────────────────────────
+function applyFleetLosses(fleet, lossPct) {
+  const losses = [];
+  for (const ship of fleet) {
+    if (ship.count > 0 && lossPct > 0) {
+      const rand = 0.75 + Math.random() * 0.5; // ±25% randomness per ship type
+      const lost = Math.floor(ship.count * Math.min(0.95, lossPct * rand));
+      if (lost > 0) {
+        ship.count -= lost;
+        losses.push({ icon: ship.icon, name: ship.name, lost });
+      }
+    }
+  }
+  return losses;
+}
+
+// ── Bot retaliation messages ───────────────────────────────
+const BOT_WIN_MSGS = [
+  'Élvezd a zsákmányt, amíg lehet. Erőim már úton vannak feléd.',
+  'Ez csupán egy csata volt. A háború még nem ért véget.',
+  'Ügyes manőver. De a birodalmamat nem veszed el ilyen könnyen.',
+  'Rajtaütöttél, de a bosszú hideget tálal. Számíts rá.',
+];
+const BOT_LOSE_MSGS = [
+  'Ha azt hitted, hogy megijesztesz — tévedtél. Jöjj vissza, ha mered.',
+  'Gyenge kísérlet. Védelmi rendszerem könnyedén elbánt veled.',
+  'Legközelebb hozz több hajót. Ez nem volt elég.',
+  'Flottád nyomát sem fogják megtalálni. Következő alkalomra felejtsd el ezt a szektort.',
+];
+function botRetaliationMessage(botName, attackerWon) {
+  const pool = attackerWon ? BOT_WIN_MSGS : BOT_LOSE_MSGS;
+  const msg  = pool[Math.floor(Math.random() * pool.length)];
+  return `📡 TITKOSÍTOTT ÜZENET — Feladó: ${botName}\n\n"${msg}"`;
 }

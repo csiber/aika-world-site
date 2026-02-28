@@ -26,6 +26,9 @@ database_id = "9857d534-0700-427a-aab7-592e1fe95dbf"
 # pattern = "aikaworld.yourdomain.com/*"
 # zone_name = "yourdomain.com"
 
+[triggers]
+crons = ["0 * * * *"]   # bot score simulation — every hour
+
 [env.preview]
 name = "aika-world-preview"
 [env.preview.vars]
