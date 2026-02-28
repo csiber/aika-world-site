@@ -2,17 +2,17 @@
   <div class="fleet-layout">
     <!-- Fleet summary -->
     <div class="panel">
-      <div class="panel-header"><span class="panel-icon">🚀</span><h3>Flotta Összesítő</h3></div>
+      <div class="panel-header"><span class="panel-icon">🚀</span><h3>{{ L.t('fleet.summary') }}</h3></div>
       <div class="panel-body">
         <table class="fleet-table">
           <thead>
             <tr>
-              <th>Hajó</th>
-              <th>Darab</th>
-              <th>Tűzerő</th>
-              <th>Pajzs</th>
-              <th>Rakodás</th>
-              <th>Sebesség</th>
+              <th>{{ L.t('fleet.ship') }}</th>
+              <th>{{ L.t('fleet.count') }}</th>
+              <th>{{ L.t('fleet.attack') }}</th>
+              <th>{{ L.t('fleet.shield') }}</th>
+              <th>{{ L.t('fleet.cargo') }}</th>
+              <th>{{ L.t('fleet.speed') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -31,7 +31,7 @@
 
     <!-- Build ships -->
     <div class="panel">
-      <div class="panel-header"><span class="panel-icon">🏭</span><h3>Hajógyártás</h3></div>
+      <div class="panel-header"><span class="panel-icon">🏭</span><h3>{{ L.t('fleet.shipyard') }}</h3></div>
       <div class="panel-body">
         <div class="ship-grid">
           <div v-for="ship in fleet" :key="ship.id" class="ship-card" :class="{ 'in-queue': inQueue(ship.id) }">
@@ -39,7 +39,7 @@
               <span class="ship-emoji">{{ ship.icon }}</span>
               <div>
                 <div class="ship-name">{{ ship.name }}</div>
-                <div class="ship-count">Jelenlegi: {{ ship.count }} db</div>
+                <div class="ship-count">{{ L.t('fleet.current') }}: {{ ship.count }} {{ L.t('fleet.units') }}</div>
               </div>
             </div>
             <div class="ship-stats">
@@ -48,7 +48,7 @@
               <span>📦 {{ ship.cargo }}</span>
             </div>
             <div class="ship-cost">
-              ⚙️ {{ ship.cost.metal.toLocaleString('hu') }} | 💎 {{ ship.cost.crystal.toLocaleString('hu') }} (db)
+              ⚙️ {{ ship.cost.metal.toLocaleString('hu') }} | 💎 {{ ship.cost.crystal.toLocaleString('hu') }} ({{ L.t('fleet.units') }})
             </div>
             <div class="ship-build-row">
               <input
@@ -62,13 +62,13 @@
                 :disabled="!canAffordShip(ship) || inQueue(ship.id) || busy === ship.id"
                 @click="onBuild(ship)"
               >
-                <span v-if="inQueue(ship.id)">⏳ Gyártás</span>
+                <span v-if="inQueue(ship.id)">⏳ {{ L.t('fleet.building') }}</span>
                 <span v-else-if="busy === ship.id">...</span>
-                <span v-else>Gyártás</span>
+                <span v-else>{{ L.t('fleet.build') }}</span>
               </button>
             </div>
             <div class="ship-total-cost" v-if="amounts[ship.id] > 1">
-              Összesen: ⚙️ {{ (ship.cost.metal * (amounts[ship.id] || 1)).toLocaleString('hu') }} | 💎 {{ (ship.cost.crystal * (amounts[ship.id] || 1)).toLocaleString('hu') }}
+              {{ L.t('fleet.total') }}: ⚙️ {{ (ship.cost.metal * (amounts[ship.id] || 1)).toLocaleString('hu') }} | 💎 {{ (ship.cost.crystal * (amounts[ship.id] || 1)).toLocaleString('hu') }}
             </div>
           </div>
         </div>
@@ -80,8 +80,10 @@
 <script setup>
 import { ref, computed, reactive } from 'vue';
 import { useGameStore } from '@/stores/game.js';
+import { useLangStore } from '@/stores/lang.js';
 
 const game  = useGameStore();
+const L     = useLangStore();
 const fleet = computed(() => game.fleet);
 const busy  = ref(null);
 

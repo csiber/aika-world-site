@@ -1,7 +1,7 @@
 <template>
   <div class="profile-layout">
     <div class="panel profile-panel">
-      <div class="panel-header"><span class="panel-icon">👤</span><h3>Profil</h3></div>
+      <div class="panel-header"><span class="panel-icon">👤</span><h3>{{ L.t('profile.title') }}</h3></div>
       <div class="panel-body" v-if="profile">
         <div class="profile-header">
           <div class="profile-avatar">{{ profile.username.charAt(0).toUpperCase() }}</div>
@@ -11,46 +11,46 @@
               <span class="alliance-tag">[{{ profile.alliance.tag }}]</span> {{ profile.alliance.name }}
               <span v-if="profile.alliance.role" class="role-label">— {{ roleLabel(profile.alliance.role) }}</span>
             </div>
-            <div v-else class="profile-no-alliance">Nincs szövetség</div>
-            <div class="profile-date">Regisztrált: {{ formatDate(profile.createdAt) }}</div>
+            <div v-else class="profile-no-alliance">{{ L.t('profile.noAlliance') }}</div>
+            <div class="profile-date">{{ L.t('profile.registered') }}: {{ formatDate(profile.createdAt) }}</div>
           </div>
         </div>
 
         <div class="stats-grid">
           <div class="stat-box">
             <div class="stat-val">#{{ profile.rank || '?' }}</div>
-            <div class="stat-lbl">Helyezés</div>
+            <div class="stat-lbl">{{ L.t('profile.rank') }}</div>
           </div>
           <div class="stat-box">
             <div class="stat-val">{{ Number(profile.score).toLocaleString('hu') }}</div>
-            <div class="stat-lbl">Pontszám</div>
+            <div class="stat-lbl">{{ L.t('profile.score') }}</div>
           </div>
           <div class="stat-box">
             <div class="stat-val">{{ profile.planets }}</div>
-            <div class="stat-lbl">Bolygók</div>
+            <div class="stat-lbl">{{ L.t('profile.planets') }}</div>
           </div>
           <div class="stat-box" v-if="profile.totalShips !== undefined">
             <div class="stat-val">{{ profile.totalShips }}</div>
-            <div class="stat-lbl">Hajók</div>
+            <div class="stat-lbl">{{ L.t('profile.ships') }}</div>
           </div>
           <div class="stat-box" v-if="profile.totalBuildingLevels !== undefined">
             <div class="stat-val">{{ profile.totalBuildingLevels }}</div>
-            <div class="stat-lbl">Épület szintek</div>
+            <div class="stat-lbl">{{ L.t('profile.buildingLevels') }}</div>
           </div>
           <div class="stat-box" v-if="profile.totalResearchLevels !== undefined">
             <div class="stat-val">{{ profile.totalResearchLevels }}</div>
-            <div class="stat-lbl">Kutatás szintek</div>
+            <div class="stat-lbl">{{ L.t('profile.researchLevels') }}</div>
           </div>
         </div>
       </div>
       <div class="panel-body" v-else>
-        <div class="empty-msg">Betöltés...</div>
+        <div class="empty-msg">{{ L.t('profile.loading') }}</div>
       </div>
     </div>
 
-    <!-- Bolygó kezelés -->
+    <!-- Planet management -->
     <div class="panel" v-if="planets.length">
-      <div class="panel-header"><span class="panel-icon">🌍</span><h3>Bolygóim</h3></div>
+      <div class="panel-header"><span class="panel-icon">🌍</span><h3>{{ L.t('profile.myPlanets') }}</h3></div>
       <div class="panel-body">
         <div v-for="(planet, idx) in planets" :key="idx" class="planet-row">
           <div class="planet-emoji-pick">
@@ -67,7 +67,7 @@
             </div>
             <div v-else class="planet-name-row">
               <span class="planet-name">{{ planet.name }}</span>
-              <button class="btn-sm" @click="startEdit(idx, planet.name)">✏️ Átnevez</button>
+              <button class="btn-sm" @click="startEdit(idx, planet.name)">✏️ {{ L.t('profile.rename') }}</button>
             </div>
             <div class="planet-coords">{{ planet.coords }}</div>
           </div>
@@ -79,12 +79,16 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useGameStore } from '@/stores/game.js';
 import { useAuthStore } from '@/stores/auth.js';
+import { useLangStore } from '@/stores/lang.js';
 import { api } from '@/api/client.js';
 
 const game = useGameStore();
 const auth = useAuthStore();
+const L    = useLangStore();
+const { lang } = storeToRefs(L);
 
 const profile = ref(null);
 const planets = computed(() => game.planets);
@@ -96,11 +100,11 @@ const emojiPickerFor = ref(null);
 
 const planetEmojis = ['🌍','🌎','🌏','🪐','🌕','🔵','🟣','🟤','🔴','⚫','🌑','💫'];
 
-function roleLabel(r) { return { leader: 'Vezető', officer: 'Tiszt', member: 'Tag' }[r] || r; }
+function roleLabel(r) { return { leader: L.t('profile.roles.leader'), officer: L.t('profile.roles.officer'), member: L.t('profile.roles.member') }[r] || r; }
 
 function formatDate(ts) {
   if (!ts) return '?';
-  return new Date(ts * 1000).toLocaleDateString('hu-HU');
+  return new Date(ts * 1000).toLocaleDateString(lang.value === 'hu' ? 'hu-HU' : 'en-US');
 }
 
 function startEdit(idx, currentName) {

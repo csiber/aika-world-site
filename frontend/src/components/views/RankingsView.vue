@@ -1,23 +1,23 @@
 <template>
   <div class="panel">
-    <div class="panel-header"><span class="panel-icon">🏆</span><h3>Galaktikus Rangsor</h3></div>
+    <div class="panel-header"><span class="panel-icon">🏆</span><h3>{{ L.t('rankings.title') }}</h3></div>
     <div class="panel-body">
-      <div v-if="loading" class="empty-msg">Rangsor betöltése...</div>
+      <div v-if="loading" class="empty-msg">{{ L.t('rankings.loading') }}</div>
       <div v-else>
         <!-- My rank highlight -->
         <div v-if="myRank" class="my-rank-bar">
-          🎖️ Saját helyezésed: <strong>#{{ myRank }}</strong>
+          🎖️ {{ L.t('rankings.myRank') }}: <strong>#{{ myRank }}</strong>
           — {{ myUsername }} —
-          <span class="score-val">{{ myScore.toLocaleString('hu') }} pont</span>
+          <span class="score-val">{{ myScore.toLocaleString('hu') }} {{ L.t('rankings.points') }}</span>
         </div>
 
         <table class="rank-table">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Játékos</th>
-              <th>Pontszám</th>
-              <th>Utoljára aktív</th>
+              <th>{{ L.t('rankings.rank') }}</th>
+              <th>{{ L.t('rankings.player') }}</th>
+              <th>{{ L.t('rankings.score') }}</th>
+              <th>{{ L.t('rankings.lastActive') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -37,15 +37,15 @@
               <td class="time-val">{{ timeAgo(row.updated_at) }}</td>
             </tr>
             <tr v-if="!rankings.length">
-              <td colspan="4" class="empty-msg">Még nincs rangsor adat.</td>
+              <td colspan="4" class="empty-msg">{{ L.t('rankings.noData') }}</td>
             </tr>
           </tbody>
         </table>
 
         <div class="pagination" v-if="total > 50">
-          <button class="btn-primary" :disabled="page <= 1" @click="changePage(page - 1)">← Előző</button>
+          <button class="btn-primary" :disabled="page <= 1" @click="changePage(page - 1)">{{ L.t('rankings.prev') }}</button>
           <span>{{ page }}</span>
-          <button class="btn-primary" :disabled="page * 50 >= total" @click="changePage(page + 1)">Következő →</button>
+          <button class="btn-primary" :disabled="page * 50 >= total" @click="changePage(page + 1)">{{ L.t('rankings.next') }}</button>
         </div>
       </div>
     </div>
@@ -56,8 +56,10 @@
 import { ref, onMounted } from 'vue';
 import { api } from '@/api/client.js';
 import { useAuthStore } from '@/stores/auth.js';
+import { useLangStore } from '@/stores/lang.js';
 
 const auth       = useAuthStore();
+const L          = useLangStore();
 const rankings   = ref([]);
 const myRank     = ref(null);
 const myScore    = ref(0);
@@ -86,10 +88,10 @@ function changePage(p) {
 
 function timeAgo(ts) {
   const diff = Math.floor(Date.now() / 1000) - ts;
-  if (diff < 60)   return 'most';
-  if (diff < 3600) return `${Math.floor(diff / 60)}p`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}ó`;
-  return `${Math.floor(diff / 86400)}n`;
+  if (diff < 60)   return L.t('time.now');
+  if (diff < 3600) return `${Math.floor(diff / 60)}${L.t('time.min')}`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}${L.t('time.hour')}`;
+  return `${Math.floor(diff / 86400)}${L.t('time.day')}`;
 }
 
 onMounted(load);

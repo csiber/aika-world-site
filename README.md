@@ -1,150 +1,47 @@
-# AIKA COLONY v2 — Full-Stack Cloudflare Workers + Vue 3 + D1
+# AIKA World v2.1
 
-## Architektúra
+**AIKA World** is a modern, real-time galactic strategy game built on the Cloudflare ecosystem (Workers, D1, Assets) using Vue 3.
 
-```
-aika-colony-v2/
-├── frontend/                    ← Vue 3 + Vite frontend
-│   ├── src/
-│   │   ├── api/client.js        ← API kliens (fetch wrapper)
-│   │   ├── components/          ← Újrafelhasználható Vue komponensek
-│   │   │   ├── views/           ← Tab-specifikus nézetek
-│   │   │   ├── BuildingCard.vue
-│   │   │   ├── BuildingItem.vue
-│   │   │   ├── QueueItem.vue
-│   │   │   └── ResourceItem.vue
-│   │   ├── router/index.js      ← Vue Router (auth guard)
-│   │   ├── stores/
-│   │   │   ├── auth.js          ← Pinia auth store (JWT)
-│   │   │   └── game.js          ← Pinia game state store
-│   │   ├── views/
-│   │   │   ├── LoginView.vue
-│   │   │   ├── RegisterView.vue
-│   │   │   └── GameView.vue     ← Fő játék shell
-│   │   ├── App.vue
-│   │   └── main.js
-│   ├── index.html
-│   ├── package.json
-│   └── vite.config.js
-├── worker/
-│   └── src/
-│       ├── index.js             ← Worker belépési pont + routing
-│       ├── routes/
-│       │   ├── auth.js          ← /api/auth/* (register, login, me)
-│       │   ├── game.js          ← /api/game/* (state, upgrade, research, fleet)
-│       │   └── rankings.js      ← /api/rankings
-│       └── utils/
-│           ├── jwt.js           ← PBKDF2 hash + HS256 JWT (Web Crypto API)
-│           └── response.js      ← JSON response helpers + CORS
-├── db/
-│   └── schema.sql               ← D1 SQLite séma + seed adatok
-├── package.json
-├── wrangler.toml
-└── README.md
-```
+## Features (v2.1)
+- **Real-time Resource Management**: Dynamic production and storage capping.
+- **Advanced Building & Research**: Progress through a multi-tier tech tree.
+- **Fleet Missions**: Launch spy, attack, or colonize missions across a coordinate-based galaxy map.
+- **Strategic Combat**: Research-aware combat calculations and cargo-limited looting.
+- **Alliances**: Create or join alliances with real-time chat and hierarchy (Leader/Officer/Member).
+- **AIKA AI**: An intelligent assistant providing game insights.
+- **Bot Mode**: Optional automation for buildings, research, and fleet production.
+- **Multi-language**: Full support for English and Hungarian.
+- **Security**: Cloudflare Turnstile CAPTCHA and secure JWT-based authentication.
 
-## Funkciók
+## Tech Stack
+- **Frontend**: Vue 3 (Composition API), Pinia (State Management), Vite.
+- **Backend**: Cloudflare Workers (JavaScript).
+- **Database**: Cloudflare D1 (SQLite).
+- **Auth**: JWT + PBKDF2 Password Hashing.
+- **Styling**: Vanilla CSS (Custom properties, Modern UI aesthetic).
 
-- **Regisztráció / Bejelentkezés** — email + jelszó, PBKDF2 hash, JWT session
-- **Épület fejlesztés** — valós D1 adatbázisba ment, build queue
-- **Kutatás** — 10 kutatási ág, szintenkénti fejlesztés
-- **Flotta gyártás** — 6 hajótípus, mennyiség megadható
-- **Rangsor** — valós játékosok pontszáma, oldalpozíció kiemelés
-- **Offline termelés** — max 8 óra offline nyersanyag-gyűjtés szinkronizálásnál
-- **Kliens-oldali tick** — folyamatos erőforrás-animáció szerver szinkron között
+## Recent Bug Fixes (v2.1)
+- Resolved alliance loading flickers and added retry mechanisms.
+- Fixed reactivity issues in client-side resource ticking.
+- Implemented distance-based travel time for missions (G:S:P coordinates).
+- Cleaned up memory leaks from background timers on component unmount.
+- Improved database error handling and state synchronization.
 
-## Telepítés
-
-### 1. Előfeltételek
-- Node.js 18+
-- Cloudflare fiók
-
-### 2. Dependenciák telepítése
-
+## Development
 ```bash
-# Gyökér (wrangler)
+# Install dependencies
 npm install
+cd frontend && npm install
 
-# Frontend (Vue + Vite)
-cd frontend && npm install && cd ..
-```
+# Run locally
+npm run dev:worker
+npm run dev:frontend
 
-### 3. D1 adatbázis létrehozása
-
-```bash
-npm run db:create
-```
-
-Másold ki a kapott database_id-t és illeszd be a `wrangler.toml`-ba:
-```toml
-[[d1_databases]]
-database_id = "IDE_ILLESZD_A_KAPOTT_ID-T"
-```
-
-### 4. Séma futtatása
-
-```bash
-# Lokális fejlesztéshez:
-npm run db:migrate:preview
-
-# Éles D1-re:
+# Database migration
 npm run db:migrate
 ```
 
-### 5. JWT secret beállítása
-
-```bash
-wrangler secret put JWT_SECRET
-# Adj meg egy hosszú, random stringet (pl. openssl rand -hex 32)
-```
-
-### 6. Lokális fejlesztés
-
-```bash
-# Terminal 1 — Vue dev server (port 5173)
-npm run dev:frontend
-
-# Terminal 2 — Cloudflare Worker (port 8787, API proxy)
-npm run dev:worker
-```
-
-A frontend Vite-ban a `/api/*` kéréseket proxyzza a Worker-re (8787).
-
-### 7. Deploy
-
+## Deployment
 ```bash
 npm run deploy
 ```
-
-Ez először buildeli a Vue appot (`frontend/dist/`), majd feltölti az egészet Cloudflare-re.
-
-## API Végpontok
-
-### Auth (publikus)
-| Metódus | Endpoint | Leírás |
-|---------|----------|--------|
-| POST | `/api/auth/register` | Regisztráció (username, email, password) |
-| POST | `/api/auth/login` | Bejelentkezés (email, password) → JWT |
-| GET  | `/api/auth/me` | Saját profil (JWT szükséges) |
-
-### Game (JWT szükséges)
-| Metódus | Endpoint | Leírás |
-|---------|----------|--------|
-| GET  | `/api/game/state` | Teljes játékállapot + sor |
-| POST | `/api/game/sync` | Szerver szinkronizáció |
-| POST | `/api/game/upgrade` | Épület fejlesztés `{ buildingId }` |
-| POST | `/api/game/research` | Kutatás indítás `{ researchId }` |
-| POST | `/api/game/fleet/build` | Hajógyártás `{ shipId, amount }` |
-
-### Rankings (JWT szükséges)
-| Metódus | Endpoint | Leírás |
-|---------|----------|--------|
-| GET | `/api/rankings?page=1` | Rangsor (50/oldal) |
-
-## Jövőbeli fejlesztési lehetőségek
-
-- **Durable Objects** — valós idejű multiplayer, flotta ütközések
-- **Queues** — aszinkron értesítések (email, push)
-- **D1 trigger** — automatikus rangsor frissítés
-- **WebSocket** — élő chat, szövetségi koordináció
-- **R2** — játékos avatárok, bolygó képek

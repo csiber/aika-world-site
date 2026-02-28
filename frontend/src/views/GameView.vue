@@ -9,17 +9,19 @@
           <div class="logo-title">AIKA</div>
           <div class="logo-sub">WORLD</div>
         </div>
+        <button class="ver-badge" @click="showChangelog = true" title="Changelog">v{{ APP_VERSION }}</button>
       </div>
 
       <div class="resource-bar">
-        <ResourceItem icon="⚙️" label="Fém"     :value="resources.metal"   :rate="rates.metal"   color="var(--metal)"    :maxVal="gameStore.storage.metal" />
-        <ResourceItem icon="💎" label="Kristály" :value="resources.crystal" :rate="rates.crystal" color="var(--crystal)"  :maxVal="gameStore.storage.crystal" />
-        <ResourceItem icon="⚡" label="Energia"  :value="resources.energy"  :rate="rates.energy"  color="var(--energy)" />
-        <ResourceItem icon="🔮" label="Déusium"  :value="resources.deus"    :rate="rates.deus"    color="var(--accent)"   :maxVal="gameStore.storage.deus" />
+        <ResourceItem icon="⚙️" :label="L.t('res.metal')"   :value="resources.metal"   :rate="rates.metal"   color="var(--metal)"   :maxVal="gameStore.storage.metal" />
+        <ResourceItem icon="💎" :label="L.t('res.crystal')" :value="resources.crystal" :rate="rates.crystal" color="var(--crystal)" :maxVal="gameStore.storage.crystal" />
+        <ResourceItem icon="⚡" :label="L.t('res.energy')"  :value="resources.energy"  :rate="rates.energy"  color="var(--energy)" />
+        <ResourceItem icon="🔮" :label="L.t('res.deus')"    :value="resources.deus"    :rate="rates.deus"    color="var(--accent)"  :maxVal="gameStore.storage.deus" />
       </div>
 
       <div class="user-area">
-        <div class="user-info" @click="activeTab = 'profile'" style="cursor:pointer" title="Profil megtekintése">
+        <LangSwitch />
+        <div class="user-info" @click="activeTab = 'profile'" style="cursor:pointer" :title="L.t('nav.profile')">
           <div class="user-name">{{ auth.username }}</div>
           <div class="user-pts">{{ score.toLocaleString('hu') }} pt</div>
         </div>
@@ -47,7 +49,9 @@
     <!-- ── ENERGY WARNING ── -->
     <Transition name="slide-down">
       <div v-if="gameStore.energyWarning" class="energy-banner" :class="gameStore.energyWarning.level">
-        {{ gameStore.energyWarning.msg }}
+        {{ gameStore.energyWarning.level === 'critical'
+          ? L.t('game.energyCritical', { eff: gameStore.energyWarning.eff, reduction: 100 - gameStore.energyWarning.eff })
+          : L.t('game.energyWarning',  { eff: gameStore.energyWarning.eff }) }}
       </div>
     </Transition>
 
@@ -64,7 +68,7 @@
         <span class="planet-name">{{ planet.name }}</span>
         <span class="planet-coords">{{ planet.coords }}</span>
       </div>
-      <div class="planet-slot add-planet" @click="activeTab = 'galaxy'" title="Új bolygót a Galaxisban gyarmatosíthatsz">+</div>
+      <div class="planet-slot add-planet" @click="activeTab = 'galaxy'" :title="L.t('game.addPlanet')">+</div>
     </div>
 
     <!-- ── VIEWS ── -->
@@ -86,14 +90,16 @@
 
   <div v-else-if="gameStore.loading" class="loading-screen">
     <div class="loading-icon">🌌</div>
-    <div class="loading-text">Galaxis betöltése...</div>
+    <div class="loading-text">{{ L.t('game.loading') }}</div>
   </div>
 
   <div v-else class="loading-screen">
     <div class="loading-icon">⚠️</div>
-    <div class="loading-text">{{ gameStore.error || 'Hiba történt' }}</div>
-    <button class="auth-btn" style="margin-top:20px;width:200px;" @click="gameStore.loadState()">Újrapróbálás</button>
+    <div class="loading-text">{{ gameStore.error || L.t('game.error') }}</div>
+    <button class="auth-btn" style="margin-top:20px;width:200px;" @click="gameStore.loadState()">{{ L.t('game.retry') }}</button>
   </div>
+
+  <ChangelogModal v-if="showChangelog" @close="showChangelog = false" />
 </template>
 
 <script setup>
@@ -113,35 +119,41 @@ import AllianceView  from '@/components/views/AllianceView.vue';
 import RankingsView  from '@/components/views/RankingsView.vue';
 import MessagesView  from '@/components/views/MessagesView.vue';
 import ProfileView   from '@/components/views/ProfileView.vue';
-import GuideView    from '@/components/views/GuideView.vue';
-import BotPanel     from '@/components/BotPanel.vue';
+import GuideView      from '@/components/views/GuideView.vue';
+import BotPanel       from '@/components/BotPanel.vue';
+import LangSwitch     from '@/components/LangSwitch.vue';
+import ChangelogModal from '@/components/ChangelogModal.vue';
+import { useLangStore }  from '@/stores/lang.js';
+import { APP_VERSION }   from '@/data/changelog.js';
 
 const router        = useRouter();
 const auth          = useAuthStore();
 const gameStore     = useGameStore();
 const msgStore      = useMessagesStore();
 const allianceStore = useAllianceStore();
+const L             = useLangStore();
 
-const activeTab    = ref('overview');
-const activePlanet = ref(0);
+const activeTab      = ref('overview');
+const activePlanet   = ref(0);
+const showChangelog  = ref(false);
 
 const resources = computed(() => gameStore.resources);
 const rates     = computed(() => gameStore.rates);
 const planets   = computed(() => gameStore.planets);
 const score     = computed(() => gameStore.score);
 
-const tabs = [
-  { id: 'overview',  label: '🌐 Áttekintés' },
-  { id: 'buildings', label: '🏗️ Épületek' },
-  { id: 'research',  label: '🔬 Kutatás' },
-  { id: 'fleet',     label: '🚀 Flotta' },
-  { id: 'galaxy',    label: '🌌 Galaxis' },
-  { id: 'alliance',  label: '🤝 Szövetség' },
-  { id: 'messages',  label: '✉️ Üzenetek' },
-  { id: 'rankings',  label: '🏆 Rangsor' },
-  { id: 'profile',   label: '👤 Profil' },
-  { id: 'guide',     label: '📖 Útmutató' },
-];
+const tabs = computed(() => [
+  { id: 'overview',  label: L.t('nav.overview')  },
+  { id: 'buildings', label: L.t('nav.buildings') },
+  { id: 'research',  label: L.t('nav.research')  },
+  { id: 'fleet',     label: L.t('nav.fleet')     },
+  { id: 'galaxy',    label: L.t('nav.galaxy')    },
+  { id: 'alliance',  label: L.t('nav.alliance')  },
+  { id: 'messages',  label: L.t('nav.messages')  },
+  { id: 'rankings',  label: L.t('nav.rankings')  },
+  { id: 'profile',   label: L.t('nav.profile')   },
+  { id: 'guide',     label: L.t('nav.guide')     },
+]);
 
 function onLogout() {
   auth.logout();
@@ -154,6 +166,7 @@ onMounted(async () => {
   await gameStore.loadState();
   await msgStore.loadMessages();
   await allianceStore.load();
+  await gameStore.syncResources(); // Force initial sync
   tickTimer = setInterval(() => gameStore.tickResources(), 1000);
   syncTimer = setInterval(() => gameStore.syncResources(), 60000);
 });
@@ -161,6 +174,8 @@ onMounted(async () => {
 onUnmounted(() => {
   clearInterval(tickTimer);
   clearInterval(syncTimer);
+  const bot = useBotStore();
+  if (bot.active) bot.stop();
 });
 </script>
 
@@ -170,6 +185,8 @@ onUnmounted(() => {
 .topbar { position: sticky; top: 0; z-index: 100; background: linear-gradient(180deg, #04091a 0%, #040813 100%); border-bottom: 1px solid var(--border); display: flex; align-items: center; height: 48px; box-shadow: 0 2px 20px rgba(0,0,0,0.6); }
 
 .logo-area { display: flex; align-items: center; gap: 8px; padding: 0 14px; border-right: 1px solid var(--border); height: 100%; min-width: 140px; }
+.ver-badge { font-family: 'Orbitron', sans-serif; font-size: 8px; color: var(--text-dim); background: none; border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; cursor: pointer; transition: all 0.2s; letter-spacing: 1px; margin-left: 4px; }
+.ver-badge:hover { color: var(--accent); border-color: var(--accent); }
 .logo-icon  { font-size: 22px; }
 .logo-title { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 900; color: var(--accent); letter-spacing: 2px; text-shadow: 0 0 12px var(--accent); }
 .logo-sub   { font-size: 8px; color: var(--text-dim); letter-spacing: 3px; font-family: 'Orbitron', sans-serif; }
@@ -215,4 +232,23 @@ onUnmounted(() => {
 .energy-banner.critical { background: rgba(255,58,122,0.15); border-bottom: 1px solid rgba(255,58,122,0.3); color: var(--accent2); animation: pulse 1.5s ease-in-out infinite; }
 .slide-down-enter-active, .slide-down-leave-active { transition: all 0.3s ease; }
 .slide-down-enter-from, .slide-down-leave-to { opacity: 0; transform: translateY(-8px); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .topbar { height: auto; min-height: 48px; flex-wrap: wrap; padding: 4px 0; }
+  .logo-area { min-width: auto; padding: 0 10px; border: none; height: 40px; }
+  .logo-title { font-size: 11px; }
+  .logo-icon { font-size: 18px; }
+  .logo-sub { display: none; }
+  
+  .resource-bar { order: 3; width: 100%; border-top: 1px solid var(--border); padding: 4px 8px; justify-content: space-around; }
+  .user-area { padding: 0 10px; border: none; height: 40px; margin-left: auto; }
+  .user-name { font-size: 10px; }
+  .user-pts { display: none; }
+  
+  .nav { top: 88px; height: 32px; }
+  .planet-bar { top: 120px; padding: 4px 8px; }
+  .planet-slot { min-width: 70px; padding: 2px 6px; }
+  .planet-emoji { font-size: 16px; }
+}
 </style>

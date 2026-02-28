@@ -2,11 +2,11 @@
   <div class="overview-grid">
     <!-- LEFT: Buildings quick -->
     <div class="panel">
-      <div class="panel-header"><span class="panel-icon">🏗️</span><h3>Épületek</h3></div>
+      <div class="panel-header"><span class="panel-icon">🏗️</span><h3>{{ L.t('overview.buildings') }}</h3></div>
       <div class="panel-body scroll-list">
-        <div class="section-title">Termelés</div>
+        <div class="section-title">{{ L.t('overview.production') }}</div>
         <BuildingItem v-for="b in prodBuildings" :key="b.id" :building="b" />
-        <div class="section-title" style="margin-top:12px;">Infrastruktúra</div>
+        <div class="section-title" style="margin-top:12px;">{{ L.t('overview.infra') }}</div>
         <BuildingItem v-for="b in infraBuildings" :key="b.id" :building="b" />
       </div>
     </div>
@@ -18,22 +18,22 @@
         <div class="big-planet">🌍</div>
         <div class="planet-stats">
           <h2>{{ activePlanet.name }}</h2>
-          <div class="planet-coords-big">KOORDINÁTA: {{ activePlanet.coords }}</div>
+          <div class="planet-coords-big">{{ L.t('overview.coords') }}: {{ activePlanet.coords }}</div>
           <div class="stat-grid">
             <div class="stat-item">
-              <div class="stat-label">Épületek</div>
+              <div class="stat-label">{{ L.t('overview.buildings') }}</div>
               <div class="stat-value">{{ buildings.length }}</div>
             </div>
             <div class="stat-item">
-              <div class="stat-label">Flotta</div>
+              <div class="stat-label">{{ L.t('overview.fleet') }}</div>
               <div class="stat-value">{{ totalShips }}</div>
             </div>
             <div class="stat-item">
-              <div class="stat-label">Termelés</div>
+              <div class="stat-label">{{ L.t('overview.production') }}</div>
               <div class="stat-value">{{ rates.metal?.toFixed(0) }}/h</div>
             </div>
             <div class="stat-item">
-              <div class="stat-label">Pontszám</div>
+              <div class="stat-label">{{ L.t('overview.score') }}</div>
               <div class="stat-value">{{ score.toLocaleString('hu') }}</div>
             </div>
           </div>
@@ -42,16 +42,16 @@
 
       <!-- Build Queue -->
       <div class="panel">
-        <div class="panel-header"><span class="panel-icon">⚒️</span><h3>Építési Sor</h3></div>
+        <div class="panel-header"><span class="panel-icon">⚒️</span><h3>{{ L.t('overview.queue') }}</h3></div>
         <div class="panel-body">
-          <div v-if="!queue.length" class="empty-msg">Nincs aktív építés.</div>
+          <div v-if="!queue.length" class="empty-msg">{{ L.t('overview.noQueue') }}</div>
           <QueueItem v-for="q in queue" :key="q.id || q.item_id" :item="q" />
         </div>
       </div>
 
       <!-- Aika AI chat -->
       <div class="panel">
-        <div class="panel-header"><span class="panel-icon">🤖</span><h3>AIKA Asszisztens</h3></div>
+        <div class="panel-header"><span class="panel-icon">🤖</span><h3>{{ L.t('overview.assistant') }}</h3></div>
         <div class="panel-body">
           <div class="aika-chat">
             <div class="aika-messages">
@@ -63,8 +63,8 @@
               </div>
             </div>
             <div class="aika-input-row">
-              <input v-model="aikaInput" class="aika-input" placeholder="Kérdezd meg Aikát..." @keydown.enter="sendToAika" :disabled="aikaLoading" />
-              <button class="aika-send" @click="sendToAika" :disabled="aikaLoading">KÜLD</button>
+              <input v-model="aikaInput" class="aika-input" :placeholder="L.t('overview.askAika')" @keydown.enter="sendToAika" :disabled="aikaLoading" />
+              <button class="aika-send" @click="sendToAika" :disabled="aikaLoading">{{ L.t('overview.send') }}</button>
             </div>
           </div>
         </div>
@@ -73,7 +73,7 @@
 
     <!-- RIGHT: Stats -->
     <div class="panel">
-      <div class="panel-header"><span class="panel-icon">📊</span><h3>Statisztikák</h3></div>
+      <div class="panel-header"><span class="panel-icon">📊</span><h3>{{ L.t('overview.stats') }}</h3></div>
       <div class="panel-body">
         <div class="stat-block">
           <div class="stat-row">
@@ -93,7 +93,7 @@
             <span class="sv deus">{{ Math.floor(resources.deus).toLocaleString('hu') }}</span>
           </div>
         </div>
-        <div class="section-title" style="margin-top:12px;">Flotta összesítő</div>
+        <div class="section-title" style="margin-top:12px;">{{ L.t('overview.fleetSummary') }}</div>
         <div class="stat-block">
           <div v-for="ship in fleet" :key="ship.id" class="stat-row">
             <span>{{ ship.icon }} {{ ship.name }}</span>
@@ -108,12 +108,14 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useGameStore } from '@/stores/game.js';
+import { useLangStore } from '@/stores/lang.js';
 import BuildingItem from '@/components/BuildingItem.vue';
 import QueueItem    from '@/components/QueueItem.vue';
 
 const props = defineProps({ activePlanetIdx: { type: Number, default: 0 } });
 
 const game = useGameStore();
+const L    = useLangStore();
 const prodBuildings  = computed(() => game.prodBuildings);
 const infraBuildings = computed(() => game.infraBuildings);
 const buildings = computed(() => game.buildings);
@@ -129,7 +131,7 @@ const totalShips    = computed(() => fleet.value.reduce((s, f) => s + f.count, 0
 const aikaInput = ref('');
 const aikaLoading = ref(false);
 const aikaChatLog = ref([
-  { role: 'assistant', text: 'Üdvözöllek! Én vagyok AIKA, galaktikus asszisztensed. Kérdezz bármit a stratégiáról, épületekről vagy kutatásokról!' }
+  { role: 'assistant', text: L.t('overview.aikaGreeting') }
 ]);
 
 async function sendToAika() {
@@ -160,7 +162,7 @@ async function sendToAika() {
       aikaChatLog.value.push({ role: 'assistant', text: data.reply || 'Hiba történt.' });
     }
   } catch (e) {
-    aikaChatLog.value.push({ role: 'assistant', text: '⚠️ Kapcsolati hiba. Kérlek próbáld újra.' });
+    aikaChatLog.value.push({ role: 'assistant', text: `⚠️ ${L.t('overview.connError')}` });
   }
   aikaLoading.value = false;
 }

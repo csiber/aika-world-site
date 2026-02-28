@@ -4,10 +4,10 @@
       <span class="bcard-icon">{{ building.icon }}</span>
       <div>
         <div class="bcard-name">{{ building.name }}</div>
-        <div class="bcard-level">Szint {{ building.level }}</div>
+        <div class="bcard-level">{{ L.t('buildings.level') }} {{ building.level }}</div>
       </div>
       <div class="bcard-badge" :class="building.type === 'production' ? 'badge-blue' : 'badge-green'">
-        {{ building.type === 'production' ? 'Termelés' : 'Infra' }}
+        {{ building.type === 'production' ? L.t('buildings.production') : L.t('buildings.infra') }}
       </div>
     </div>
 
@@ -17,19 +17,19 @@
 
     <div class="bcard-costs">
       <div class="cost-row">
-        <span>Következő szint:</span>
+        <span>{{ L.t('buildings.nextLevel') }}</span>
         <span>{{ building.level + 1 }}</span>
       </div>
       <div class="cost-row">
-        <span>⚙️ Fém:</span>
-        <span :class="{ 'not-enough': !hasMetal }">{{ cost.metal.toLocaleString('hu') }}</span>
+        <span>⚙️ {{ L.t('res.metal') }}:</span>
+        <span :class="{ 'not-enough': !hasMetal }">{{ L.n(cost.metal) }}</span>
       </div>
       <div class="cost-row">
-        <span>💎 Kristály:</span>
-        <span :class="{ 'not-enough': !hasCrystal }">{{ cost.crystal.toLocaleString('hu') }}</span>
+        <span>💎 {{ L.t('res.crystal') }}:</span>
+        <span :class="{ 'not-enough': !hasCrystal }">{{ L.n(cost.crystal) }}</span>
       </div>
       <div class="cost-row">
-        <span>⏱️ Idő:</span>
+        <span>⏱️ {{ L.t('buildings.time') }}</span>
         <span>{{ formatTime(buildSeconds) }}</span>
       </div>
     </div>
@@ -39,10 +39,10 @@
       :disabled="!canAfford || inQueue || loading"
       @click="onUpgrade"
     >
-      <span v-if="inQueue">⏳ Folyamatban...</span>
-      <span v-else-if="loading">Kérés küldése...</span>
-      <span v-else-if="!canAfford">Kevés nyersanyag</span>
-      <span v-else>⬆️ Fejlesztés indítása</span>
+      <span v-if="inQueue">⏳ {{ L.t('buildings.inProgress') }}</span>
+      <span v-else-if="loading">{{ L.t('buildings.sending') }}</span>
+      <span v-else-if="!canAfford">{{ L.t('buildings.notEnough') }}</span>
+      <span v-else>⬆️ {{ L.t('buildings.upgrade') }}</span>
     </button>
   </div>
 </template>
@@ -50,9 +50,11 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useGameStore } from '@/stores/game.js';
+import { useLangStore } from '@/stores/lang.js';
 
 const props   = defineProps({ building: Object });
 const game    = useGameStore();
+const L       = useLangStore();
 const loading = ref(false);
 
 const cost      = computed(() => game.getBuildCost(props.building));
@@ -72,9 +74,9 @@ function formatTime(s) {
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
-  if (h > 0) return `${h}ó ${m}p`;
-  if (m > 0) return `${m}p ${sec}mp`;
-  return `${sec}mp`;
+  if (h > 0) return `${h}${L.t('time.hour')} ${m}${L.t('time.min')}`;
+  if (m > 0) return `${m}${L.t('time.min')} ${sec}${L.t('time.sec')}`;
+  return `${sec}${L.t('time.sec')}`;
 }
 
 async function onUpgrade() {

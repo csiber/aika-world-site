@@ -28,9 +28,6 @@ export async function handleAlliance(request, env, url, user) {
   // Check if tables exist (migration might not have run yet)
   const tablesReady = await tableExists(env, 'alliances');
   if (!tablesReady) {
-    if (path === '/api/alliance/my' && method === 'GET') {
-      return jsonResponse({ ok: true, alliance: null }, 200, request);
-    }
     return jsonError(503, 'Szövetség funkció még nem érhető el. Futtasd a migration.sql-t!', request);
   }
 

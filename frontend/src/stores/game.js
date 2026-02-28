@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { api } from '@/api/client.js';
+import { useLangStore } from '@/stores/lang.js';
 
 export const useGameStore = defineStore('game', () => {
   const state   = ref(null);
@@ -29,12 +30,12 @@ export const useGameStore = defineStore('game', () => {
     deus:    Math.min(100, Math.floor((resources.value.deus    || 0) / (storage.value.deus    || 1) * 100)),
   }));
 
-  // Energy efficiency warning
+  // Energy efficiency warning — message formatted in component with i18n
   const energyWarning = computed(() => {
     const eff = rates.value.energyEff;
     if (eff === undefined) return null;
-    if (eff < 50)  return { level: 'critical', msg: `⚡ Energia kritikusan alacsony (${eff}%)! Termelésed ${100-eff}%-kal csökkent.` };
-    if (eff < 80)  return { level: 'warning',  msg: `⚡ Energia hiány (${eff}%) — Fejleszd a Napelemfarmot!` };
+    if (eff < 50) return { level: 'critical', eff };
+    if (eff < 80) return { level: 'warning',  eff };
     return null;
   });
 
@@ -67,8 +68,10 @@ export const useGameStore = defineStore('game', () => {
           finish_at: data.finishAt,
         });
       }
+      const L    = useLangStore();
       const mins = Math.floor((data.seconds || 0) / 60);
-      notify(`⚒️ Fejlesztés megkezdve! (${mins > 0 ? mins + ' perc' : 'kevesebb mint 1 perc'})`, 'blue');
+      const time = mins > 0 ? `${mins} ${L.t('time.min')}` : L.t('game.lessThanMin');
+      notify(L.t('game.buildingStarted', { time }), 'blue');
       return true;
     } catch (e) {
       notify(`❌ ${e.message}`, 'red');
@@ -88,8 +91,10 @@ export const useGameStore = defineStore('game', () => {
           finish_at: data.finishAt,
         });
       }
+      const L    = useLangStore();
       const mins = Math.floor((data.seconds || 0) / 60);
-      notify(`🔬 Kutatás megkezdve! (${mins > 0 ? mins + ' perc' : 'kevesebb mint 1 perc'})`, 'blue');
+      const time = mins > 0 ? `${mins} ${L.t('time.min')}` : L.t('game.lessThanMin');
+      notify(L.t('game.researchStarted', { time }), 'blue');
       return true;
     } catch (e) {
       notify(`❌ ${e.message}`, 'red');
@@ -109,10 +114,11 @@ export const useGameStore = defineStore('game', () => {
           finish_at: data.finishAt,
         });
       }
-      const hrs = Math.floor((data.seconds || 0) / 3600);
+      const L    = useLangStore();
+      const hrs  = Math.floor((data.seconds || 0) / 3600);
       const mins = Math.floor(((data.seconds || 0) % 3600) / 60);
-      const timeStr = hrs > 0 ? `${hrs}ó ${mins}p` : `${mins} perc`;
-      notify(`🚀 Hajógyártás megkezdve! (${timeStr})`, 'blue');
+      const time = hrs > 0 ? `${hrs}${L.t('time.hour')} ${mins}${L.t('time.min')}` : `${mins} ${L.t('time.min')}`;
+      notify(L.t('game.fleetStarted', { time }), 'blue');
       return true;
     } catch (e) {
       notify(`❌ ${e.message}`, 'red');
@@ -134,7 +140,7 @@ export const useGameStore = defineStore('game', () => {
     try {
       const data = await api.renamePlanet(planetIdx, name, emoji);
       if (state.value) state.value.planets = data.planets;
-      notify('✏️ Bolygó sikeresen átnevezve!', 'green');
+      notify(useLangStore().t('game.planetRenamed'), 'green');
       return true;
     } catch (e) {
       notify(`❌ ${e.message}`, 'red');
@@ -142,17 +148,19 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
-  // Client-side resource tick — respects storage cap
   function tickResources() {
     if (!state.value) return;
     const r  = state.value.resources;
     const rt = state.value.rates;
     const s  = storage.value;
+    
+    // Immutable update for reactivity
     state.value.resources = {
-      metal:   Math.min(s.metal,   r.metal   + (rt.metal   || 0) / 3600),
-      crystal: Math.min(s.crystal, r.crystal + (rt.crystal || 0) / 3600),
-      energy:  Math.min(s.energy,  r.energy  + (rt.energy  || 0) / 3600),
-      deus:    Math.min(s.deus,    r.deus    + (rt.deus    || 0) / 3600),
+      ...r,
+      metal:   Math.min(s.metal,   (r.metal   || 0) + (rt.metal   || 0) / 3600),
+      crystal: Math.min(s.crystal, (r.crystal || 0) + (rt.crystal || 0) / 3600),
+      energy:  Math.min(s.energy,  (r.energy  || 0) + (rt.energy  || 0) / 3600),
+      deus:    Math.min(s.deus,    (r.deus    || 0) + (rt.deus    || 0) / 3600),
     };
   }
 

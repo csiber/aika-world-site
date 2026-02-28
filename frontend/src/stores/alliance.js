@@ -13,15 +13,26 @@ export const useAllianceStore = defineStore('alliance', () => {
   const isOfficer = computed(() => ['leader','officer'].includes(myRole.value));
   const inAlliance = computed(() => !!alliance.value);
 
-  async function load() {
+  async function load(retries = 3) {
     loading.value = true;
-    try {
-      const data = await api.getMyAlliance();
-      alliance.value = data.alliance;
-      members.value  = data.members || [];
-      myRole.value   = data.myRole || null;
-    } catch (e) { /* silent */ }
+    for (let i = 0; i < retries; i++) {
+      try {
+        const data = await api.getMyAlliance();
+        alliance.value = data.alliance;
+        members.value  = data.members || [];
+        myRole.value   = data.myRole || null;
+        loading.value = false;
+        return;
+      } catch (e) {
+        console.warn(`Alliance load failed (attempt ${i+1}/${retries}):`, e);
+        if (i < retries - 1) await new Promise(r => setTimeout(r, 500));
+      }
+    }
     loading.value = false;
+    // Reset state on total failure to avoid inconsistent UI
+    alliance.value = null;
+    members.value = [];
+    myRole.value = null;
   }
 
   async function loadChat() {

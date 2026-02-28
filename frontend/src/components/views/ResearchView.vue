@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="panel" style="margin-bottom:12px;">
-      <div class="panel-header"><span class="panel-icon">🔬</span><h3>Kutatási Fa</h3></div>
+      <div class="panel-header"><span class="panel-icon">🔬</span><h3>{{ L.t('research.title') }}</h3></div>
       <div class="panel-body">
         <div class="research-grid">
           <div
@@ -12,7 +12,7 @@
           >
             <div class="research-icon">{{ r.icon }}</div>
             <div class="research-name">{{ r.name }}</div>
-            <div class="research-level">Szint {{ r.level }} / {{ r.max }}</div>
+            <div class="research-level">{{ L.t('research.level') }} {{ r.level }} / {{ r.max }}</div>
 
             <div class="research-progress">
               <div class="research-progress-fill" :style="{ width: (r.level / r.max * 100) + '%' }"></div>
@@ -30,13 +30,13 @@
                 :disabled="!canAfford(r) || inQueue(r.id) || busy === r.id"
                 @click="onResearch(r)"
               >
-                <span v-if="inQueue(r.id)">⏳ Folyamatban</span>
+                <span v-if="inQueue(r.id)">⏳ {{ L.t('research.inProgress') }}</span>
                 <span v-else-if="busy === r.id">...</span>
-                <span v-else-if="!canAfford(r)">Nincs elég nyersanyag</span>
-                <span v-else>🔬 Kutatás indítása</span>
+                <span v-else-if="!canAfford(r)">{{ L.t('research.notEnough') }}</span>
+                <span v-else>🔬 {{ L.t('research.start') }}</span>
               </button>
             </template>
-            <div v-else class="maxed-label">MAX SZINT</div>
+            <div v-else class="maxed-label">{{ L.t('research.maxLevel') }}</div>
           </div>
         </div>
       </div>
@@ -47,8 +47,10 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useGameStore } from '@/stores/game.js';
+import { useLangStore } from '@/stores/lang.js';
 
 const game     = useGameStore();
+const L        = useLangStore();
 const research = computed(() => game.research);
 const busy     = ref(null);
 

@@ -1,12 +1,12 @@
 <template>
   <div class="msg-layout">
     <div class="panel msg-list-panel">
-      <div class="panel-header"><span class="panel-icon">✉️</span><h3>Üzenetek</h3>
+      <div class="panel-header"><span class="panel-icon">✉️</span><h3>{{ L.t('messages.title') }}</h3>
         <span v-if="store.unreadCount > 0" class="unread-badge">{{ store.unreadCount }}</span>
       </div>
       <div>
-        <div v-if="store.loading" class="empty-msg" style="padding:12px;">Betöltés...</div>
-        <div v-else-if="!store.messages.length" class="empty-msg" style="padding:12px;">Nincs üzeneted.</div>
+        <div v-if="store.loading" class="empty-msg" style="padding:12px;">{{ L.t('messages.loading') }}</div>
+        <div v-else-if="!store.messages.length" class="empty-msg" style="padding:12px;">{{ L.t('messages.none') }}</div>
         <div
           v-for="msg in store.messages"
           :key="msg.id"
@@ -27,15 +27,15 @@
         <h3>{{ selected.subject }}</h3>
       </div>
       <div class="panel-body">
-        <div class="msg-meta">Feladó: {{ selected.from_name }}</div>
+        <div class="msg-meta">{{ L.t('messages.from') }}: {{ selected.from_name }}</div>
         <div class="msg-body">{{ selected.body }}</div>
         <div class="msg-actions">
-          <button class="btn-primary" style="border-color:var(--accent2);color:var(--accent2);" @click="doDelete">🗑️ Törlés</button>
+          <button class="btn-primary" style="border-color:var(--accent2);color:var(--accent2);" @click="doDelete">🗑️ {{ L.t('messages.delete') }}</button>
         </div>
       </div>
     </div>
     <div v-else class="panel msg-reader empty-panel">
-      <div class="empty-msg">Válassz ki egy üzenetet a listából.</div>
+      <div class="empty-msg">{{ L.t('messages.select') }}</div>
     </div>
   </div>
 </template>
@@ -43,8 +43,10 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useMessagesStore } from '@/stores/messages.js';
+import { useLangStore } from '@/stores/lang.js';
 
 const store = useMessagesStore();
+const L     = useLangStore();
 const selected = ref(null);
 
 async function open(msg) {
@@ -63,10 +65,10 @@ async function doDelete() {
 
 function timeAgo(ts) {
   const diff = Math.floor(Date.now() / 1000) - ts;
-  if (diff < 60)    return 'most';
-  if (diff < 3600)  return `${Math.floor(diff / 60)}p`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}ó`;
-  return `${Math.floor(diff / 86400)}n`;
+  if (diff < 60)    return L.t('time.now');
+  if (diff < 3600)  return `${Math.floor(diff / 60)}${L.t('time.min')}`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}${L.t('time.hour')}`;
+  return `${Math.floor(diff / 86400)}${L.t('time.day')}`;
 }
 
 onMounted(() => store.loadMessages());

@@ -37,9 +37,22 @@ async function saveState(env, userId, state) {
   ).run();
 }
 
-function travelTime(base = 300) {
-  // 5-15 minutes travel time
-  return base + Math.floor(Math.random() * 600);
+function calcTravelTime(fromCoords, targetCoords, state, baseSeconds = 300) {
+  const driveLevel = state.research?.find(r => r.id === 'drive')?.level || 0;
+  const driveBonus = 1 + driveLevel * 0.15;
+  
+  // Calculate distance based on coordinate segments [G:S:P]
+  const parse = (c) => c.match(/\d+/g).map(Number);
+  const [g1, s1, p1] = parse(fromCoords || '[1:1:1]');
+  const [g2, s2, p2] = parse(targetCoords);
+  
+  let dist = 0;
+  if (g1 !== g2) dist = Math.abs(g1 - g2) * 2000;
+  else if (s1 !== s2) dist = Math.abs(s1 - s2) * 200;
+  else dist = Math.abs(p1 - p2) * 20;
+
+  const time = Math.floor((baseSeconds + dist / 10) / driveBonus);
+  return Math.max(60, time);
 }
 
 export async function handleMissions(request, env, url, user) {
@@ -167,7 +180,8 @@ export async function handleMissions(request, env, url, user) {
       result.resources = null; // empty system
     }
 
-    const arriveAt = Math.floor(Date.now() / 1000) + travelTime(60);
+    const fromCoords = state.planets[0]?.coords || '[1:1:1]';
+    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(fromCoords, targetCoords, state, 60);
     await env.DB.prepare(
       `INSERT INTO fleet_missions (id, user_id, target_user_id, mission_type, target_coords, target_name, status, result, arrive_at)
        VALUES (?, ?, ?, 'spy', ?, ?, 'travelling', ?, ?)`
@@ -252,7 +266,8 @@ export async function handleMissions(request, env, url, user) {
     }
 
     const result = { attackerWins, loot, attackPower: Math.floor(attackPower), defPower: Math.floor(defPower), scoreGain, cargoUsed: loot.metal + loot.crystal, cargoTotal: atkPow.cargo };
-    const arriveAt = Math.floor(Date.now() / 1000) + travelTime(180);
+    const fromCoords = state.planets[0]?.coords || '[1:1:1]';
+    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(fromCoords, targetCoords, state, 180);
 
     await env.DB.prepare(
       `INSERT INTO fleet_missions (id, user_id, target_user_id, mission_type, target_coords, target_name, status, result, arrive_at)
@@ -304,7 +319,8 @@ export async function handleMissions(request, env, url, user) {
     const planetName = `${user.username}'s Colony ${state.planets.length + 1}`;
 
     const result = { success: true, planetName, emoji, coords: targetCoords };
-    const arriveAt = Math.floor(Date.now() / 1000) + travelTime(600);
+    const fromCoords = state.planets[0]?.coords || '[1:1:1]';
+    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(fromCoords, targetCoords, state, 600);
 
     await env.DB.prepare(
       `INSERT INTO fleet_missions (id, user_id, target_user_id, mission_type, target_coords, target_name, status, result, arrive_at)

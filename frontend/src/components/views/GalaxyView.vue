@@ -3,18 +3,18 @@
     <div class="panel galaxy-panel">
       <div class="panel-header">
         <span class="panel-icon">🌌</span>
-        <h3>Galaxis Térkép</h3>
+        <h3>{{ L.t('galaxy.title') }}</h3>
         <div class="galaxy-legend" style="margin-left:auto;display:flex;gap:10px;font-size:10px;">
-          <span style="color:var(--accent3);">■ Sajátod</span>
-          <span style="color:var(--accent2);">■ Ellenség</span>
-          <span style="color:var(--text-dim);">■ Üres</span>
+          <span style="color:var(--accent3);">■ {{ L.t('galaxy.own') }}</span>
+          <span style="color:var(--accent2);">■ {{ L.t('galaxy.enemy') }}</span>
+          <span style="color:var(--text-dim);">■ {{ L.t('galaxy.empty') }}</span>
         </div>
         <button class="btn-refresh" @click="loadGalaxy" :disabled="loading" style="margin-left:10px;">
           {{ loading ? '...' : '↻' }}
         </button>
       </div>
       <div class="panel-body">
-        <div v-if="loading && !galaxyCells.length" class="empty-msg" style="padding:20px 0;">Galaxis betöltése...</div>
+        <div v-if="loading && !galaxyCells.length" class="empty-msg" style="padding:20px 0;">{{ L.t('galaxy.loading') }}</div>
         <div v-else class="galaxy-grid">
           <div
             v-for="cell in galaxyCells"
@@ -33,7 +33,7 @@
     <!-- Selected cell info -->
     <Transition name="slide">
       <div v-if="selected" class="panel cell-info">
-        <div class="panel-header"><span class="panel-icon">📍</span><h3>Rendszer Info</h3></div>
+        <div class="panel-header"><span class="panel-icon">📍</span><h3>{{ L.t('galaxy.sysInfo') }}</h3></div>
         <div class="panel-body">
           <div class="cell-detail">
             <div class="cd-emoji">{{ selected.emoji || '🌑' }}</div>
@@ -49,23 +49,23 @@
               class="btn-primary"
               :disabled="!!actionBusy"
               @click="doSpy"
-            >{{ actionBusy === 'spy' ? '...' : '🔍 Kémkedés' }}</button>
+            >{{ actionBusy === 'spy' ? '...' : '🔍 ' + L.t('galaxy.spy') }}</button>
             <button
               class="btn-primary"
               v-if="selected.type === 'enemy' && selected.targetUserId"
               :disabled="!!actionBusy"
               @click="doAttack"
-            >{{ actionBusy === 'attack' ? '...' : '⚔️ Támadás' }}</button>
+            >{{ actionBusy === 'attack' ? '...' : '⚔️ ' + L.t('galaxy.attack') }}</button>
             <button
               class="btn-primary"
               v-if="selected.type === 'empty'"
               :disabled="!!actionBusy || !hasColonyShip"
               @click="doColonize"
-              :title="!hasColonyShip ? 'Szükséges: Gyarmatosító hajó' : ''"
-            >{{ actionBusy === 'colony' ? '...' : '🌍 Gyarmatosítás' }}</button>
+              :title="!hasColonyShip ? L.t('galaxy.colonizeReq') : ''"
+            >{{ actionBusy === 'colony' ? '...' : '🌍 ' + L.t('galaxy.colonize') }}</button>
           </div>
           <div v-if="!hasColonyShip && selected.type === 'empty'" class="action-hint">
-            ⚠️ Gyarmatosító hajó szükséges
+            ⚠️ {{ L.t('galaxy.noColonyShip') }}
           </div>
         </div>
       </div>
@@ -77,10 +77,12 @@
 import { ref, computed, onMounted } from 'vue';
 import { useGameStore } from '@/stores/game.js';
 import { useAuthStore } from '@/stores/auth.js';
+import { useLangStore } from '@/stores/lang.js';
 import { api } from '@/api/client.js';
 
 const game = useGameStore();
 const auth = useAuthStore();
+const L    = useLangStore();
 const selected   = ref(null);
 const actionBusy = ref(null);
 const loading    = ref(false);
@@ -88,9 +90,9 @@ const players    = ref([]);
 const apiMyPlanets = ref([]);
 
 const typeLabel = (t) => ({
-  own:   'Saját bolygó',
-  enemy: 'Ellenséges',
-  empty: 'Üres rendszer',
+  own:   L.t('galaxy.ownPlanet'),
+  enemy: L.t('galaxy.enemyPlanet'),
+  empty: L.t('galaxy.emptySystem'),
 })[t] || t;
 
 const hasColonyShip = computed(() => {
@@ -150,21 +152,21 @@ const galaxyCells = computed(() => {
 
     if (ownMap.has(key)) {
       const p = ownMap.get(key);
-      cells.push({ id: i, type: 'own', emoji: p.emoji || '🌍', name: p.name, coords: p.coords, targetUserId: null, username: myUsername, tooltip: `${p.name} ${p.coords} (Saját)` });
+      cells.push({ id: i, type: 'own', emoji: p.emoji || '🌍', name: p.name, coords: p.coords, targetUserId: null, username: myUsername, tooltip: `${p.name} ${p.coords} (${L.t('galaxy.ownSuffix')})` });
       continue;
     }
 
     if (playerMap.has(key)) {
       const p = playerMap.get(key);
       if (p.username === myUsername) {
-        cells.push({ id: i, type: 'own', emoji: p.planet_emoji || '🌍', name: p.planet_name, coords: p.coords, targetUserId: p.user_id, username: p.username, tooltip: `${p.planet_name} ${p.coords} (Saját)` });
+        cells.push({ id: i, type: 'own', emoji: p.planet_emoji || '🌍', name: p.planet_name, coords: p.coords, targetUserId: p.user_id, username: p.username, tooltip: `${p.planet_name} ${p.coords} (${L.t('galaxy.ownSuffix')})` });
       } else {
         cells.push({ id: i, type: 'enemy', emoji: p.planet_emoji || '🔴', name: p.planet_name || p.username, coords: p.coords, targetUserId: p.user_id, username: p.username, tooltip: `${p.planet_name || p.username} ${p.coords}` });
       }
       continue;
     }
 
-    cells.push({ id: i, type: 'empty', emoji: '', name: `Üres rendszer ${row}:${col}`, coords, targetUserId: null, username: null, tooltip: `Üres ${coords}` });
+    cells.push({ id: i, type: 'empty', emoji: '', name: `${L.t('galaxy.emptySystem')} ${row}:${col}`, coords, targetUserId: null, username: null, tooltip: `${L.t('galaxy.empty')} ${coords}` });
   }
 
   return cells;
@@ -177,7 +179,7 @@ async function doSpy() {
   actionBusy.value = 'spy';
   try {
     await api.spy(selected.value.targetUserId || null, selected.value.coords, selected.value.name);
-    game.notify('🔍 Kém úton van! Ellenőrizd az Üzenetek menüpontot, ha megérkezett.', 'blue');
+    game.notify(L.t('galaxy.spyMsg'), 'blue');
   } catch (e) {
     game.notify(`❌ ${e.message}`, 'red');
   }
@@ -189,7 +191,7 @@ async function doAttack() {
   actionBusy.value = 'attack';
   try {
     await api.attack(selected.value.targetUserId, selected.value.coords, selected.value.name);
-    game.notify('⚔️ Flottád elindult! Ellenőrizd az Üzenetek menüpontot, ha megérkezett.', 'blue');
+    game.notify(L.t('galaxy.attackMsg'), 'blue');
   } catch (e) {
     game.notify(`❌ ${e.message}`, 'red');
   }
@@ -201,7 +203,7 @@ async function doColonize() {
   actionBusy.value = 'colony';
   try {
     await api.colonize(selected.value.coords, selected.value.name);
-    game.notify(`🌍 Gyarmatosító úton van ${selected.value.coords} felé!`, 'blue');
+    game.notify(L.t('galaxy.colonizeMsg', { coords: selected.value.coords }), 'blue');
     selected.value = null;
     await loadGalaxy();
   } catch (e) {
