@@ -30,11 +30,17 @@
           <input v-model="password2" type="password" placeholder="••••••••" autocomplete="new-password" required />
         </div>
 
+        <!-- Turnstile widget -->
+        <div class="ts-wrap">
+          <div ref="tsContainer"></div>
+          <div v-if="!tsReady" class="ts-loading">🔒 Biztonság betöltése...</div>
+        </div>
+
         <div v-if="errorMsg" class="auth-error">{{ errorMsg }}</div>
 
-        <button type="submit" class="auth-btn" :disabled="loading">
+        <button type="submit" class="auth-btn" :disabled="loading || !tsToken">
           <span v-if="loading">Regisztráció...</span>
-          <span v-else">🚀 Fiók létrehozása</span>
+          <span v-else>🚀 Fiók létrehozása</span>
         </button>
       </form>
 
@@ -47,20 +53,50 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
 import { useAuthStore } from '@/stores/auth.js';
 
-const router    = useRouter();
-const auth      = useAuthStore();
-const username  = ref('');
-const email     = ref('');
-const password  = ref('');
-const password2 = ref('');
-const loading   = ref(false);
-const errorMsg  = ref('');
+const SITE_KEY = '0x4AAAAAACjkTbgtjRtTiQo_';
+
+const router      = useRouter();
+const auth        = useAuthStore();
+const username    = ref('');
+const email       = ref('');
+const password    = ref('');
+const password2   = ref('');
+const loading     = ref(false);
+const errorMsg    = ref('');
+const tsContainer = ref(null);
+const tsToken     = ref('');
+const tsWidgetId  = ref(null);
+const tsReady     = ref(false);
+
+function initTurnstile() {
+  if (window.turnstile && tsContainer.value) {
+    tsReady.value = true;
+    tsWidgetId.value = window.turnstile.render(tsContainer.value, {
+      sitekey: SITE_KEY,
+      theme: 'dark',
+      callback:           (token) => { tsToken.value = token; },
+      'expired-callback': ()      => { tsToken.value = ''; },
+      'error-callback':   ()      => { tsToken.value = ''; },
+    });
+  } else {
+    setTimeout(initTurnstile, 100);
+  }
+}
+
+onMounted(initTurnstile);
+
+onUnmounted(() => {
+  if (tsWidgetId.value !== null && window.turnstile) {
+    window.turnstile.remove(tsWidgetId.value);
+  }
+});
 
 async function onRegister() {
+  if (!tsToken.value) return;
   if (password.value !== password2.value) {
     errorMsg.value = 'A két jelszó nem egyezik';
     return;
@@ -68,10 +104,14 @@ async function onRegister() {
   loading.value  = true;
   errorMsg.value = '';
   try {
-    await auth.register(username.value, email.value, password.value);
+    await auth.register(username.value, email.value, password.value, tsToken.value);
     router.push('/');
   } catch (e) {
     errorMsg.value = e.message;
+    if (tsWidgetId.value !== null && window.turnstile) {
+      window.turnstile.reset(tsWidgetId.value);
+    }
+    tsToken.value = '';
   } finally {
     loading.value = false;
   }
@@ -107,6 +147,22 @@ async function onRegister() {
 .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,200,255,0.1); }
 .field input::placeholder { color: var(--text-dim); }
 .field-hint { font-size: 10px; color: var(--text-dim); }
+
+/* Turnstile */
+.ts-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 68px;
+  justify-content: center;
+}
+.ts-loading {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: 'Exo 2', sans-serif;
+  letter-spacing: 1px;
+}
+
 .auth-error { background: rgba(255,58,122,0.1); border: 1px solid rgba(255,58,122,0.3); color: var(--accent2); padding: 8px 12px; border-radius: 4px; font-size: 12px; text-align: center; }
 .auth-btn { padding: 12px; background: rgba(0,200,255,0.15); border: 1px solid var(--accent); color: var(--accent); font-size: 13px; border-radius: 4px; cursor: pointer; font-family: 'Orbitron', sans-serif; font-weight: 700; letter-spacing: 1px; transition: all 0.2s; margin-top: 4px; }
 .auth-btn:hover:not(:disabled) { background: rgba(0,200,255,0.3); box-shadow: 0 0 20px rgba(0,200,255,0.3); }

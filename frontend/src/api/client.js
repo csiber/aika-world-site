@@ -15,8 +15,8 @@ async function request(method, path, body = null, auth = true) {
 
 export const api = {
   // Auth
-  register: (username, email, password) => request('POST', '/auth/register', { username, email, password }, false),
-  login: (email, password) => request('POST', '/auth/login', { email, password }, false),
+  register: (username, email, password, tsToken) => request('POST', '/auth/register', { username, email, password, tsToken }, false),
+  login: (email, password, tsToken) => request('POST', '/auth/login', { email, password, tsToken }, false),
   me: () => request('GET', '/auth/me'),
 
   // Game

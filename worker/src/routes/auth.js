@@ -8,6 +8,23 @@
 import { jsonResponse, jsonError } from '../utils/response.js';
 import { signJWT, verifyJWT, hashPassword, verifyPassword } from '../utils/jwt.js';
 
+const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+
+async function verifyTurnstile(token, secret) {
+  if (!token) return false;
+  try {
+    const res = await fetch(TURNSTILE_VERIFY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret, response: token }),
+    });
+    const data = await res.json();
+    return data.success === true;
+  } catch {
+    return false;
+  }
+}
+
 export async function handleAuth(request, env, url) {
   const path = url.pathname;
 
@@ -16,7 +33,11 @@ export async function handleAuth(request, env, url) {
     let body;
     try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
 
-    const { username, email, password } = body;
+    const { username, email, password, tsToken } = body;
+
+    const tsOk = await verifyTurnstile(tsToken, env.TURNSTILE_SECRET);
+    if (!tsOk) return jsonError(400, 'Biztonsági ellenőrzés sikertelen. Próbáld újra!', request);
+
     if (!username || !email || !password) return jsonError(400, 'Minden mező kitöltése kötelező', request);
     if (username.length < 3 || username.length > 20) return jsonError(400, 'Felhasználónév 3–20 karakter legyen', request);
     if (!/^[a-zA-Z0-9_\-]+$/.test(username)) return jsonError(400, 'Felhasználónév csak betűt, számot, _, - tartalmazhat', request);
@@ -72,7 +93,11 @@ export async function handleAuth(request, env, url) {
     let body;
     try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
 
-    const { email, password } = body;
+    const { email, password, tsToken } = body;
+
+    const tsOk = await verifyTurnstile(tsToken, env.TURNSTILE_SECRET);
+    if (!tsOk) return jsonError(400, 'Biztonsági ellenőrzés sikertelen. Próbáld újra!', request);
+
     if (!email || !password) return jsonError(400, 'Email és jelszó megadása kötelező', request);
 
     try {

@@ -80,6 +80,8 @@
       <ProfileView   v-if="activeTab === 'profile'"   />
       <GuideView     v-if="activeTab === 'guide'"     />
     </main>
+
+    <BotPanel />
   </div>
 
   <div v-else-if="gameStore.loading" class="loading-screen">
@@ -112,6 +114,7 @@ import RankingsView  from '@/components/views/RankingsView.vue';
 import MessagesView  from '@/components/views/MessagesView.vue';
 import ProfileView   from '@/components/views/ProfileView.vue';
 import GuideView    from '@/components/views/GuideView.vue';
+import BotPanel     from '@/components/BotPanel.vue';
 
 const router        = useRouter();
 const auth          = useAuthStore();

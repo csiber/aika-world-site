@@ -27,14 +27,14 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('aika_userid');
   }
 
-  async function register(uname, email, password) {
-    const data = await api.register(uname, email, password);
+  async function register(uname, email, password, tsToken) {
+    const data = await api.register(uname, email, password, tsToken);
     setAuth(data);
     return data;
   }
 
-  async function login(email, password) {
-    const data = await api.login(email, password);
+  async function login(email, password, tsToken) {
+    const data = await api.login(email, password, tsToken);
     setAuth(data);
     return data;
   }

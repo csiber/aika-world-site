@@ -20,9 +20,15 @@
           <input v-model="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
         </div>
 
+        <!-- Turnstile widget -->
+        <div class="ts-wrap">
+          <div ref="tsContainer"></div>
+          <div v-if="!tsReady" class="ts-loading">🔒 Biztonság betöltése...</div>
+        </div>
+
         <div v-if="errorMsg" class="auth-error">{{ errorMsg }}</div>
 
-        <button type="submit" class="auth-btn" :disabled="loading">
+        <button type="submit" class="auth-btn" :disabled="loading || !tsToken">
           <span v-if="loading">Bejelentkezés...</span>
           <span v-else>🚀 Belépés</span>
         </button>
@@ -37,25 +43,60 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
 import { useAuthStore } from '@/stores/auth.js';
 
-const router   = useRouter();
-const auth     = useAuthStore();
-const email    = ref('');
-const password = ref('');
-const loading  = ref(false);
-const errorMsg = ref('');
+const SITE_KEY = '0x4AAAAAACjkTbgtjRtTiQo_';
+
+const router      = useRouter();
+const auth        = useAuthStore();
+const email       = ref('');
+const password    = ref('');
+const loading     = ref(false);
+const errorMsg    = ref('');
+const tsContainer = ref(null);
+const tsToken     = ref('');
+const tsWidgetId  = ref(null);
+const tsReady     = ref(false);
+
+function initTurnstile() {
+  if (window.turnstile && tsContainer.value) {
+    tsReady.value = true;
+    tsWidgetId.value = window.turnstile.render(tsContainer.value, {
+      sitekey: SITE_KEY,
+      theme: 'dark',
+      callback:           (token) => { tsToken.value = token; },
+      'expired-callback': ()      => { tsToken.value = ''; },
+      'error-callback':   ()      => { tsToken.value = ''; },
+    });
+  } else {
+    setTimeout(initTurnstile, 100);
+  }
+}
+
+onMounted(initTurnstile);
+
+onUnmounted(() => {
+  if (tsWidgetId.value !== null && window.turnstile) {
+    window.turnstile.remove(tsWidgetId.value);
+  }
+});
 
 async function onLogin() {
+  if (!tsToken.value) return;
   loading.value  = true;
   errorMsg.value = '';
   try {
-    await auth.login(email.value, password.value);
+    await auth.login(email.value, password.value, tsToken.value);
     router.push('/');
   } catch (e) {
     errorMsg.value = e.message;
+    // Reset widget so user must re-verify after a failed attempt
+    if (tsWidgetId.value !== null && window.turnstile) {
+      window.turnstile.reset(tsWidgetId.value);
+    }
+    tsToken.value = '';
   } finally {
     loading.value = false;
   }
@@ -138,6 +179,21 @@ async function onLogin() {
 }
 .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,200,255,0.1); }
 .field input::placeholder { color: var(--text-dim); }
+
+/* Turnstile */
+.ts-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 68px;
+  justify-content: center;
+}
+.ts-loading {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: 'Exo 2', sans-serif;
+  letter-spacing: 1px;
+}
 
 .auth-error {
   background: rgba(255,58,122,0.1);
