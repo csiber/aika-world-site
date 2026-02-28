@@ -174,7 +174,8 @@ onUnmounted(() => {
 .logo-title { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 900; color: var(--accent); letter-spacing: 2px; text-shadow: 0 0 12px var(--accent); }
 .logo-sub   { font-size: 8px; color: var(--text-dim); letter-spacing: 3px; font-family: 'Orbitron', sans-serif; }
 
-.resource-bar { display: flex; align-items: center; flex: 1; height: 100%; padding: 0 8px; }
+.resource-bar { display: flex; align-items: center; flex: 1; height: 100%; padding: 0 8px; overflow-x: auto; scrollbar-width: none; }
+.resource-bar::-webkit-scrollbar { display: none; }
 
 .user-area { display: flex; align-items: center; gap: 8px; padding: 0 14px; border-left: 1px solid var(--border); height: 100%; }
 .user-info  { text-align: right; }
@@ -204,6 +205,82 @@ onUnmounted(() => {
 .add-planet:hover { opacity: 0.8; }
 
 .main-content { flex: 1; padding: 10px; position: relative; z-index: 1; }
+
+/* ── Mobile & Tablet Optimization ── */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0 4px;
+    justify-content: space-between;
+  }
+  .logo-area {
+    min-width: auto;
+    padding: 0 8px;
+    border-right: none;
+  }
+  .logo-title, .logo-sub {
+    display: none;
+  }
+  .resource-bar {
+    padding: 0 4px;
+    mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%);
+  }
+  .user-area {
+    padding: 0 4px;
+    border-left: none;
+  }
+  .user-name {
+    display: none; /* Hide name on mobile to save space */
+  }
+  
+  /* Bottom Navigation */
+  .nav {
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: #050c1c;
+    border-top: 1px solid var(--border);
+    border-bottom: none;
+    padding: 0;
+    z-index: 1000;
+    justify-content: flex-start; /* scrollable */
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+  }
+  .nav-btn {
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    padding: 0 16px;
+    min-width: 70px;
+    font-size: 10px;
+    gap: 4px;
+    border: none;
+    border-top: 2px solid transparent;
+    border-radius: 0;
+  }
+  .nav-btn.active {
+    border-color: var(--accent);
+    background: linear-gradient(180deg, rgba(0,200,255,0.05) 0%, transparent 100%);
+    box-shadow: none;
+  }
+  
+  /* Adjust Planet Bar sticky position */
+  .planet-bar {
+    top: 48px; /* Stick right under topbar */
+    z-index: 90;
+    padding: 4px 8px;
+  }
+  .planet-slot {
+    min-width: 70px;
+    padding: 2px 6px;
+  }
+  
+  .main-content {
+    padding-bottom: 80px; /* Space for bottom nav */
+  }
+}
 
 .loading-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; position: relative; z-index: 1; }
 .loading-icon { font-size: 64px; animation: pulse 2s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(0,200,255,0.5)); }

@@ -234,4 +234,25 @@ async function sendToAika() {
 @media (max-width: 900px) {
   .overview-grid { grid-template-columns: 1fr; }
 }
+
+@media (max-width: 480px) {
+  .planet-visual {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+  .planet-visual h2 {
+    font-size: 16px;
+  }
+  .planet-coords-big {
+    margin-bottom: 8px;
+  }
+  .stat-grid {
+    width: 100%;
+    gap: 4px;
+  }
+  .stat-item {
+    padding: 4px 6px;
+  }
+}
 </style>

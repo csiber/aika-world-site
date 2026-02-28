@@ -97,6 +97,24 @@ body::before {
 .notif-enter-from { transform: translateX(300px); opacity: 0; }
 .notif-leave-to   { transform: translateX(300px); opacity: 0; }
 
+@media (max-width: 768px) {
+  .notif-container {
+    top: 110px;
+    right: 10px;
+    left: 10px;
+    align-items: stretch;
+  }
+  .notif {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
+  .notif-enter-from, .notif-leave-to {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+}
+
 /* ── Shared component styles ── */
 .panel {
   background: var(--bg-panel);
