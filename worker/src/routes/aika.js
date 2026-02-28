@@ -1,7 +1,7 @@
 /**
  * AIKA AI Chat route
  * POST /api/aika-chat
- * Calls Google Gemini API (free tier) with game context
+ * Calls OpenRouter API with game context
  */
 
 import { jsonResponse, jsonError } from '../utils/response.js';
@@ -25,9 +25,9 @@ export async function handleAikaChat(request, env, url, user) {
   }
 
   // Check API key exists
-  const apiKey = env.GEMINI_API_KEY;
+  const apiKey = env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    console.error('GEMINI_API_KEY is not set!');
+    console.error('OPENROUTER_API_KEY is not set!');
     return jsonError(503, 'AI nincs konfigurálva (hiányzó API kulcs)', request);
   }
 
@@ -38,35 +38,39 @@ export async function handleAikaChat(request, env, url, user) {
   }
 
   try {
-    // Use gemini-2.0-flash (current free model name)
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: [{ role: 'user', parts: [{ text: userMsg }] }],
-          generationConfig: { maxOutputTokens: 256, temperature: 0.7 },
-        }),
-      }
-    );
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://aikaworld.com',
+        'X-Title': 'AIKA World',
+      },
+      body: JSON.stringify({
+        model: 'arcee-ai/trinity-large-preview:free',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userMsg },
+        ],
+        max_tokens: 256,
+        temperature: 0.7,
+      }),
+    });
 
     const responseText = await response.text();
 
     if (!response.ok) {
-      console.error('Gemini API error', response.status, responseText);
-      // Return the actual error to help with debugging (will show in frontend)
-      return jsonError(502, `Gemini hiba (${response.status}): ${responseText.slice(0, 200)}`, request);
+      console.error('OpenRouter API error', response.status, responseText);
+      return jsonError(502, `OpenRouter hiba (${response.status}): ${responseText.slice(0, 200)}`, request);
     }
 
     let data;
     try { data = JSON.parse(responseText); } catch {
-      console.error('Gemini invalid JSON:', responseText);
-      return jsonError(502, 'Gemini invalid response', request);
+      console.error('OpenRouter invalid JSON:', responseText);
+      return jsonError(502, 'OpenRouter invalid response', request);
     }
 
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Nem tudok válaszolni most.';
+    const reply = data.choices?.[0]?.message?.content || 'Nem tudok válaszolni most.';
     return jsonResponse({ ok: true, reply }, 200, request);
   } catch (e) {
     console.error('Aika fetch error:', e.message);

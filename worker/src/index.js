@@ -48,10 +48,13 @@ export default {
         return jsonError(404, 'Not found', request);
       }
 
-      const html = await env.ASSETS.fetch(new Request(new URL('/', request.url)));
-      return new Response(html.body, {
-        headers: { 'Content-Type': 'text/html; charset=UTF-8', 'Cache-Control': 'no-cache' },
-      });
+      // Try to serve the actual static asset first (CSS, JS, images, etc.)
+      const assetResponse = await env.ASSETS.fetch(request);
+      if (assetResponse.status !== 404) {
+        return assetResponse;
+      }
+      // Fall back to index.html for SPA client-side routing
+      return await env.ASSETS.fetch(new Request(new URL('/', request.url)));
     } catch (err) {
       console.error('Worker error:', err);
       return jsonError(500, 'Internal server error', request);
