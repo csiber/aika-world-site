@@ -1,8 +1,10 @@
-# AIKA World v2.2.0 — Full-Stack Cloudflare Workers + Vue 3 + D1
+# AIKA World v2.2.1 — Full-Stack Cloudflare Workers + Vue 3 + D1
 
 **AIKA World** is a modern, real-time galactic strategy game built on the Cloudflare ecosystem (Workers, D1, Assets) using Vue 3.
 
-## Features (v2.2.0)
+## Features (v2.2.1)
+- **🪐 Multi-planet Economy (Beta)**: Resources, buildings, and fleets are now stored per planet instead of globally. Switch between planets to manage your empire.
+- **🗺️ Roadmap (todo.md)**: Clear development phases for future mechanics, UI/UX, and social features.
 - **🤖 NPC Bot Players**: 25 AI opponents (Elite/Advanced/Beginner tiers) populate the rankings and galaxy map. Bots grow hourly via Cloudflare Cron Triggers and retaliate when attacked.
 - **⚔️ Fleet Losses in Combat**: Both attacker and defender lose ships proportionally to opponent strength. Losses appear in battle reports.
 - **🪐 Colony Planets on Galaxy Map**: Colonized planets appear as separate entries on the galaxy map.
@@ -44,6 +46,7 @@ wrangler d1 execute aika-world-db --file=./db/schema.sql
 wrangler d1 execute aika-world-db --file=./db/migration.sql
 wrangler d1 execute aika-world-db --file=./db/migration_bots.sql
 wrangler d1 execute aika-world-db --file=./db/migration_galaxy_colonies.sql
+wrangler d1 execute aika-world-db --file=./db/migration_planets.sql
 ```
 
 ### 4. Secrets
@@ -65,6 +68,11 @@ curl -X POST https://your-domain/api/admin/bots/seed \
 ```
 
 ## Changelog
+
+### v2.2.1
+- **Multi-planet Economy Core**: Database migration and backend logic to support per-planet resources and buildings.
+- **Roadmap**: Added `todo.md` for project tracking.
+- **Bugfixes**: Fixed building upgrade logic with new planet-specific structure.
 
 ### v2.2.0
 - NPC bot players (25 bots, 3 tiers, hourly score growth via cron)

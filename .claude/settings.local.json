@@ -4,7 +4,14 @@
       "Bash(git:*)",
       "mcp__ide__getDiagnostics",
       "Bash(node:*)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(npm run:*)",
+      "Bash(npx wrangler:*)",
+      "WebFetch(domain:openrouter.ai)",
+      "Bash(cat:*)",
+      "Bash(wrangler d1:*)",
+      "Bash(wrangler deploy:*)",
+      "Bash(curl:*)"
     ]
   }
 }
