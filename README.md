@@ -1,21 +1,20 @@
-# AIKA World v2.3.3 — Full-Stack Cloudflare Workers + Vue 3 + D1
+# AIKA World v2.4.0 — Full-Stack Cloudflare Workers + Vue 3 + D1
 
 **AIKA World** is a modern, real-time galactic strategy game built on the Cloudflare ecosystem (Workers, D1, Assets) using Vue 3.
 
-## Features (v2.3.3)
-- **🎯 Daily Quests**: New progression system with randomized daily objectives (building, missions, donations) and resource rewards.
-- **✨ Enhanced Visuals**: 3D rotating planets and synthesized sound effects for a more immersive experience.
-- **🤖 NPC Bots v2**: Active AI that spies on and attacks players every hour.
-- **🤝 Alliance Synergy**: High-level alliances grant passive production bonuses.
+## Features (v2.4.0)
+- **🔒 Security Hardening**: Strict server-side validation for all inputs. Prevented negative unit construction and out-of-bounds galaxy navigation.
+- **⏱️ Precise Resource Sync**: Implemented server-time offset tracking to align client-side resource ticking with the source of truth, eliminating jumping numbers.
+- **🎯 Daily Quests**: Randomized daily objectives with resource rewards.
+- **🪐 3D Planet Visualization**: Immersive rotating planet spheres.
 ...
 ## Changelog
 
-### v2.3.3
-- **Daily Quests**: Implemented `user_quests` database and backend tracking logic.
-- **Rewards**: Added automated resource claiming for completed daily tasks.
-- **UI**: Added a Quest dashboard to the Overview view.
-- **Backend**: Integrated quest progression into building, fleet, and mission endpoints.
+### v2.4.0
+- **Security**: Added robust validation to building, fleet, defense, and mission endpoints.
+- **Sync Refinement**: Server now returns `serverTime` on all game endpoints; client adjusts resource accumulation based on clock drift.
+- **Backend Refactoring**: Consistently use `updateFromResponse` in the frontend store to handle state updates.
 
-### v2.3.2
-- **Visuals**: Added 3D rotating planets and UI audio.
+### v2.3.3
+- **Daily Quests**: Added daily objective system.
 ...

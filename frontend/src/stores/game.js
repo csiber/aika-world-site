@@ -11,6 +11,9 @@ export const useGameStore = defineStore('game', () => {
   const loading = ref(false);
   const error   = ref(null);
   const notifications = ref([]);
+  
+  // State Sync refinement (v2.4.0)
+  const serverTimeOffset = ref(0);
 
   // ── Computed ──────────────────────────────────────────────
   const activePlanet = computed(() => state.value?.activePlanet || {});
@@ -41,6 +44,16 @@ export const useGameStore = defineStore('game', () => {
     return null;
   });
 
+  // ── Internal Helpers ──────────────────────────────────────
+  function updateFromResponse(data) {
+    if (data.state) state.value = data.state;
+    if (data.queue) queue.value = data.queue;
+    if (data.storage) storage.value = data.storage;
+    if (data.serverTime) {
+        serverTimeOffset.value = data.serverTime - Math.floor(Date.now() / 1000);
+    }
+  }
+
   // ── Actions ───────────────────────────────────────────────
   async function loadState() {
     audio.init();
@@ -48,9 +61,7 @@ export const useGameStore = defineStore('game', () => {
     error.value = null;
     try {
       const data = await api.getState();
-      state.value   = data.state;
-      queue.value   = data.queue || [];
-      if (data.storage) storage.value = data.storage;
+      updateFromResponse(data);
     } catch (e) { error.value = e.message; }
     finally { loading.value = false; }
   }
@@ -62,19 +73,14 @@ export const useGameStore = defineStore('game', () => {
       audio.click();
       await loadState();
       return true;
-    } catch (e) {
-      audio.error();
-      notify(`❌ ${e.message}`, 'red');
-      return false;
-    } finally {
-      loading.value = false;
-    }
+    } catch (e) { audio.error(); notify(`❌ ${e.message}`, 'red'); return false; }
+    finally { loading.value = false; }
   }
 
   async function upgradeBuilding(buildingId) {
     try {
       const data = await api.upgradeBuilding(buildingId);
-      state.value = data.state;
+      updateFromResponse(data);
       audio.build();
       notify('Építkezés elindítva', 'blue');
       return true;
@@ -84,7 +90,7 @@ export const useGameStore = defineStore('game', () => {
   async function startResearch(researchId) {
     try {
       const data = await api.startResearch(researchId);
-      state.value = data.state;
+      updateFromResponse(data);
       audio.build();
       notify('Kutatás elindítva', 'blue');
       return true;
@@ -94,7 +100,7 @@ export const useGameStore = defineStore('game', () => {
   async function buildFleet(shipId, amount) {
     try {
       const data = await api.buildFleet(shipId, amount);
-      state.value = data.state;
+      updateFromResponse(data);
       audio.build();
       notify('Hajóépítés elindítva', 'blue');
       return true;
@@ -104,7 +110,7 @@ export const useGameStore = defineStore('game', () => {
   async function buildDefense(defenseId, amount) {
     try {
       const data = await api.buildDefense(defenseId, amount);
-      state.value = data.state;
+      updateFromResponse(data);
       audio.build();
       notify('Védelem építése elindítva', 'blue');
       return true;
@@ -114,7 +120,7 @@ export const useGameStore = defineStore('game', () => {
   async function syncResources() {
     try {
       const data = await api.syncState();
-      state.value = data.state;
+      updateFromResponse(data);
       const qData = await api.getQueue();
       queue.value = qData.queue || [];
     } catch (e) {}

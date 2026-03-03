@@ -1,5 +1,6 @@
 /**
  * Game routes (all protected — user injected by middleware)
+ * Refactored for v2.4.0: Security audit + State Sync refinement
  */
 
 import { jsonResponse, jsonError } from '../utils/response.js';
@@ -239,9 +240,12 @@ export async function handleGame(request, env, url, user) {
   fullState = accrueAllResources(fullState);
   fullState = await processQueue(env, userId, fullState);
 
+  // v2.4.0 Sync logic: Include server time for precise client ticking
+  const responseData = (base) => ({ ...base, serverTime: Math.floor(Date.now() / 1000) });
+
   if (path === '/api/game/quests' && method === 'GET') {
     const { results } = await env.DB.prepare('SELECT * FROM user_quests WHERE user_id = ? AND expires_at > ?').bind(userId, Math.floor(Date.now() / 1000)).all();
-    return jsonResponse({ ok: true, quests: results }, 200, request);
+    return jsonResponse(responseData({ ok: true, quests: results }), 200, request);
   }
 
   if (path.startsWith('/api/game/quests/claim/') && method === 'POST') {
@@ -251,7 +255,7 @@ export async function handleGame(request, env, url, user) {
     await env.DB.prepare('UPDATE user_quests SET is_claimed = 1 WHERE id = ?').bind(qid).run();
     fullState.activePlanet.resources.metal += q.reward_metal; fullState.activePlanet.resources.deus += q.reward_deus;
     await saveFullState(env, userId, fullState);
-    return jsonResponse({ ok: true, reward: { metal: q.reward_metal, deus: q.reward_deus } }, 200, request);
+    return jsonResponse(responseData({ ok: true, reward: { metal: q.reward_metal, deus: q.reward_deus } }), 200, request);
   }
 
   if (path === '/api/game/state' && method === 'GET') {
@@ -259,12 +263,14 @@ export async function handleGame(request, env, url, user) {
     const storage = calcStorage(fullState.activePlanet.buildings, fullState.research);
     const queue   = await env.DB.prepare('SELECT * FROM build_queue WHERE user_id = ? ORDER BY finish_at ASC').bind(userId).all();
     const planetsSummary = fullState.planets.map(p => ({ id: p.id, name: p.name, emoji: p.emoji, coords: p.coords, isMain: p.isMain }));
-    return jsonResponse({ ok: true, state: { research: fullState.research, score: fullState.score, allianceLevel: fullState.allianceLevel, activePlanet: fullState.activePlanet, planets: planetsSummary }, queue: queue.results, storage }, 200, request);
+    return jsonResponse(responseData({ ok: true, state: { research: fullState.research, score: fullState.score, allianceLevel: fullState.allianceLevel, activePlanet: fullState.activePlanet, planets: planetsSummary }, queue: queue.results, storage }), 200, request);
   }
 
   if (path === '/api/game/defense/build' && method === 'POST') {
     let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { defenseId, amount = 1 } = body;
+    if (amount < 1 || amount > 10000) return jsonError(400, 'Érvénytelen mennyiség', request);
+
     const def = fullState.activePlanet.defense.find(x => x.id === defenseId);
     if (!def) return jsonError(404, 'Defense type not found', request);
     const preCheck = checkPrerequisites(def, fullState.activePlanet.buildings, fullState.research);
@@ -276,7 +282,15 @@ export async function handleGame(request, env, url, user) {
     const finishAt = Math.floor(Date.now() / 1000) + seconds;
     await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at) VALUES (?, ?, ?, ?, 'defense', ?, ?, ?)`).bind(crypto.randomUUID(), userId, fullState.activePlanet.id, defenseId, `${def.icon} ${def.name} ×${amount}`, amount, finishAt).run();
     await saveFullState(env, userId, fullState);
-    return jsonResponse({ ok: true, finishAt, cost: totalCost, state: fullState }, 200, request);
+    return jsonResponse(responseData({ ok: true, finishAt, cost: totalCost, state: fullState }), 200, request);
+  }
+
+  if (path === '/api/game/planet/switch' && method === 'POST') {
+    let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    const { planetId } = body;
+    if (!planetId) return jsonError(400, 'planetId required', request);
+    await env.DB.prepare('UPDATE game_state SET active_planet_id = ? WHERE user_id = ?').bind(planetId, userId).run();
+    return jsonResponse(responseData({ ok: true, activePlanetId: planetId }), 200, request);
   }
 
   if (path === '/api/game/upgrade' && method === 'POST') {
@@ -293,7 +307,7 @@ export async function handleGame(request, env, url, user) {
     await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at) VALUES (?, ?, ?, ?, 'building', ?, ?, ?)`).bind(crypto.randomUUID(), userId, fullState.activePlanet.id, buildingId, `${b.icon} ${b.name} → Szint ${b.level + 1}`, b.level + 1, finishAt).run();
     await saveFullState(env, userId, fullState);
     await incrementQuest(env, userId, 'upgrade');
-    return jsonResponse({ ok: true, finishAt, cost, seconds, state: fullState }, 200, request);
+    return jsonResponse(responseData({ ok: true, finishAt, cost, seconds, state: fullState }), 200, request);
   }
 
   if (path === '/api/game/research' && method === 'POST') {
@@ -309,12 +323,13 @@ export async function handleGame(request, env, url, user) {
     const seconds = researchTime(r.level, fullState.activePlanet.buildings.find(x => x.id === 'lab')?.level || 1); const finishAt = Math.floor(Date.now() / 1000) + seconds;
     await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at) VALUES (?, ?, ?, ?, 'research', ?, ?, ?)`).bind(crypto.randomUUID(), userId, fullState.activePlanet.id, researchId, `🔬 ${r.name} → Szint ${r.level + 1}`, r.level + 1, finishAt).run();
     await saveFullState(env, userId, fullState);
-    return jsonResponse({ ok: true, finishAt, cost, seconds, state: fullState }, 200, request);
+    return jsonResponse(responseData({ ok: true, finishAt, cost, seconds, state: fullState }), 200, request);
   }
 
   if (path === '/api/game/fleet/build' && method === 'POST') {
     let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { shipId, amount = 1 } = body;
+    if (amount < 1 || amount > 10000) return jsonError(400, 'Invalid amount', request);
     const ship = fullState.activePlanet.fleet.find(x => x.id === shipId);
     if (!ship) return jsonError(404, 'Ship type not found', request);
     const preCheck = checkPrerequisites(ship, fullState.activePlanet.buildings, fullState.research);
@@ -326,20 +341,13 @@ export async function handleGame(request, env, url, user) {
     await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at) VALUES (?, ?, ?, ?, 'fleet', ?, ?, ?)`).bind(crypto.randomUUID(), userId, fullState.activePlanet.id, shipId, `${ship.icon} ${ship.name} ×${amount}`, amount, finishAt).run();
     await saveFullState(env, userId, fullState);
     await incrementQuest(env, userId, 'build', shipId, amount);
-    return jsonResponse({ ok: true, finishAt, cost: totalCost, state: fullState }, 200, request);
-  }
-
-  if (path === '/api/game/planet/switch' && method === 'POST') {
-    let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
-    const { planetId } = body;
-    await env.DB.prepare('UPDATE game_state SET active_planet_id = ? WHERE user_id = ?').bind(planetId, userId).run();
-    return jsonResponse({ ok: true, activePlanetId: planetId }, 200, request);
+    return jsonResponse(responseData({ ok: true, finishAt, cost: totalCost, state: fullState }), 200, request);
   }
 
   if (path === '/api/game/sync' && method === 'POST') {
     await saveFullState(env, userId, fullState);
     await env.DB.prepare('UPDATE rankings SET score=?, updated_at=unixepoch() WHERE user_id=?').bind(fullState.score, userId).run();
-    return jsonResponse({ ok: true, state: fullState }, 200, request);
+    return jsonResponse(responseData({ ok: true, state: fullState }), 200, request);
   }
 
   return jsonError(404, 'Game endpoint not found', request);
