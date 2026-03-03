@@ -93,6 +93,10 @@ export function runBattle(attacker, defender) {
         defenderResources.deus -= loot.deus;
     }
 
+    const debrisTotal = (lostMetal + lostCrystal) * 0.3;
+    const moonChance = Math.min(20, Math.floor(debrisTotal / 100000));
+    const moonCreated = Math.random() * 100 < moonChance;
+
     return {
         attackerWins,
         attackerName: attacker.username,
@@ -106,7 +110,9 @@ export function runBattle(attacker, defender) {
         defenderResources,
         loot,
         rounds,
-        debris: { metal: Math.floor(lostMetal * 0.3), crystal: Math.floor(lostCrystal * 0.3) }
+        debris: { metal: Math.floor(lostMetal * 0.3), crystal: Math.floor(lostCrystal * 0.3) },
+        moonChance,
+        moonCreated
     };
 }
 

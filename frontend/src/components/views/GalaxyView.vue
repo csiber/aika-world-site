@@ -47,6 +47,7 @@
                 <td class="slot-visual">
                   <span v-if="getCell(slot).emoji" class="p-emoji">{{ getCell(slot).emoji }}</span>
                   <span v-else class="p-empty">🌑</span>
+                  <span v-if="getCell(slot).hasMoon" class="p-moon" title="Hold">🌑</span>
                 </td>
                 <td class="slot-name">
                   <div v-if="getCell(slot).type !== 'empty'">{{ getCell(slot).name }}</div>
@@ -66,14 +67,18 @@
                 </td>
                 <td class="slot-actions">
                   <div class="action-btns">
+                    <!-- Enemy actions -->
                     <template v-if="getCell(slot).type === 'enemy'">
                       <button class="btn-icon" @click="selectCell(getCell(slot), 'spy')" title="Kémkedés">🔍</button>
                       <button class="btn-icon" @click="selectCell(getCell(slot), 'attack')" title="Támadás">⚔️</button>
                     </template>
+                    <!-- Debris action -->
                     <button v-if="getCell(slot).debris_metal > 0 || getCell(slot).debris_crystal > 0" 
                       class="btn-icon harvest" @click="selectCell(getCell(slot), 'harvest')" title="Újrahasznosítás">🚛</button>
+                    <!-- Empty slot actions -->
                     <button v-if="getCell(slot).type === 'empty'" 
                       class="btn-icon" @click="doQuickColonize(getCell(slot))" :disabled="!hasColonyShip" title="Gyarmatosítás">🌍</button>
+                    <!-- Own slot -->
                     <span v-if="getCell(slot).type === 'own'" class="own-tag">Saját</span>
                   </div>
                 </td>
@@ -204,7 +209,7 @@ async function loadGalaxy() {
 function getCell(slot) {
   const coords = `[${currentGal.value}:${currentSys.value}:${slot}]`;
   const p = players.value.find(x => x.coords === coords);
-  if (!p) return { slot, coords, type: 'empty', debris_metal: 0, debris_crystal: 0 };
+  if (!p) return { slot, coords, type: 'empty', debris_metal: 0, debris_crystal: 0, hasMoon: false };
   
   const isOwn = p.username === auth.username;
   return {
@@ -216,7 +221,8 @@ function getCell(slot) {
     score: p.score,
     targetUserId: p.user_id,
     debris_metal: p.debris_metal || 0,
-    debris_crystal: p.debris_crystal || 0
+    debris_crystal: p.debris_crystal || 0,
+    hasMoon: !!p.has_moon
   };
 }
 
@@ -339,6 +345,9 @@ onMounted(() => {
 .slot-num { font-family: 'Orbitron', sans-serif; color: var(--text-dim); font-size: 10px; }
 .p-emoji { font-size: 20px; }
 .p-empty { opacity: 0.2; font-size: 18px; }
+.p-moon { font-size: 14px; position: absolute; bottom: 5px; right: 5px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); }
+.slot-visual { position: relative; }
+
 .empty-text { color: var(--text-dim); font-style: italic; font-size: 11px; }
 .player-link { color: var(--accent); cursor: pointer; }
 .player-link:hover { text-decoration: underline; }

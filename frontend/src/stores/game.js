@@ -45,11 +45,12 @@ export const useGameStore = defineStore('game', () => {
   // ── Internal Helpers ──────────────────────────────────────
   function updateFromResponse(data) {
     if (data.state) {
-        // v2.7.4: If the number of planets changed, we might need a full reload or notification
-        const oldPlanetCount = state.value?.planets?.length || 0;
-        const newPlanetCount = data.state.planets?.length || 0;
-        if (newPlanetCount > oldPlanetCount && oldPlanetCount > 0) {
-            notify('Új bolygó vált elérhetővé a birodalmadban!', 'green');
+        // Check for new planets
+        const oldPlanets = state.value?.planets?.length || 0;
+        const newPlanets = data.state.planets?.length || 0;
+        if (newPlanets > oldPlanets && oldPlanets > 0) {
+            notify('🪐 Új bolygó csatlakozott a birodalomhoz!', 'green');
+            audio.success();
         }
         state.value = data.state;
     }

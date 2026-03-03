@@ -73,7 +73,13 @@ export async function handleMissions(request, env, url, user) {
     const gal = url.searchParams.get('galaxy') || '1';
     const sys = url.searchParams.get('system') || '1';
     const pattern = `[${gal}:${sys}:%`;
-    const rows = await env.DB.prepare(`SELECT user_id, username, planet_name, planet_emoji, coords, score, debris_metal, debris_crystal FROM galaxy_map WHERE coords LIKE ? ORDER BY coords ASC`).bind(pattern).all();
+    const rows = await env.DB.prepare(`
+      SELECT g.user_id, g.username, g.planet_name, g.planet_emoji, g.coords, g.score, g.debris_metal, g.debris_crystal,
+      EXISTS(SELECT 1 FROM moons m JOIN planets p ON m.planet_id = p.id WHERE p.coords = g.coords) as has_moon
+      FROM galaxy_map g
+      WHERE g.coords LIKE ?
+      ORDER BY g.coords ASC
+    `).bind(pattern).all();
     const { results: myPlanets } = await env.DB.prepare('SELECT id, name, emoji, coords FROM planets WHERE user_id = ?').bind(userId).all();
     return jsonResponse({ ok: true, players: rows.results, myPlanets, galaxy: parseInt(gal), system: parseInt(sys) }, 200, request);
   }

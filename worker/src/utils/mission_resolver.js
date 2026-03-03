@@ -107,6 +107,23 @@ export async function resolveMissionsForUser(env, userId) {
               await env.DB.prepare(`UPDATE galaxy_map SET debris_metal = debris_metal + ?, debris_crystal = debris_crystal + ? WHERE coords = ?`)
                   .bind(battle.debris.metal, battle.debris.crystal, mission.target_coords).run();
           }
+
+          // Moon Chance
+          if (battle.moonCreated) {
+              const existingMoon = await env.DB.prepare('SELECT id FROM moons WHERE planet_id = ?').bind(targetPlanet.id).first();
+              if (!existingMoon) {
+                  const moonId = crypto.randomUUID();
+                  const defMB = await env.DB.prepare('SELECT data FROM default_moon_buildings').first();
+                  await env.DB.prepare(`
+                      INSERT INTO moons (id, planet_id, user_id, name, size, buildings, fleet, defense, created_at)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, unixepoch())
+                  `).bind(moonId, targetPlanet.id, targetPlanet.userId, 'Hold', Math.floor(Math.random() * 4000) + 4000, defMB?.data || '[]', '[]', '[]').run();
+                  
+                  // Notify defender about moon creation
+                  await env.DB.prepare('INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)')
+                    .bind(crypto.randomUUID(), targetPlanet.userId, 'Rendszer', 'Hold keletkezett!', `A csata során keletkezett törmelékből egy Hold állt össze a(z) ${targetPlanet.coords} koordinátán!`, 'system').run();
+              }
+          }
         }
       }
 
@@ -175,7 +192,8 @@ function formatMissionResult(mission, result) {
     return `🔍 KÉM JELENTÉS\n\nCél: ${mission.target_name}\n\nFém: ${Math.floor(result.resources.metal || 0)}\nKristály: ${Math.floor(result.resources.crystal || 0)}\nVédelem: ${result.defense?.length || 0} típusú egység észlelt.`;
   }
   if (mission.mission_type === 'attack') {
-    return `⚔️ HARCI JELENTÉS — ${result.attackerWins ? 'GYŐZELEM' : 'VERESÉG'}\n\nZsákmány:\nFém: ${Math.floor(result.loot?.metal || 0)}\nKristály: ${Math.floor(result.loot?.crystal || 0)}\n\n[DETAILED_REPORT:${mission.id}]`;
+    const moonText = result.moonCreated ? '\n\n🌑 ÚJ HOLD KELETKEZETT!' : (result.moonChance > 0 ? `\n\nHold esély: ${result.moonChance}%` : '');
+    return `⚔️ HARCI JELENTÉS — ${result.attackerWins ? 'GYŐZELEM' : 'VERESÉG'}\n\nZsákmány:\nFém: ${Math.floor(result.loot?.metal || 0)}\nKristály: ${Math.floor(result.loot?.crystal || 0)}\n\n[DETAILED_REPORT:${mission.id}]${moonText}`;
   }
   if (mission.mission_type === 'harvest') {
       return `🚛 ÚJRAHASZNOSÍTÁS JELENTÉS\n\nKoordináta: ${mission.target_coords}\nGyűjtött fém: ${Math.floor(result.loot?.metal || 0)}\nGyűjtött kristály: ${Math.floor(result.loot?.crystal || 0)}`;

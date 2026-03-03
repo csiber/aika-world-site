@@ -1,20 +1,22 @@
-# AIKA World v2.7.4 — Full-Stack Cloudflare Workers + Vue 3 + D1 (STABLE)
+# AIKA World v2.7.5 — Full-Stack Cloudflare Workers + Vue 3 + D1 (STABLE)
 
 **AIKA World** is a modern, real-time galactic strategy game built on the Cloudflare ecosystem (Workers, D1, Assets) using Vue 3.
 
-## Key Improvements (v2.7.4)
-- **🌍 Reliable Colonization**: Fixed a major bug where colonization could target occupied slots. Added strict coordinate validation.
-- **✨ Instant Empire Sync**: New planets now appear immediately in your selector as soon as the colony ship arrives, with a desktop notification.
-- **🛠️ Zero-Crash Backend**: Implemented deep null-safety and robust error handling in the mission resolver to eliminate 500 Internal Server Errors.
-- **🔐 Password Management**: Securely update your account credentials from the Profile view.
+## Key Improvements (v2.7.5)
+- **🌑 Moon System**: Massive battles can now create Moons from debris fields. Moons function as specialized bases with unique buildings like the Sensor Phalanx and Jump Gate.
+- **🛠️ Backend Architecture**: Unified `planets` and `moons` state handling, allowing seamless switching and management of all celestial bodies.
+- **🌍 Colonization Stability**: Robust checks prevent coordinate collisions, and new colonies appear instantly.
+- **⚔️ Advanced Combat**: Battle engine now calculates Moon formation probability based on total debris size.
+
 ...
 ## Changelog
 
-### v2.7.4 (Colonization & Stability)
-- **Fix**: Added `PRE-CHECK` to colonization launches to prevent coordinate collisions.
-- **Frontend**: Updated `GameStore` to detect and refresh planet lists automatically.
-- **Backend**: Hardened `mission_resolver` with better data validation and fallback mechanisms.
+### v2.7.5 (Moon Update)
+- **Feature**: Implemented Moon creation mechanic (max 20% chance from battle debris).
+- **Backend**: Updated game state engine to fetch and manage Moons alongside Planets.
+- **Database**: Added `moons` table and `default_moon_buildings` template.
+- **Frontend**: Updated Galaxy View to display Moons and Mission control to show Moon-related info.
 
-### v2.7.3
-- **Stability**: Initial 500 error mitigation.
+### v2.7.4
+- **Fix**: Colonization reliability and instant empire sync.
 ...
