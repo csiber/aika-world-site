@@ -12,12 +12,13 @@ Ez a dokumentum összefoglalja a folyamatban lévő és tervezett fejlesztéseke
 - [x] Védelmi Rendszerek
 
 ## 🎨 Phase 2: Felhasználói Élmény & Vizualitás (Folyamatban)
-- [x] **Részletes Harci Jelentések:**
-    - [x] Körökre bontott csataszimuláció.
-    - [x] Veszteségek egységenkénti kijelzése.
-    - [x] Külön modális ablak a jelentésekhez.
-- [ ] **Galaxis Térkép Bővítése:**
-    - [ ] Naprendszerek és galaxisok bevezetése.
+- [x] **Részletes Harci Jelentések:** Körökre bontott statisztikák és veszteségek.
+- [x] **Galaxis Térkép Bővítése:** 
+    - [x] Több Galaxis (1-9) és Naprendszer (1-499) támogatása.
+    - [x] Navigációs vezérlők (Galaxis/Naprendszer váltó).
+    - [x] Új, listás "System View" 15 bolygóhellyel.
 - [ ] **Flotta Irányítóközpont:**
     - [ ] Egy központi nézet visszahívási (Recall) lehetőséggel.
+- [ ] **Animációk & Effektek:**
+    - [ ] Épületek és csaták vizuális feldobása.
 ...

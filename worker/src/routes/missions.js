@@ -144,9 +144,19 @@ export async function handleMissions(request, env, url, user) {
   const activePlanetId = gs?.active_planet_id;
 
   if (path === '/api/galaxy' && method === 'GET') {
-    const rows = await env.DB.prepare(`SELECT user_id, username, planet_name, planet_emoji, coords, score FROM galaxy_map ORDER BY score DESC LIMIT 200`).all();
+    const gal = url.searchParams.get('galaxy') || '1';
+    const sys = url.searchParams.get('system') || '1';
+    const pattern = `[${gal}:${sys}:%`;
+
+    const rows = await env.DB.prepare(`
+      SELECT user_id, username, planet_name, planet_emoji, coords, score 
+      FROM galaxy_map 
+      WHERE coords LIKE ?
+      ORDER BY coords ASC
+    `).bind(pattern).all();
+
     const { results: myPlanets } = await env.DB.prepare('SELECT id, name, emoji, coords FROM planets WHERE user_id = ?').bind(userId).all();
-    return jsonResponse({ ok: true, players: rows.results, myPlanets }, 200, request);
+    return jsonResponse({ ok: true, players: rows.results, myPlanets, galaxy: parseInt(gal), system: parseInt(sys) }, 200, request);
   }
 
   if (path === '/api/missions' && method === 'GET') {

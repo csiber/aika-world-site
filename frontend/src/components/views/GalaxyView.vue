@@ -1,93 +1,116 @@
 <template>
   <div class="galaxy-layout">
-    <div class="panel galaxy-panel">
-      <div class="panel-header">
-        <span class="panel-icon">🌌</span>
-        <h3>{{ L.t('galaxy.title') }}</h3>
-        <div class="galaxy-legend" style="margin-left:auto;display:flex;gap:10px;font-size:10px;">
-          <span style="color:var(--accent3);">■ {{ L.t('galaxy.own') }}</span>
-          <span style="color:var(--accent2);">■ {{ L.t('galaxy.enemy') }}</span>
-          <span style="color:var(--text-dim);">■ {{ L.t('galaxy.empty') }}</span>
+    <!-- Galaxy Navigation -->
+    <div class="panel nav-panel">
+      <div class="panel-body nav-row">
+        <div class="nav-group">
+          <label>{{ L.t('galaxy.galaxy') || 'Galaxis' }}</label>
+          <button class="nav-btn-sm" @click="changeGal(-1)">◀</button>
+          <input type="number" v-model.number="currentGal" min="1" max="9" class="nav-input" @change="loadGalaxy" />
+          <button class="nav-btn-sm" @click="changeGal(1)">▶</button>
         </div>
-        <button class="btn-refresh" @click="loadGalaxy" :disabled="loading" style="margin-left:10px;">
-          {{ loading ? '...' : '↻' }}
+        <div class="nav-group">
+          <label>{{ L.t('galaxy.system') || 'Naprendszer' }}</label>
+          <button class="nav-btn-sm" @click="changeSys(-1)">◀</button>
+          <input type="number" v-model.number="currentSys" min="1" max="499" class="nav-input" @change="loadGalaxy" />
+          <button class="nav-btn-sm" @click="changeSys(1)">▶</button>
+        </div>
+        <button class="btn-refresh" @click="loadGalaxy" :disabled="loading">
+          {{ loading ? '...' : 'Mutat' }}
         </button>
       </div>
-      <div class="panel-body">
-        <div v-if="loading && !galaxyCells.length" class="empty-msg" style="padding:20px 0;">{{ L.t('galaxy.loading') }}</div>
-        <div v-else class="galaxy-grid">
-          <div
-            v-for="cell in galaxyCells"
-            :key="cell.id"
-            class="galaxy-cell"
-            :class="cell.type"
-            :title="cell.tooltip"
-            @click="selectCell(cell)"
-          >
-            <span v-if="cell.emoji">{{ cell.emoji }}</span>
-          </div>
+    </div>
+
+    <!-- System View -->
+    <div class="panel system-panel">
+      <div class="panel-header">
+        <span class="panel-icon">🌌</span>
+        <h3>{{ L.t('galaxy.system') || 'Naprendszer' }} [{{ currentGal }}:{{ currentSys }}]</h3>
+      </div>
+      <div class="panel-body no-padding">
+        <div class="system-table-wrapper">
+          <table class="system-table">
+            <thead>
+              <tr>
+                <th style="width:40px;">#</th>
+                <th style="width:60px;">Bolygó</th>
+                <th>Név</th>
+                <th>Játékos</th>
+                <th>Pontszám</th>
+                <th style="text-align:right;">Akciók</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="slot in 15" :key="slot" :class="getCell(slot).type">
+                <td class="slot-num">{{ slot }}</td>
+                <td class="slot-visual">
+                  <span v-if="getCell(slot).emoji" class="p-emoji">{{ getCell(slot).emoji }}</span>
+                  <span v-else class="p-empty">🌑</span>
+                </td>
+                <td class="slot-name">
+                  <span v-if="getCell(slot).type !== 'empty'">{{ getCell(slot).name }}</span>
+                  <span v-else class="empty-text">Üres világűr</span>
+                </td>
+                <td class="slot-player">
+                  <span v-if="getCell(slot).username" @click="openProfile(getCell(slot).username)" class="player-link">
+                    {{ getCell(slot).username }}
+                  </span>
+                </td>
+                <td class="slot-score">
+                  <span v-if="getCell(slot).score">{{ getCell(slot).score.toLocaleString('hu') }}</span>
+                </td>
+                <td class="slot-actions">
+                  <div v-if="getCell(slot).type === 'enemy'" class="action-btns">
+                    <button class="btn-icon" @click="selectCell(getCell(slot), 'spy')" title="Kémkedés">🔍</button>
+                    <button class="btn-icon" @click="selectCell(getCell(slot), 'attack')" title="Támadás">⚔️</button>
+                  </div>
+                  <div v-else-if="getCell(slot).type === 'empty'" class="action-btns">
+                    <button class="btn-icon" @click="doQuickColonize(getCell(slot))" :disabled="!hasColonyShip" title="Gyarmatosítás">🌍</button>
+                  </div>
+                  <div v-else-if="getCell(slot).type === 'own'" class="action-btns">
+                    <span class="own-tag">Saját</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
 
-    <!-- Selected cell info -->
-    <Transition name="slide">
-      <div v-if="selected" class="panel cell-info">
-        <div class="panel-header"><span class="panel-icon">📍</span><h3>{{ L.t('galaxy.sysInfo') }}</h3></div>
-        <div class="panel-body">
-          <div class="cell-detail">
-            <div class="cd-emoji">{{ selected.emoji || '🌑' }}</div>
-            <div>
-              <div class="cd-name">{{ selected.name }}</div>
-              <div class="cd-coords">{{ selected.coords }}</div>
-              <div class="cd-type" :class="'text-' + selected.type">{{ typeLabel(selected.type) }}</div>
-              <div v-if="selected.username" class="cd-player">👤 {{ selected.username }}</div>
-            </div>
+    <!-- Fleet Setup Modal (Overlay) -->
+    <Transition name="fade">
+      <div v-if="showFleetSetup" class="modal-overlay" @click.self="showFleetSetup = false">
+        <div class="panel fleet-setup-modal">
+          <div class="panel-header">
+            <h3>🚀 {{ missionType === 'spy' ? 'Kémflotta' : 'Támadó flotta' }} indítása</h3>
+            <button class="close-btn" @click="showFleetSetup = false">✕</button>
           </div>
-
-          <div v-if="selected.type !== 'own'" class="cd-actions" style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
-            <div v-if="showFleetSetup" class="fleet-setup panel" style="width:100%;">
-              <div class="panel-header"><h4>🚀 {{ L.t('galaxy.setupFleet') || 'Flotta összeállítása' }}</h4></div>
-              <div class="panel-body">
-                <div v-if="availableShips.length === 0" class="empty-msg">Nincs elérhető hajó ezen a bolygón.</div>
-                <div v-for="ship in availableShips" :key="ship.id" class="fleet-setup-row">
-                  <span>{{ ship.icon }} {{ ship.name }} ({{ ship.count }})</span>
+          <div class="panel-body">
+            <div class="target-summary">
+              Célpont: <strong>{{ selected?.name }}</strong> {{ selected?.coords }}
+            </div>
+            
+            <div v-if="availableShips.length === 0" class="empty-msg">Nincs elérhető hajó ezen a bolygón.</div>
+            <div v-else class="fleet-setup-grid">
+              <div v-for="ship in availableShips" :key="ship.id" class="fleet-setup-row">
+                <div class="ship-info">
+                  <span class="ship-icon">{{ ship.icon }}</span>
+                  <span class="ship-name">{{ ship.name }}</span>
+                  <span class="ship-count">({{ ship.count }})</span>
+                </div>
+                <div class="ship-input-wrap">
+                  <button class="btn-xs" @click="selectedShips[ship.id] = ship.count">MAX</button>
                   <input type="number" v-model.number="selectedShips[ship.id]" min="0" :max="ship.count" class="ship-input" />
                 </div>
-                <div class="fleet-setup-btns" style="margin-top:10px;display:flex;gap:8px;">
-                  <button class="btn-primary" @click="confirmMission" :disabled="!hasSelectedShips || !!actionBusy">
-                    {{ actionBusy ? '...' : (missionType === 'spy' ? '🔍 Kémkedés' : '⚔️ Támadás') }}
-                  </button>
-                  <button class="btn-primary red" @click="showFleetSetup = false">Mégse</button>
-                </div>
               </div>
             </div>
 
-            <template v-else>
-              <div style="display:flex;gap:8px;">
-                <button
-                  class="btn-primary"
-                  :disabled="!!actionBusy"
-                  @click="startFleetSetup('spy')"
-                >🔍 {{ L.t('galaxy.spy') }}</button>
-                <button
-                  class="btn-primary"
-                  v-if="selected.type === 'enemy' && selected.targetUserId"
-                  :disabled="!!actionBusy"
-                  @click="startFleetSetup('attack')"
-                >⚔️ {{ L.t('galaxy.attack') }}</button>
-                <button
-                  class="btn-primary"
-                  v-if="selected.type === 'empty'"
-                  :disabled="!!actionBusy || !hasColonyShip"
-                  @click="doColonize"
-                  :title="!hasColonyShip ? L.t('galaxy.colonizeReq') : ''"
-                >{{ actionBusy === 'colony' ? '...' : '🌍 ' + L.t('galaxy.colonize') }}</button>
-              </div>
-            </template>
-          </div>
-          <div v-if="!hasColonyShip && selected.type === 'empty' && !showFleetSetup" class="action-hint">
-            ⚠️ {{ L.t('galaxy.noColonyShip') }}
+            <div class="modal-footer">
+              <button class="btn-primary" @click="confirmMission" :disabled="!hasSelectedShips || !!actionBusy">
+                {{ actionBusy ? '...' : 'FLOTTA INDÍTÁSA' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -105,11 +128,13 @@ import { api } from '@/api/client.js';
 const game = useGameStore();
 const auth = useAuthStore();
 const L    = useLangStore();
-const selected   = ref(null);
-const actionBusy = ref(null);
+
+const currentGal = ref(1);
+const currentSys = ref(1);
 const loading    = ref(false);
 const players    = ref([]);
-const apiMyPlanets = ref([]);
+const selected   = ref(null);
+const actionBusy = ref(null);
 
 const showFleetSetup = ref(false);
 const missionType    = ref(null);
@@ -117,16 +142,54 @@ const selectedShips  = ref({});
 
 const availableShips = computed(() => game.fleet.filter(f => f.count > 0));
 const hasSelectedShips = computed(() => Object.values(selectedShips.value).some(v => v > 0));
+const hasColonyShip = computed(() => game.fleet.some(f => f.id === 'colony' && f.count > 0));
 
-function startFleetSetup(type) {
+function changeGal(delta) {
+  currentGal.value = Math.max(1, Math.min(9, currentGal.value + delta));
+  loadGalaxy();
+}
+function changeSys(delta) {
+  currentSys.value = Math.max(1, Math.min(499, currentSys.value + delta));
+  loadGalaxy();
+}
+
+async function loadGalaxy() {
+  loading.value = true;
+  try {
+    const data = await api.getGalaxy(currentGal.value, currentSys.value);
+    players.value = data.players || [];
+  } catch (e) {
+    game.notify(`Hiba: ${e.message}`, 'red');
+  }
+  loading.value = false;
+}
+
+function getCell(slot) {
+  const coords = `[${currentGal.value}:${currentSys.value}:${slot}]`;
+  const p = players.value.find(x => x.coords === coords);
+  if (!p) return { slot, coords, type: 'empty' };
+  
+  const isOwn = p.username === auth.username;
+  return {
+    slot, coords,
+    type: isOwn ? 'own' : 'enemy',
+    emoji: p.planet_emoji,
+    name: p.planet_name,
+    username: p.username,
+    score: p.score,
+    targetUserId: p.user_id
+  };
+}
+
+function selectCell(cell, type) {
+  selected.value = cell;
   missionType.value = type;
   showFleetSetup.value = true;
   selectedShips.value = {};
   availableShips.value.forEach(s => selectedShips.value[s.id] = 0);
-  // Default for spy: 1 spy ship if available
   if (type === 'spy') {
-      const spy = availableShips.value.find(s => s.id === 'fighter_s' || s.id === 'spy');
-      if (spy) selectedShips.value[spy.id] = 1;
+    const s = availableShips.value.find(x => x.id === 'fighter_s' || x.id === 'spy');
+    if (s) selectedShips.value[s.id] = 1;
   }
 }
 
@@ -135,176 +198,99 @@ async function confirmMission() {
   else if (missionType.value === 'attack') await doAttack();
 }
 
-const typeLabel = (t) => ({
-  own:   L.t('galaxy.ownPlanet'),
-  enemy: L.t('galaxy.enemyPlanet'),
-  empty: L.t('galaxy.emptySystem'),
-})[t] || t;
-
-const hasColonyShip = computed(() => {
-  const ship = game.fleet.find(f => f.id === 'colony');
-  return ship && ship.count > 0;
-});
-
-function parseCoords(coords) {
-  const m = coords?.match(/\[(\d+):(\d+):(\d+)\]/);
-  if (!m) return null;
-  return { row: parseInt(m[1]), col: parseInt(m[2]), slot: parseInt(m[3]) };
-}
-
-async function loadGalaxy() {
-  loading.value = true;
-  try {
-    const data = await api.getGalaxy();
-    players.value    = data.players    || [];
-    apiMyPlanets.value = data.myPlanets || [];
-  } catch {
-    players.value    = [];
-    apiMyPlanets.value = game.planets;
-  }
-  loading.value = false;
-}
-
-const galaxyCells = computed(() => {
-  const myUsername = auth.username;
-
-  // Build player map keyed by "row:col" → player (highest score wins if collision)
-  const playerMap = new Map();
-  for (const p of players.value) {
-    const parsed = parseCoords(p.coords);
-    if (!parsed) continue;
-    const key = `${parsed.row}:${parsed.col}`;
-    if (!playerMap.has(key) || (playerMap.get(key).score || 0) < (p.score || 0)) {
-      playerMap.set(key, p);
-    }
-  }
-
-  // Build own planets map
-  const ownPlanets = apiMyPlanets.value.length ? apiMyPlanets.value : game.planets;
-  const ownMap = new Map();
-  for (const p of ownPlanets) {
-    const parsed = parseCoords(p.coords);
-    if (!parsed) continue;
-    ownMap.set(`${parsed.row}:${parsed.col}`, p);
-  }
-
-  const cells = [];
-  for (let i = 0; i < 100; i++) {
-    const row  = Math.floor(i / 10) + 1;
-    const col  = (i % 10) + 1;
-    const key  = `${row}:${col}`;
-    const slot = ((row * 31 + col * 17) % 15) + 1;
-    const coords = `[${row}:${col}:${slot}]`;
-
-    if (ownMap.has(key)) {
-      const p = ownMap.get(key);
-      cells.push({ id: i, type: 'own', emoji: p.emoji || '🌍', name: p.name, coords: p.coords, targetUserId: null, username: myUsername, tooltip: `${p.name} ${p.coords} (${L.t('galaxy.ownSuffix')})` });
-      continue;
-    }
-
-    if (playerMap.has(key)) {
-      const p = playerMap.get(key);
-      if (p.username === myUsername) {
-        cells.push({ id: i, type: 'own', emoji: p.planet_emoji || '🌍', name: p.planet_name, coords: p.coords, targetUserId: p.user_id, username: p.username, tooltip: `${p.planet_name} ${p.coords} (${L.t('galaxy.ownSuffix')})` });
-      } else {
-        cells.push({ id: i, type: 'enemy', emoji: p.planet_emoji || '🔴', name: p.planet_name || p.username, coords: p.coords, targetUserId: p.user_id, username: p.username, tooltip: `${p.planet_name || p.username} ${p.coords}` });
-      }
-      continue;
-    }
-
-    cells.push({ id: i, type: 'empty', emoji: '', name: `${L.t('galaxy.emptySystem')} ${row}:${col}`, coords, targetUserId: null, username: null, tooltip: `${L.t('galaxy.empty')} ${coords}` });
-  }
-
-  return cells;
-});
-
-function selectCell(cell) { selected.value = cell; showFleetSetup.value = false; }
-
 async function doSpy() {
-  if (!selected.value) return;
   actionBusy.value = 'spy';
   try {
-    const ships = Object.entries(selectedShips.value)
-      .filter(([_, count]) => count > 0)
-      .map(([id, count]) => ({ id, count }));
-
-    await api.spy(selected.value.targetUserId || null, selected.value.coords, selected.value.name, ships);
-    game.notify(L.t('galaxy.spyMsg'), 'blue');
+    const ships = Object.entries(selectedShips.value).filter(([_, c]) => c > 0).map(([id, count]) => ({ id, count }));
+    await api.spy(selected.value.targetUserId, selected.value.coords, selected.value.name, ships);
+    game.notify('Kémflotta elindult', 'blue');
     showFleetSetup.value = false;
-    await game.loadState(); // Refresh local fleet
-  } catch (e) {
-    game.notify(`❌ ${e.message}`, 'red');
-  }
+    await game.loadState();
+  } catch (e) { game.notify(`❌ ${e.message}`, 'red'); }
   actionBusy.value = null;
 }
 
 async function doAttack() {
-  if (!selected.value) return;
   actionBusy.value = 'attack';
   try {
-    const ships = Object.entries(selectedShips.value)
-      .filter(([_, count]) => count > 0)
-      .map(([id, count]) => ({ id, count }));
-
+    const ships = Object.entries(selectedShips.value).filter(([_, c]) => c > 0).map(([id, count]) => ({ id, count }));
     await api.attack(selected.value.targetUserId, selected.value.coords, selected.value.name, ships);
-    game.notify(L.t('galaxy.attackMsg'), 'blue');
+    game.notify('Támadó flotta elindult', 'red');
     showFleetSetup.value = false;
-    await game.loadState(); // Refresh local fleet
-  } catch (e) {
-    game.notify(`❌ ${e.message}`, 'red');
-  }
+    await game.loadState();
+  } catch (e) { game.notify(`❌ ${e.message}`, 'red'); }
   actionBusy.value = null;
 }
 
-async function doColonize() {
-  if (!selected.value || !hasColonyShip.value) return;
+async function doQuickColonize(cell) {
   actionBusy.value = 'colony';
   try {
-    await api.colonize(selected.value.coords, selected.value.name);
-    game.notify(L.t('galaxy.colonizeMsg', { coords: selected.value.coords }), 'blue');
-    selected.value = null;
-    await loadGalaxy();
+    await api.colonize(cell.coords, 'Új gyarmat');
+    game.notify(`Gyarmatosító hajó elindult: ${cell.coords}`, 'blue');
     await game.loadState();
-  } catch (e) {
-    game.notify(`❌ ${e.message}`, 'red');
-  }
+  } catch (e) { game.notify(`❌ ${e.message}`, 'red'); }
   actionBusy.value = null;
 }
 
-onMounted(loadGalaxy);
+onMounted(() => {
+  // Try to parse current planet coords to start there
+  const m = game.activePlanet?.coords?.match(/\[(\d+):(\d+):(\d+)\]/);
+  if (m) { currentGal.value = parseInt(m[1]); currentSys.value = parseInt(m[2]); }
+  loadGalaxy();
+});
 </script>
 
 <style scoped>
 .galaxy-layout { display: flex; flex-direction: column; gap: 12px; }
-.galaxy-panel { width: 100%; }
-.galaxy-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; }
-.galaxy-cell { aspect-ratio: 1; border: 1px solid rgba(26,42,74,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; transition: all 0.15s; background: rgba(0,0,0,0.3); }
-.galaxy-cell:hover { border-color: var(--accent); background: rgba(0,200,255,0.1); z-index: 1; }
-.galaxy-cell.own     { border-color: var(--accent3); background: rgba(58,255,122,0.08); }
-.galaxy-cell.enemy   { border-color: var(--accent2); background: rgba(255,58,122,0.08); }
-.galaxy-cell.empty   { opacity: 0.3; }
 
-.btn-refresh { background: none; border: 1px solid var(--border); color: var(--text-dim); width: 26px; height: 26px; border-radius: 3px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.btn-refresh:hover { border-color: var(--accent); color: var(--accent); }
+.nav-panel { background: var(--bg-panel); border: 1px solid var(--border); }
+.nav-row { display: flex; align-items: center; justify-content: center; gap: 30px; padding: 10px; }
+.nav-group { display: flex; align-items: center; gap: 8px; }
+.nav-group label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+.nav-input { width: 60px; background: #000; border: 1px solid var(--border); color: var(--accent); text-align: center; font-family: 'Orbitron', sans-serif; font-size: 14px; padding: 4px; border-radius: 4px; }
+.nav-btn-sm { background: none; border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+.nav-btn-sm:hover { border-color: var(--accent); color: var(--accent); }
 
-.cell-info { }
-.cell-detail { display: flex; gap: 14px; align-items: center; }
-.cd-emoji { font-size: 40px; }
-.cd-name   { font-size: 14px; color: var(--text-bright); font-weight: 600; }
-.cd-coords { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--accent); }
-.cd-type   { font-size: 11px; margin-top: 4px; }
-.cd-player { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-.text-own     { color: var(--accent3); }
-.text-enemy   { color: var(--accent2); }
-.text-empty   { color: var(--text-dim); }
-.action-hint { font-size: 10px; color: var(--accent4); margin-top: 6px; }
-.cd-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.system-panel { width: 100%; }
+.no-padding { padding: 0 !important; }
+.system-table-wrapper { width: 100%; overflow-x: auto; }
+.system-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.system-table th { text-align: left; padding: 12px 15px; background: rgba(255,255,255,0.02); color: var(--text-dim); font-size: 10px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+.system-table td { padding: 10px 15px; border-bottom: 1px solid rgba(26,42,74,0.3); }
+.system-table tr:hover td { background: rgba(255,255,255,0.02); }
 
-.fleet-setup-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px; }
-.ship-input { width: 60px; background: #000; border: 1px solid var(--border); color: #fff; padding: 2px 5px; font-size: 11px; border-radius: 3px; }
-.btn-primary.red { border-color: var(--accent2); color: var(--accent2); }
+.slot-num { font-family: 'Orbitron', sans-serif; color: var(--text-dim); font-size: 10px; }
+.p-emoji { font-size: 20px; }
+.p-empty { opacity: 0.2; font-size: 18px; }
+.empty-text { color: var(--text-dim); font-style: italic; font-size: 11px; }
+.player-link { color: var(--accent); cursor: pointer; }
+.player-link:hover { text-decoration: underline; }
+.own-tag { font-size: 9px; color: var(--accent3); border: 1px solid var(--accent3); padding: 1px 5px; border-radius: 10px; }
 
-.slide-enter-active, .slide-leave-active { transition: all 0.3s ease; }
-.slide-enter-from, .slide-leave-to { opacity: 0; transform: translateY(-10px); }
-.empty-msg { color: var(--text-dim); font-size: 11px; }
+.action-btns { display: flex; justify-content: flex-end; gap: 6px; }
+.btn-icon { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 4px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+.btn-icon:hover { border-color: var(--accent); background: rgba(0,200,255,0.1); transform: translateY(-2px); }
+.btn-icon:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Modal Styles */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
+.fleet-setup-modal { width: 90%; max-width: 450px; }
+.close-btn { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; }
+.target-summary { padding: 10px; background: rgba(0,0,0,0.3); border-radius: 4px; margin-bottom: 15px; font-size: 12px; }
+.fleet-setup-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.fleet-setup-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.ship-info { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.ship-count { color: var(--text-dim); font-size: 10px; }
+.ship-input-wrap { display: flex; gap: 6px; }
+.ship-input { width: 60px; background: #000; border: 1px solid var(--border); color: #fff; padding: 4px; border-radius: 3px; text-align: center; }
+.btn-xs { font-size: 8px; padding: 2px 4px; background: rgba(255,255,255,0.1); border: 1px solid var(--border); color: #fff; border-radius: 2px; cursor: pointer; }
+.modal-footer { display: flex; justify-content: flex-end; }
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+@media (max-width: 600px) {
+  .nav-row { flex-direction: column; gap: 15px; }
+  .system-table th:nth-child(5), .system-table td:nth-child(5) { display: none; }
+}
 </style>
