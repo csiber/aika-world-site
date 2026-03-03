@@ -13,12 +13,9 @@ Ez a dokumentum összefoglalja a folyamatban lévő és tervezett fejlesztéseke
 
 ## 🎨 Phase 2: Felhasználói Élmény & Vizualitás (Folyamatban)
 - [x] **Részletes Harci Jelentések:** Körökre bontott statisztikák és veszteségek.
-- [x] **Galaxis Térkép Bővítése:** 
-    - [x] Több Galaxis (1-9) és Naprendszer (1-499) támogatása.
-    - [x] Navigációs vezérlők (Galaxis/Naprendszer váltó).
-    - [x] Új, listás "System View" 15 bolygóhellyel.
-- [ ] **Flotta Irányítóközpont:**
-    - [ ] Egy központi nézet visszahívási (Recall) lehetőséggel.
-- [ ] **Animációk & Effektek:**
-    - [ ] Épületek és csaták vizuális feldobása.
+- [x] **Galaxis Térkép Bővítése:** Több Galaxis (1-9) és Naprendszer (1-499) támogatása.
+- [x] **Flotta Irányítóközpont:** 
+    - [x] Központi nézet az összes úton lévő saját flottáról.
+    - [x] **Recall (Visszahívás):** Úton lévő flották visszafordításának lehetősége.
+- [ ] **Animációk & Effektek:** Épületek és csaták vizuális feldobása.
 ...

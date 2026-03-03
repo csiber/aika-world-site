@@ -42,6 +42,7 @@ export const api = {
   getGalaxy: () => request('GET', '/galaxy'),
   getMissions: () => request('GET', '/missions'),
   getMissionReport: (mid) => request('GET', `/missions/report/${mid}`),
+  recallMission: (mid) => request('POST', `/missions/recall/${mid}`),
   resolveMissions: () => request('POST', '/missions/resolve'),
   spy: (targetUserId, targetCoords, targetName, ships) => request('POST', '/missions/spy', { targetUserId, targetCoords, targetName, ships }),
   attack: (targetUserId, targetCoords, targetName, ships) => request('POST', '/missions/attack', { targetUserId, targetCoords, targetName, ships }),

@@ -171,6 +171,23 @@ export async function handleMissions(request, env, url, user) {
       return jsonResponse({ ok: true, report: JSON.parse(m.result) }, 200, request);
   }
 
+  if (path.startsWith('/api/missions/recall/') && method === 'POST') {
+      const mid = path.split('/').pop();
+      const m = await env.DB.prepare('SELECT * FROM fleet_missions WHERE id = ? AND user_id = ?').bind(mid, userId).first();
+      
+      if (!m) return jsonError(404, 'Mission not found', request);
+      if (m.status !== 'travelling') return jsonError(400, 'Csak úton lévő flotta hívható vissza', request);
+
+      const now = Math.floor(Date.now() / 1000);
+      const elapsed = now - m.created_at;
+      const returnAt = now + elapsed; // Takes the same time to get back as it has travelled so far
+
+      await env.DB.prepare(`UPDATE fleet_missions SET status = 'returning', return_at = ? WHERE id = ?`)
+        .bind(returnAt, mid).run();
+
+      return jsonResponse({ ok: true, returnAt }, 200, request);
+  }
+
   if (path === '/api/missions/resolve' && method === 'POST') {
     const count = await resolveMissionsForUser(env, userId);
     return jsonResponse({ ok: true, resolved: count }, 200, request);

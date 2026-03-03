@@ -79,6 +79,7 @@
       <FleetView     v-if="activeTab === 'fleet'"     />
       <DefenseView   v-if="activeTab === 'defense'"   />
       <GalaxyView    v-if="activeTab === 'galaxy'"    />
+      <MissionsView  v-if="activeTab === 'missions'"  />
       <AllianceView  v-if="activeTab === 'alliance'"  />
       <RankingsView  v-if="activeTab === 'rankings'"  />
       <MessagesView  v-if="activeTab === 'messages'"  />
@@ -119,6 +120,7 @@ import ResearchView  from '@/components/views/ResearchView.vue';
 import FleetView     from '@/components/views/FleetView.vue';
 import DefenseView   from '@/components/views/DefenseView.vue';
 import GalaxyView    from '@/components/views/GalaxyView.vue';
+import MissionsView  from '@/components/views/MissionsView.vue';
 import AllianceView  from '@/components/views/AllianceView.vue';
 import RankingsView  from '@/components/views/RankingsView.vue';
 import MessagesView  from '@/components/views/MessagesView.vue';
@@ -139,7 +141,6 @@ const allianceStore = useAllianceStore();
 const L             = useLangStore();
 
 const activeTab      = ref('overview');
-const activePlanet   = ref(0);
 const showChangelog  = ref(false);
 
 const resources = computed(() => gameStore.resources);
@@ -153,8 +154,9 @@ const tabs = computed(() => {
     { id: 'buildings', label: L.t('nav.buildings') },
     { id: 'research',  label: L.t('nav.research')  },
     { id: 'fleet',     label: L.t('nav.fleet')     },
-    { id: 'defense',   label: L.t('nav.defense') || '🛡️ Védelem' },
+    { id: 'defense',   label: L.t('nav.defense')   || '🛡️ Védelem' },
     { id: 'galaxy',    label: L.t('nav.galaxy')    },
+    { id: 'missions',  label: L.t('nav.missions')  || '🚀 Küldetések' },
     { id: 'alliance',  label: L.t('nav.alliance')  },
     { id: 'messages',  label: L.t('nav.messages')  },
     { id: 'rankings',  label: L.t('nav.rankings')  },
@@ -178,7 +180,7 @@ onMounted(async () => {
   await gameStore.loadState();
   await msgStore.loadMessages();
   await allianceStore.load();
-  await gameStore.syncResources(); // Force initial sync
+  await gameStore.syncResources(); 
   tickTimer = setInterval(() => gameStore.tickResources(), 1000);
   syncTimer = setInterval(() => gameStore.syncResources(), 60000);
 });
@@ -237,78 +239,20 @@ onUnmounted(() => {
 
 /* ── Mobile & Tablet Optimization ── */
 @media (max-width: 768px) {
-  .topbar {
-    padding: 0 4px;
-    justify-content: space-between;
-  }
-  .logo-area {
-    min-width: auto;
-    padding: 0 8px;
-    border-right: none;
-  }
-  .logo-title, .logo-sub {
-    display: none;
-  }
-  .resource-bar {
-    padding: 0 4px;
-    mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%);
-  }
-  .user-area {
-    padding: 0 4px;
-    border-left: none;
-  }
-  .user-name {
-    display: none;
-  }
+  .topbar { padding: 0 4px; justify-content: space-between; }
+  .logo-area { min-width: auto; padding: 0 8px; border-right: none; }
+  .logo-title, .logo-sub { display: none; }
+  .resource-bar { padding: 0 4px; mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%); }
+  .user-area { padding: 0 4px; border-left: none; }
+  .user-name { display: none; }
   
-  /* Bottom Navigation */
-  .nav {
-    position: fixed;
-    bottom: 0;
-    top: auto;
-    left: 0;
-    width: 100%;
-    height: 60px;
-    background: #050c1c;
-    border-top: 1px solid var(--border);
-    border-bottom: none;
-    padding: 0;
-    z-index: 1000;
-    justify-content: flex-start;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
-  }
-  .nav-btn {
-    flex-direction: column;
-    justify-content: center;
-    height: 100%;
-    padding: 0 16px;
-    min-width: 70px;
-    font-size: 10px;
-    gap: 4px;
-    border: none;
-    border-top: 2px solid transparent;
-    border-radius: 0;
-  }
-  .nav-btn.active {
-    border-color: var(--accent);
-    background: linear-gradient(180deg, rgba(0,200,255,0.05) 0%, transparent 100%);
-    box-shadow: none;
-  }
+  .nav { position: fixed; bottom: 0; top: auto; left: 0; width: 100%; height: 60px; background: #050c1c; border-top: 1px solid var(--border); border-bottom: none; padding: 0; z-index: 1000; justify-content: flex-start; box-shadow: 0 -4px 20px rgba(0,0,0,0.5); }
+  .nav-btn { flex-direction: column; justify-content: center; height: 100%; padding: 0 16px; min-width: 70px; font-size: 10px; gap: 4px; border: none; border-top: 2px solid transparent; border-radius: 0; }
+  .nav-btn.active { border-color: var(--accent); background: linear-gradient(180deg, rgba(0,200,255,0.05) 0%, transparent 100%); box-shadow: none; }
   
-  /* Adjust Planet Bar sticky position */
-  .planet-bar {
-    top: 48px;
-    z-index: 90;
-    padding: 4px 8px;
-  }
-  .planet-slot {
-    min-width: 70px;
-    padding: 2px 6px;
-  }
-  
-  .main-content {
-    padding-bottom: 80px;
-  }
+  .planet-bar { top: 48px; z-index: 90; padding: 4px 8px; }
+  .planet-slot { min-width: 70px; padding: 2px 6px; }
+  .main-content { padding-bottom: 80px; }
 }
 
 .loading-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; position: relative; z-index: 1; }
@@ -321,23 +265,4 @@ onUnmounted(() => {
 .energy-banner.critical { background: rgba(255,58,122,0.15); border-bottom: 1px solid rgba(255,58,122,0.3); color: var(--accent2); animation: pulse 1.5s ease-in-out infinite; }
 .slide-down-enter-active, .slide-down-leave-active { transition: all 0.3s ease; }
 .slide-down-enter-from, .slide-down-leave-to { opacity: 0; transform: translateY(-8px); }
-
-/* ── RESPONSIVE ── */
-@media (max-width: 768px) {
-  .topbar { height: auto; min-height: 48px; flex-wrap: wrap; padding: 4px 0; }
-  .logo-area { min-width: auto; padding: 0 10px; border: none; height: 40px; }
-  .logo-title { font-size: 11px; }
-  .logo-icon { font-size: 18px; }
-  .logo-sub { display: none; }
-  
-  .resource-bar { order: 3; width: 100%; border-top: 1px solid var(--border); padding: 4px 8px; justify-content: space-around; }
-  .user-area { padding: 0 10px; border: none; height: 40px; margin-left: auto; }
-  .user-name { font-size: 10px; }
-  .user-pts { display: none; }
-  
-  .nav { top: 88px; height: 32px; }
-  .planet-bar { top: 120px; padding: 4px 8px; }
-  .planet-slot { min-width: 70px; padding: 2px 6px; }
-  .planet-emoji { font-size: 16px; }
-}
 </style>

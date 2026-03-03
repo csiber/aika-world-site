@@ -1,20 +1,20 @@
-# AIKA World v2.2.8 — Full-Stack Cloudflare Workers + Vue 3 + D1
+# AIKA World v2.2.9 — Full-Stack Cloudflare Workers + Vue 3 + D1
 
 **AIKA World** is a modern, real-time galactic strategy game built on the Cloudflare ecosystem (Workers, D1, Assets) using Vue 3.
 
-## Features (v2.2.8)
-- **🌌 Expanded Galaxy Map**: Travel across 9 Galaxies and 499 Systems. The map now features a high-fidelity "System View" showing 15 planet slots with detailed player info.
-- **🗺️ Navigation Controls**: Easily browse the universe with Galaxy/System selectors and quick-jump inputs.
-- **⚔️ Detailed Battle Reports**: Simulate and view multi-round combat outcomes with unit-by-unit loss tracking.
-- **🛡️ Planetary Defense Systems**: Build specialized defensive structures like Missile Turrets and Shield Domes.
+## Features (v2.2.9)
+- **🚀 Fleet Command Center**: Manage all your interstellar operations from a single view. Track every ship movement across the entire universe.
+- **↩️ Mission Recall**: Real-time fleet redirection. Change your mind and pull back your fleets mid-flight; they will return to their origin based on the time already spent travelling.
+- **🌌 Expanded Galaxy Map**: Navigate 9 Galaxies and 499 Systems with a redesigned "System View".
+- **⚔️ Detailed Battle Reports**: Full multi-round simulation with structured damage and loss reports.
 ...
 ## Changelog
 
-### v2.2.8
-- **Galaxy Expansion**: Replaced the 10x10 grid with a robust coordinate system supporting [1:1:1] to [9:499:15].
-- **Galaxy UI**: Redesigned the Galaxy View with a table-based system layout and navigation controls.
-- **Backend**: Updated mission API to handle coordinate filtering and dynamic system generation.
+### v2.2.9
+- **Missions View**: Created a central dashboard for fleet monitoring.
+- **Recall Mechanic**: Implemented backend and frontend logic for aborting missions.
+- **Navigation**: Added "Missions" to the primary game navigation.
 
-### v2.2.7
-- **Combat Reports**: Added detailed JSON-based battle summaries and a visualization modal.
+### v2.2.8
+- **Galaxy Expansion**: Full G:S:P coordinate system implementation.
 ...
