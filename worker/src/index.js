@@ -11,6 +11,7 @@ import { handleMissions, resolveAllMissions } from './routes/missions.js';
 import { handleAlliance } from './routes/alliance.js';
 import { handleProfile }  from './routes/profile.js';
 import { handleAdmin }    from './routes/admin.js';
+import { handleMarket }   from './routes/market.js';
 import { corsHeaders, jsonError } from './utils/response.js';
 import { verifyJWT } from './utils/jwt.js';
 import { simulateBots } from './utils/bots.js';
@@ -53,6 +54,7 @@ export default {
                                                         return await handleMissions(request, env, url, user);
         if (url.pathname.startsWith('/api/alliance'))   return await handleAlliance(request, env, url, user);
         if (url.pathname.startsWith('/api/profile'))    return await handleProfile(request, env, url, user);
+        if (url.pathname.startsWith('/api/market'))     return await handleMarket(request, env, url, user);
 
         return jsonError(404, 'Not found', request);
       }

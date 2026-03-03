@@ -69,4 +69,11 @@ export const api = {
   // Profile
   getMyProfile: () => request('GET', '/profile/me'),
   getProfile: (username) => request('GET', `/profile/${username}`),
+
+  // Market
+  getMarketOffers: () => request('GET', '/market/list'),
+  createMarketOffer: (offerRes, offerAmt, seekRes, seekAmt, planetId) => request('POST', '/market/create', { offerRes, offerAmt, seekRes, seekAmt, planetId }),
+  acceptMarketOffer: (offerId, planetId) => request('POST', `/market/accept/${offerId}`, { planetId }),
+  cancelMarketOffer: (offerId) => request('POST', `/market/cancel/${offerId}`),
+  npcTrade: (giveRes, giveAmt, getRes, planetId) => request('POST', '/market/npc-trade', { giveRes, giveAmt, getRes, planetId }),
 };

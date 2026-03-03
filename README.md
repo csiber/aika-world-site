@@ -1,23 +1,24 @@
-# AIKA World v2.7.6 — Full-Stack Cloudflare Workers + Vue 3 + D1 (STABLE)
+# AIKA World v2.8.0 — Full-Stack Cloudflare Workers + Vue 3 + D1 (STABLE)
 
 **AIKA World** is a modern, real-time galactic strategy game built on the Cloudflare ecosystem (Workers, D1, Assets) using Vue 3.
 
-## Key Improvements (v2.7.6)
-- **🖥️ Terminal Intro**: A high-tech, animated terminal interface on the login page introduces new players to the game's lore and objectives.
-- **🚀 Interactive Tour**: A guided step-by-step tutorial helps new Commanders navigate the resources, planet management, and navigation systems.
-- **✨ Cyberpunk Aesthetics**: Enhanced visuals with scanlines and glitch effects for an immersive sci-fi atmosphere.
-- **🔍 SEO Ready**: Fully optimized metadata and OpenGraph tags for better discoverability on Google and social media.
-- **🌑 Moon System (v2.7.5)**: Strategic celestial bodies born from the debris of massive space battles.
+## Key Improvements (v2.8.0)
+- **⚖️ Marketplace & Trade**: Introducing the Galactic Exchange. Trade resources with other players through custom offers or use the NPC Trader for instant exchanges.
+- **🌑 Moon System**: High-stakes battles can result in the formation of Moons, which offer unique strategic building opportunities.
+- **🖥️ Cyberpunk Onboarding**: A new terminal-style lore introduction and a guided interactive tour for new Commanders.
+- **🎨 Immersive Visuals**: Glitch effects, scanlines, and a redesigned login experience.
+- **🔍 SEO Optimized**: Professional metadata and OpenGraph support for better visibility.
 
 ...
 ## Changelog
 
-### v2.7.6 (Visuals & Tutorial)
-- **Feature**: Added Terminal Intro modal to LoginView.
-- **Feature**: Implemented `TutorialStore` and `TourOverlay` component for in-game onboarding.
-- **Visual**: Added animated scanline and glitch effects to the landing page.
-- **SEO**: Updated `index.html` with professional meta tags.
+### v2.8.0 (Market & Visuals Milestone)
+- **Feature**: Implemented player-to-player Galactic Exchange.
+- **Feature**: Added NPC Trader for instant resource swaps.
+- **Visual**: Cyberpunk terminal intro and landing page glitch effects.
+- **Tutorial**: Interactive "Demo Tour" for new users.
+- **Backend**: New `/api/market` endpoints and `market_offers` database.
 
-### v2.7.5
-- **Feature**: Moon creation system and backend support.
+### v2.7.6
+- **Feature**: SEO metadata and initial visual updates.
 ...

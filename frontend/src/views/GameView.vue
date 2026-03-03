@@ -84,6 +84,7 @@
       <RankingsView  v-if="activeTab === 'rankings'"  />
       <MessagesView  v-if="activeTab === 'messages'"  />
       <ProfileView   v-if="activeTab === 'profile'"   />
+      <MarketView    v-if="activeTab === 'market'"    />
       <GuideView     v-if="activeTab === 'guide'"     />
       <AdminView     v-if="activeTab === 'admin'"     />
     </main>
@@ -127,6 +128,7 @@ import AllianceView  from '@/components/views/AllianceView.vue';
 import RankingsView  from '@/components/views/RankingsView.vue';
 import MessagesView  from '@/components/views/MessagesView.vue';
 import ProfileView   from '@/components/views/ProfileView.vue';
+import MarketView    from '@/components/views/MarketView.vue';
 import GuideView     from '@/components/views/GuideView.vue';
 import AdminView     from '@/components/views/AdminView.vue';
 import BotPanel       from '@/components/BotPanel.vue';
@@ -162,6 +164,7 @@ const tabs = computed(() => {
     { id: 'galaxy',    label: L.t('nav.galaxy')    },
     { id: 'missions',  label: L.t('nav.missions')  || '🚀 Küldetések' },
     { id: 'alliance',  label: L.t('nav.alliance')  },
+    { id: 'market',    label: L.t('nav.market')    || '⚖️ Piac' },
     { id: 'messages',  label: L.t('nav.messages')  },
     { id: 'rankings',  label: L.t('nav.rankings')  },
     { id: 'profile',   label: L.t('nav.profile')   },
