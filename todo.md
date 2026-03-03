@@ -23,14 +23,12 @@ Ez a dokumentum összefoglalja a folyamatban lévő és tervezett fejlesztéseke
 - [x] Események & Küldetések
 
 ## 🛰️ Phase 5: Mélységi Mechanikák (Folyamatban)
-- [x] **Törmelékmezők & Újrahasznosítás:** 
-    - [x] Csaták után törmelék keletkezik.
-    - [x] **Recycler (Újrahasznosító):** Új hajótípus a törmelék gyűjtéséhez.
-    - [x] **Harvest Mission:** Speciális küldetés a nyersanyagok visszanyerésére.
-- [ ] **Holdak (Moons):** Nagy csaták utáni esély hold keletkezésére.
-- [ ] **Expedíciók:** Távoli űr felfedezése (Slot 16).
+- [x] Törmelékmezők & Újrahasznosítás
+- [ ] Holdak (Moons)
+- [ ] Expedíciók
 
 ## 🧹 Phase 4: Refaktorálás & Biztonság (Befejezve)
 - [x] State Sync refinement
-- [x] API Biztonsági Felülvizsgálat
+- [x] API Biztonsági Felülvizsgálat & Admin Panel javítások.
+- [ ] Lokalizáció
 ...

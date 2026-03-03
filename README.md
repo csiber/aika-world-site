@@ -1,22 +1,19 @@
-# AIKA World v2.5.0 — Full-Stack Cloudflare Workers + Vue 3 + D1
+# AIKA World v2.5.1 — Full-Stack Cloudflare Workers + Vue 3 + D1
 
 **AIKA World** is a modern, real-time galactic strategy game built on the Cloudflare ecosystem (Workers, D1, Assets) using Vue 3.
 
-## Features (v2.5.0)
-- **🚛 Debris Fields & Recycling**: Battles now leave behind ship wreckage. Deploy the new **Recycler** ships to harvest these resources from the Galaxy Map.
-- **🎯 Daily Quests**: Randomized daily objectives with significant resource rewards.
-- **🪐 3D Planet Visualization**: Immersive rotating planet spheres in the Overview dashboard.
-- **🤝 Alliance Progression**: Level up your alliance to gain global production bonuses for all members.
+## Features (v2.5.1)
+- **🐛 Admin Panel Fixes**: Resolved critical 500 and 404 errors in the admin dashboard.
+- **🚛 Debris Fields & Recycling**: Battles create debris fields, harvestable with new Recycler ships.
+- **🎯 Daily Quests**: Randomized daily objectives with resource rewards.
 ...
 ## Changelog
 
-### v2.5.0
-- **Recycling System**: Added `debris_metal` and `debris_crystal` columns to the galaxy map.
-- **Combat Update**: Destroyed ships now contribute 30% of their cost to a debris field at the combat coordinates.
-- **New Ship**: Added **Recycler** unit with large cargo capacity specifically designed for harvesting.
-- **Harvest Mission**: Implemented backend logic for debris collection and transportation back to origin.
-- **UI**: Added debris visualization and harvest triggers to the Galaxy View.
+### v2.5.1
+- **Fix**: Corrected admin panel queries to work with the planet-specific economy.
+- **Fix**: Added mock endpoints for compatibility with external tools, resolving 404 errors.
+- **Refactor**: Updated `update-resources` admin command to target the user's active planet.
 
-### v2.4.0
-- **Security**: Added robust validation to all game endpoints.
+### v2.5.0
+- **Recycling System**: Implemented debris fields and harvester ships.
 ...

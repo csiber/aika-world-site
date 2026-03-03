@@ -16,18 +16,48 @@ export async function handleAdmin(request, env, url) {
 
   // GET /api/admin/stats - Global game stats
   if (path === '/api/admin/stats' && method === 'GET') {
-    const userCount = await env.DB.prepare('SELECT COUNT(*) as count FROM users').first();
-    const totalScore = await env.DB.prepare('SELECT SUM(score) as sum FROM game_state').first();
-    const activeMissions = await env.DB.prepare('SELECT COUNT(*) as count FROM fleet_missions WHERE status = "travelling"').first();
-    
-    return jsonResponse({
-      ok: true,
-      stats: {
-        users: userCount.count,
-        totalScore: totalScore.sum,
-        missions: activeMissions.count
-      }
-    }, 200, request);
+    try {
+      const { results: users } = await env.DB.prepare('SELECT COUNT(*) as count FROM users').all();
+      const { results: scores } = await env.DB.prepare('SELECT SUM(score) as sum FROM game_state').all();
+      const { results: missions } = await env.DB.prepare('SELECT COUNT(*) as count FROM fleet_missions WHERE status = "travelling"').all();
+      
+      return jsonResponse({
+        ok: true,
+        stats: {
+          users: users[0].count,
+          totalScore: scores[0].sum || 0,
+          activeMissions: missions[0].count
+        }
+      }, 200, request);
+    } catch (err) {
+      console.error('Admin stats error:', err);
+      return jsonError(500, 'Hiba a statisztikák lekérésekor', request);
+    }
+  }
+
+  // GET /api/admin/licenses - Mock for compatibility
+  if (path === '/api/admin/licenses' && method === 'GET') {
+    return jsonResponse({ ok: true, licenses: [] }, 200, request);
+  }
+
+  // GET /api/admin/plugins - Mock for compatibility
+  if (path === '/api/admin/plugins' && method === 'GET') {
+    return jsonResponse({ ok: true, plugins: [] }, 200, request);
+  }
+
+  // GET /api/admin/tickets - Mock for compatibility
+  if (path === '/api/admin/tickets' && method === 'GET') {
+    return jsonResponse({ ok: true, tickets: [] }, 200, request);
+  }
+
+  // GET /api/admin/emails - Mock for compatibility
+  if (path === '/api/admin/emails' && method === 'GET') {
+    return jsonResponse({ ok: true, emails: [] }, 200, request);
+  }
+
+  // GET /api/admin/activity - Mock for compatibility
+  if (path === '/api/admin/activity' && method === 'GET') {
+    return jsonResponse({ ok: true, activity: [] }, 200, request);
   }
 
   // GET /api/admin/users - List users with basic info
@@ -42,38 +72,38 @@ export async function handleAdmin(request, env, url) {
     return jsonResponse({ ok: true, users: users.results }, 200, request);
   }
 
-  // POST /api/admin/update-resources - Give resources to a user
+  // POST /api/admin/update-resources - Give resources to a user (planet-aware)
   if (path === '/api/admin/update-resources' && method === 'POST') {
-    const { targetUserId, metal, crystal, deus } = await request.json();
+    const { targetUserId, metal = 0, crystal = 0, deus = 0 } = await request.json();
     
-    const state = await env.DB.prepare('SELECT resources FROM game_state WHERE user_id = ?').bind(targetUserId).first();
-    if (!state) return jsonError(404, 'User not found', request);
+    // Find user's active planet
+    const gs = await env.DB.prepare('SELECT active_planet_id FROM game_state WHERE user_id = ?').bind(targetUserId).first();
+    if (!gs) return jsonError(404, 'User not found', request);
     
-    const res = JSON.parse(state.resources);
-    if (metal) res.metal += metal;
-    if (crystal) res.crystal += crystal;
-    if (deus) res.deus += deus;
+    const planet = await env.DB.prepare('SELECT * FROM planets WHERE id = ?').bind(gs.active_planet_id).first();
+    if (!planet) return jsonError(404, 'Planet not found', request);
     
-    await env.DB.prepare('UPDATE game_state SET resources = ? WHERE user_id = ?')
-      .bind(JSON.stringify(res), targetUserId)
+    const res = JSON.parse(planet.resources);
+    res.metal += metal;
+    res.crystal += crystal;
+    res.deus += deus;
+    
+    await env.DB.prepare('UPDATE planets SET resources = ? WHERE id = ?')
+      .bind(JSON.stringify(res), planet.id)
       .run();
       
-    return jsonResponse({ ok: true, message: 'Resources updated' }, 200, request);
+    return jsonResponse({ ok: true, message: 'Resources updated on active planet' }, 200, request);
   }
 
-  // POST /api/admin/bots/seed — create missing NPC bots (idempotent)
+  // Bot routes
   if (path === '/api/admin/bots/seed' && method === 'POST') {
     const result = await seedBots(env);
     return jsonResponse({ ok: true, ...result }, 200, request);
   }
-
-  // POST /api/admin/bots/simulate — run one growth tick for all bots
   if (path === '/api/admin/bots/simulate' && method === 'POST') {
     const result = await simulateBots(env);
     return jsonResponse({ ok: true, ...result }, 200, request);
   }
-
-  // GET /api/admin/bots/list — list all bots with current scores
   if (path === '/api/admin/bots/list' && method === 'GET') {
     const bots = await listBots(env);
     return jsonResponse({ ok: true, bots }, 200, request);
