@@ -91,12 +91,15 @@ export async function resolveMissionsForUser(env, userId) {
     }
 
     if (mission.mission_type === 'attack') {
-      const attackerState = { fleet: currentShips, research: JSON.parse(gs.research) };
+      const attackerGS = await getGlobalState(env, userId);
+      const attackerState = { username: user.username, fleet: currentShips, research: JSON.parse(attackerGS.research) };
       const targetPlanet = await getPlanetState(env, (await env.DB.prepare('SELECT id FROM planets WHERE user_id = ? AND coords = ?').bind(mission.target_user_id, mission.target_coords).first())?.id);
       
       if (targetPlanet) {
         const targetGS = await getGlobalState(env, mission.target_user_id);
-        const defenderState = { fleet: targetPlanet.fleet, defense: targetPlanet.defense, research: JSON.parse(targetGS.research), buildings: targetPlanet.buildings, resources: targetPlanet.resources };
+        const targetUser = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(mission.target_user_id).first();
+        const defenderState = { username: targetUser.username, fleet: targetPlanet.fleet, defense: targetPlanet.defense, research: JSON.parse(targetGS.research), buildings: targetPlanet.buildings, resources: targetPlanet.resources };
+        
         const battle = runBattle(attackerState, defenderState);
         result = { ...result, ...battle };
         currentShips = battle.attackerRemainingFleet;
@@ -109,8 +112,11 @@ export async function resolveMissionsForUser(env, userId) {
     }
 
     await env.DB.prepare(`UPDATE fleet_missions SET status=?, result=?, ships=?, return_at=? WHERE id=?`).bind(nextStatus, JSON.stringify(result), JSON.stringify(currentShips), returnAt, mission.id).run();
+    
+    // Store mission_id in metadata for frontend linking
+    const msgId = crypto.randomUUID();
     await env.DB.prepare('INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)')
-      .bind(crypto.randomUUID(), userId, missionIcon(mission.mission_type) + ' Küldetés', missionSubject(mission.mission_type, mission.target_name), formatMissionResult(mission, result), 'combat').run();
+      .bind(msgId, userId, missionIcon(mission.mission_type) + ' Küldetés', missionSubject(mission.mission_type, mission.target_name), formatMissionResult(mission, result), 'combat').run();
   }
 
   const returned = await env.DB.prepare(`SELECT * FROM fleet_missions WHERE user_id = ? AND status = 'returning' AND return_at <= ?`).bind(userId, now).all();
@@ -148,6 +154,13 @@ export async function handleMissions(request, env, url, user) {
     return jsonResponse({ ok: true, missions: rows.results }, 200, request);
   }
 
+  if (path.startsWith('/api/missions/report/') && method === 'GET') {
+      const mid = path.split('/').pop();
+      const m = await env.DB.prepare('SELECT * FROM fleet_missions WHERE id = ? AND user_id = ?').bind(mid, userId).first();
+      if (!m) return jsonError(404, 'Report not found', request);
+      return jsonResponse({ ok: true, report: JSON.parse(m.result) }, 200, request);
+  }
+
   if (path === '/api/missions/resolve' && method === 'POST') {
     const count = await resolveMissionsForUser(env, userId);
     return jsonResponse({ ok: true, resolved: count }, 200, request);
@@ -165,7 +178,13 @@ export async function handleMissions(request, env, url, user) {
     let res = { success: true };
     if (targetUserId) {
         const targetP = await env.DB.prepare('SELECT * FROM planets WHERE user_id = ? AND coords = ?').bind(targetUserId, targetCoords).first();
-        if (targetP) { res.resources = JSON.parse(targetP.resources); res.fleet = JSON.parse(targetP.fleet).filter(f => f.count > 0); res.defense = JSON.parse(targetP.defense || '[]').filter(d => d.count > 0); }
+        if (targetP) { 
+            const targetUser = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(targetUserId).first();
+            res.targetUsername = targetUser.username;
+            res.resources = JSON.parse(targetP.resources); 
+            res.fleet = JSON.parse(targetP.fleet).filter(f => f.count > 0); 
+            res.defense = JSON.parse(targetP.defense || '[]').filter(d => d.count > 0); 
+        }
     }
     await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, target_user_id, mission_type, target_coords, target_name, status, ships, result, arrive_at, created_at) VALUES (?, ?, ?, ?, 'spy', ?, ?, 'travelling', ?, ?, ?, unixepoch())`)
       .bind(crypto.randomUUID(), userId, planet.id, targetUserId || null, targetCoords, targetName || 'Ismeretlen', JSON.stringify(sentShips), JSON.stringify(res), arriveAt).run();
@@ -214,42 +233,80 @@ function extractShips(currentFleet, requestedShips) {
 }
 
 function runBattle(attacker, defender) {
-    const calcPower = (units, research, buildings = []) => {
-        const combatLevel = research?.find(r => r.id === 'combat')?.level || 0;
-        const shieldLevel = research?.find(r => r.id === 'shield')?.level || 0;
-        const laserLevel  = research?.find(r => r.id === 'laser')?.level || 0;
-        const atkBonus = 1 + combatLevel * 0.10 + laserLevel * 0.05;
-        const defBonus = 1 + shieldLevel * 0.10;
-        const attack = units.reduce((s, u) => s + (u.attack * u.count * atkBonus), 0);
-        const shield = units.reduce((s, u) => s + (u.shield * u.count * defBonus), 0);
-        const cargo  = units.reduce((s, u) => s + ((u.cargo || 0) * u.count), 0);
-        const defenseBonus = (buildings.find(b => b.id === 'defense')?.level || 0) * 500;
-        return { attack, shield: shield + defenseBonus, cargo };
+    const getStats = (units, res, builds = []) => {
+        const combat = res?.find(r => r.id === 'combat')?.level || 0;
+        const shield = res?.find(r => r.id === 'shield')?.level || 0;
+        const laser  = res?.find(r => r.id === 'laser')?.level || 0;
+        const plasma = res?.find(r => r.id === 'plasma')?.level || 0;
+        const atkBonus = 1 + combat * 0.10 + laser * 0.05 + plasma * 0.12;
+        const defBonus = 1 + shield * 0.10;
+        const atkTotal = units.reduce((s, u) => s + (u.attack * u.count * atkBonus), 0);
+        const defTotal = units.reduce((s, u) => s + (u.shield * u.count * defBonus), 0);
+        const defenseBuildingBonus = (builds.find(b => b.id === 'defense')?.level || 0) * 500;
+        return { attack: Math.floor(atkTotal), shield: Math.floor(defTotal + defenseBuildingBonus), cargo: units.reduce((s, u) => s + ((u.cargo || 0) * u.count), 0) };
     };
 
-    const atkPow = calcPower(attacker.fleet, attacker.research);
-    const defPow = calcPower([...defender.fleet, ...(defender.defense || [])], defender.research, defender.buildings);
+    const initialAtk = getStats(attacker.fleet, attacker.research);
+    const initialDef = getStats([...defender.fleet, ...defender.defense], defender.research, defender.buildings);
 
-    const attackerWins = atkPow.attack > defPow.shield;
-    const loss = (units, pct) => units.map(u => ({ ...u, count: Math.floor(u.count * (1 - pct)) }));
+    const rounds = [];
+    let curAtkFleet = JSON.parse(JSON.stringify(attacker.fleet));
+    let curDefFleet = JSON.parse(JSON.stringify(defender.fleet));
+    let curDefDefense = JSON.parse(JSON.stringify(defender.defense));
 
-    const atkLoss = attackerWins ? 0.2 : 0.8;
-    const defLoss = attackerWins ? 0.9 : 0.1;
+    // Simulate 3 rounds
+    for (let r = 1; r <= 3; r++) {
+        const atkStats = getStats(curAtkFleet, attacker.research);
+        const defStats = getStats([...curDefFleet, ...curDefDefense], defender.research, defender.buildings);
+        
+        rounds.push({ round: r, attackerPower: atkStats.attack, defenderPower: defStats.shield });
 
-    const attackerRemainingFleet = loss(attacker.fleet, atkLoss);
-    const defenderRemainingFleet = loss(defender.fleet, defLoss);
-    const defenderRemainingDefense = loss(defender.defense || [], defLoss);
+        // Apply damage (simplified linear distribution)
+        const atkDamage = atkStats.attack;
+        const defDamage = defStats.shield / 2; // Attacker takes less relative damage if winning
 
+        const applyLoss = (units, dmg, totalShield) => {
+            if (totalShield <= 0) return units.map(u => ({ ...u, count: 0 }));
+            const lossPct = Math.min(1, dmg / (totalShield * 1.5 + 1));
+            return units.map(u => ({ ...u, count: Math.floor(u.count * (1 - lossPct)) }));
+        };
+
+        curDefFleet = applyLoss(curDefFleet, atkDamage, defStats.shield);
+        curDefDefense = applyLoss(curDefDefense, atkDamage, defStats.shield);
+        curAtkFleet = applyLoss(curAtkFleet, defDamage, atkStats.shield || 1000);
+        
+        if (atkStats.attack <= 0 || defStats.shield <= 0) break;
+    }
+
+    const finalAtkStats = getStats(curAtkFleet, attacker.research);
+    const finalDefStats = getStats([...curDefFleet, ...curDefDefense], defender.research, defender.buildings);
+    
+    const attackerWins = finalAtkStats.attack > finalDefStats.shield;
+    
     let loot = { metal: 0, crystal: 0 };
     let defenderResources = { ...defender.resources };
     if (attackerWins) {
-        loot.metal = Math.min(atkPow.cargo / 2, defenderResources.metal * 0.5);
-        loot.crystal = Math.min(atkPow.cargo / 2, defenderResources.crystal * 0.5);
+        const finalAtk = getStats(curAtkFleet, attacker.research);
+        loot.metal = Math.min(finalAtk.cargo / 2, defenderResources.metal * 0.5);
+        loot.crystal = Math.min(finalAtk.cargo / 2, defenderResources.crystal * 0.5);
         defenderResources.metal -= loot.metal;
         defenderResources.crystal -= loot.crystal;
     }
 
-    return { attackerWins, attackerRemainingFleet, defenderRemainingFleet, defenderRemainingDefense, defenderResources, loot };
+    return {
+        attackerWins,
+        attackerName: attacker.username,
+        defenderName: defender.username,
+        initialAtkFleet: attacker.fleet,
+        initialDefFleet: defender.fleet,
+        initialDefDefense: defender.defense,
+        attackerRemainingFleet: curAtkFleet,
+        defenderRemainingFleet: curDefFleet,
+        defenderRemainingDefense: curDefDefense,
+        defenderResources,
+        loot,
+        rounds
+    };
 }
 
 function missionIcon(type) { return { spy: '🔍', attack: '⚔️', colonize: '🌍', return: '↩️' }[type] || '📡'; }
@@ -264,7 +321,7 @@ function formatMissionResult(mission, result) {
     return `🔍 KÉM JELENTÉS\n\nCél: ${mission.target_name}\n\nFém: ${Math.floor(result.resources.metal)}\nKristály: ${Math.floor(result.resources.crystal)}\nVédelem: ${result.defense?.length || 0} típusú egység észlelt.`;
   }
   if (mission.mission_type === 'attack') {
-    return `⚔️ HARCI JELENTÉS\n\nEredmény: ${result.attackerWins ? 'GYŐZELEM' : 'VERESÉG'}\nZsákmány:\nFém: ${Math.floor(result.loot.metal)}\nKristály: ${Math.floor(result.loot.crystal)}`;
+    return `⚔️ HARCI JELENTÉS — ${result.attackerWins ? 'GYŐZELEM' : 'VERESÉG'}\n\nZsákmány:\nFém: ${Math.floor(result.loot.metal)}\nKristály: ${Math.floor(result.loot.crystal)}\n\n[DETAILED_REPORT:${mission.id}]`;
   }
   return 'Küldetés befejezve.';
 }

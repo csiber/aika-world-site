@@ -28,8 +28,12 @@
       </div>
       <div class="panel-body">
         <div class="msg-meta">{{ L.t('messages.from') }}: {{ selected.from_name }}</div>
-        <div class="msg-body">{{ selected.body }}</div>
+        <div class="msg-body">{{ cleanBody(selected.body) }}</div>
+        
         <div class="msg-actions">
+          <button v-if="getReportId(selected.body)" class="btn-primary" @click="showReport = true">
+            ⚔️ Részletes Jelentés Megtekintése
+          </button>
           <button class="btn-primary" style="border-color:var(--accent2);color:var(--accent2);" @click="doDelete">🗑️ {{ L.t('messages.delete') }}</button>
         </div>
       </div>
@@ -37,6 +41,9 @@
     <div v-else class="panel msg-reader empty-panel">
       <div class="empty-msg">{{ L.t('messages.select') }}</div>
     </div>
+
+    <!-- Combat Report Modal -->
+    <CombatReportModal v-if="showReport && selected" :reportId="getReportId(selected.body)" @close="showReport = false" />
   </div>
 </template>
 
@@ -44,13 +51,16 @@
 import { ref, onMounted } from 'vue';
 import { useMessagesStore } from '@/stores/messages.js';
 import { useLangStore } from '@/stores/lang.js';
+import CombatReportModal from '@/components/CombatReportModal.vue';
 
 const store = useMessagesStore();
 const L     = useLangStore();
 const selected = ref(null);
+const showReport = ref(false);
 
 async function open(msg) {
   selected.value = msg;
+  showReport.value = false;
   if (!msg.is_read) {
     await store.markRead(msg.id);
   }
@@ -61,6 +71,17 @@ async function doDelete() {
   const id = selected.value.id;
   selected.value = null;
   await store.deleteMessage(id);
+}
+
+function getReportId(body) {
+  if (!body) return null;
+  const m = body.match(/\[DETAILED_REPORT:([^\]]+)\]/);
+  return m ? m[1] : null;
+}
+
+function cleanBody(body) {
+  if (!body) return '';
+  return body.replace(/\[DETAILED_REPORT:[^\]]+\]/, '').trim();
 }
 
 function timeAgo(ts) {
@@ -93,4 +114,9 @@ onMounted(() => store.loadMessages());
 
 .empty-panel { display: flex; align-items: center; justify-content: center; }
 .empty-msg { color: var(--text-dim); font-size: 12px; }
+
+@media (max-width: 768px) {
+  .msg-layout { grid-template-columns: 1fr; }
+  .msg-list-panel { max-height: 200px; overflow-y: auto; }
+}
 </style>

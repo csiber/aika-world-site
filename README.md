@@ -1,21 +1,21 @@
-# AIKA World v2.2.6 — Full-Stack Cloudflare Workers + Vue 3 + D1
+# AIKA World v2.2.7 — Full-Stack Cloudflare Workers + Vue 3 + D1
 
 **AIKA World** is a modern, real-time galactic strategy game built on the Cloudflare ecosystem (Workers, D1, Assets) using Vue 3.
 
-## Features (v2.2.6)
-- **🛡️ Planetary Defense Systems**: You can now build defensive units (Missile Turrets, Laser Cannons, Shield Domes) to protect your planets.
-- **⚔️ Integrated Combat**: Defense units are fully integrated into the battle simulation, adding their attack and shield power to the defender's fleet.
-- **🌿 Advanced Tech Tree**: Comprehensive prerequisite system for buildings, research, fleet, and defense.
-- **🪐 Multi-planet Economy**: Independent resource and building management per planet.
+## Features (v2.2.7)
+- **⚔️ Detailed Battle Reports**: Combat now simulates multiple rounds. Detailed reports show initial fleets, unit-by-unit losses for both sides, and round-by-round power stats.
+- **📩 Message Integration**: Access detailed combat reports directly from your inbox with the new "View Detailed Report" action.
+- **🛡️ Planetary Defense Systems**: Build Rocket Turrets, Laser Cannons, and Shield Domes to protect your planets.
+- **🌿 Advanced Tech Tree**: Prerequisite system for buildings, research, and units.
 ...
 ## Changelog
 
-### v2.2.6
-- **Defense Systems**: Added `defense` state to planets. Created `DefenseView` for building defensive units.
-- **Combat Logic**: Refactored `runBattle` to include defense units in calculations and losses.
-- **Spy Missions**: Spy reports now include detected defense units.
-- **UI**: Added a dedicated "Defense" tab to the main navigation.
+### v2.2.7
+- **Combat Simulation**: Refactored `runBattle` to generate structured JSON reports with round data and loss tracking.
+- **Reports UI**: Created `CombatReportModal` for a high-fidelity visualization of battle outcomes.
+- **API**: Added `/api/missions/report/:id` endpoint to fetch historical battle data.
+- **Messages**: Updated message body parsing to clean metadata and provide action buttons.
 
-### v2.2.5
-- **Tech Tree**: Defined dependencies for all game items.
+### v2.2.6
+- **Defense Systems**: Added buildable defensive units.
 ...
