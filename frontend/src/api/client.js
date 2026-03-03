@@ -41,8 +41,8 @@ export const api = {
   getGalaxy: () => request('GET', '/galaxy'),
   getMissions: () => request('GET', '/missions'),
   resolveMissions: () => request('POST', '/missions/resolve'),
-  spy: (targetUserId, targetCoords, targetName) => request('POST', '/missions/spy', { targetUserId, targetCoords, targetName }),
-  attack: (targetUserId, targetCoords, targetName) => request('POST', '/missions/attack', { targetUserId, targetCoords, targetName }),
+  spy: (targetUserId, targetCoords, targetName, ships) => request('POST', '/missions/spy', { targetUserId, targetCoords, targetName, ships }),
+  attack: (targetUserId, targetCoords, targetName, ships) => request('POST', '/missions/attack', { targetUserId, targetCoords, targetName, ships }),
   colonize: (targetCoords, targetName) => request('POST', '/missions/colonize', { targetCoords, targetName }),
 
   // Alliance

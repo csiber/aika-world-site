@@ -10,40 +10,44 @@
 
 import { jsonResponse, jsonError } from '../utils/response.js';
 
-async function getState(env, userId) {
-  const row = await env.DB.prepare('SELECT * FROM game_state WHERE user_id = ?').bind(userId).first();
+// ── DB helpers ────────────────────────────────────────────────────────────────
+
+async function getPlanetState(env, planetId) {
+  const row = await env.DB.prepare('SELECT * FROM planets WHERE id = ?').bind(planetId).first();
   if (!row) return null;
   return {
+    id: row.id,
+    userId: row.user_id,
     resources: JSON.parse(row.resources),
     rates: JSON.parse(row.rates),
     buildings: JSON.parse(row.buildings),
-    research: JSON.parse(row.research),
     fleet: JSON.parse(row.fleet),
-    planets: JSON.parse(row.planets),
-    score: row.score,
+    coords: row.coords,
     updatedAt: row.updated_at,
   };
 }
 
-async function saveState(env, userId, state) {
+async function savePlanetState(env, planetId, state) {
   await env.DB.prepare(`
-    UPDATE game_state SET resources=?, rates=?, buildings=?, research=?, fleet=?, planets=?, score=?, updated_at=unixepoch()
-    WHERE user_id=?
+    UPDATE planets SET resources=?, rates=?, buildings=?, fleet=?, updated_at=unixepoch()
+    WHERE id=?
   `).bind(
     JSON.stringify(state.resources), JSON.stringify(state.rates),
-    JSON.stringify(state.buildings), JSON.stringify(state.research),
-    JSON.stringify(state.fleet), JSON.stringify(state.planets),
-    state.score, userId
+    JSON.stringify(state.buildings), JSON.stringify(state.fleet),
+    planetId
   ).run();
 }
 
-function calcTravelTime(fromCoords, targetCoords, state, baseSeconds = 300) {
-  const driveLevel = state.research?.find(r => r.id === 'drive')?.level || 0;
+async function getGlobalState(env, userId) {
+  return await env.DB.prepare('SELECT * FROM game_state WHERE user_id = ?').bind(userId).first();
+}
+
+function calcTravelTime(fromCoords, targetCoords, research, baseSeconds = 300) {
+  const driveLevel = research?.find(r => r.id === 'drive')?.level || 0;
   const driveBonus = 1 + driveLevel * 0.15;
   
-  // Calculate distance based on coordinate segments [G:S:P]
-  const parse = (c) => c.match(/\d+/g).map(Number);
-  const [g1, s1, p1] = parse(fromCoords || '[1:1:1]');
+  const parse = (c) => (c.match(/\d+/g) || [1,1,1]).map(Number);
+  const [g1, s1, p1] = parse(fromCoords);
   const [g2, s2, p2] = parse(targetCoords);
   
   let dist = 0;
@@ -60,9 +64,12 @@ export async function handleMissions(request, env, url, user) {
   const path = url.pathname;
   const method = request.method;
 
+  // Get active planet to know where the fleet is coming from
+  const gs = await getGlobalState(env, userId);
+  const activePlanetId = gs?.active_planet_id;
+
   // ── GET /api/galaxy ─────────────────────────────────────
   if (path === '/api/galaxy' && method === 'GET') {
-    // Get all players' main planets for the galaxy map
     const rows = await env.DB.prepare(`
       SELECT g.user_id, g.username, g.planet_name, g.planet_emoji, g.coords, g.score
       FROM galaxy_map g
@@ -70,16 +77,12 @@ export async function handleMissions(request, env, url, user) {
       LIMIT 200
     `).all();
 
-    // Also get current user's own planets
-    const myState = await getState(env, userId);
-    const myPlanets = myState?.planets || [];
-
+    const { results: myPlanets } = await env.DB.prepare('SELECT id, name, emoji, coords FROM planets WHERE user_id = ?').bind(userId).all();
     return jsonResponse({ ok: true, players: rows.results, myPlanets }, 200, request);
   }
 
   // ── GET /api/missions ────────────────────────────────────
   if (path === '/api/missions' && method === 'GET') {
-    const now = Math.floor(Date.now() / 1000);
     const rows = await env.DB.prepare(
       'SELECT * FROM fleet_missions WHERE user_id = ? AND status != ? ORDER BY arrive_at ASC'
     ).bind(userId, 'done').all();
@@ -89,131 +92,139 @@ export async function handleMissions(request, env, url, user) {
   // ── POST /api/missions/resolve ───────────────────────────
   if (path === '/api/missions/resolve' && method === 'POST') {
     const now = Math.floor(Date.now() / 1000);
+    
+    // 1. Process fleets arriving at target
     const arrived = await env.DB.prepare(
       `SELECT * FROM fleet_missions WHERE user_id = ? AND status = 'travelling' AND arrive_at <= ?`
     ).bind(userId, now).all();
 
-    const results = [];
     for (const mission of arrived.results) {
       let result = JSON.parse(mission.result || '{}');
-      let newStatus = 'done';
+      let currentShips = JSON.parse(mission.ships || '[]');
+      let nextStatus = 'returning';
+      
+      // Calculate travel time for return trip
+      const travelTime = mission.arrive_at - mission.created_at; 
+      const returnAt = now + travelTime;
 
       if (mission.mission_type === 'colonize' && result.success) {
-        // Add new planet to state
-        const state = await getState(env, userId);
-        if (state && state.planets.length < 9) {
-          state.planets.push({
-            name: result.planetName,
-            emoji: result.emoji,
-            coords: mission.target_coords,
-          });
-          state.score += 200;
-          await saveState(env, userId, state);
-          await env.DB.prepare('UPDATE rankings SET score=?, updated_at=unixepoch() WHERE user_id=?')
-            .bind(state.score, userId).run();
-          // Register colony on the galaxy map
-          await env.DB.prepare(
-            `INSERT OR IGNORE INTO galaxy_map (user_id, username, planet_name, planet_emoji, coords, score, is_main)
-             VALUES (?, ?, ?, ?, ?, ?, 0)`
-          ).bind(userId, user.username, result.planetName, result.emoji, mission.target_coords, state.score).run();
+        const planetCount = (await env.DB.prepare('SELECT COUNT(*) as cnt FROM planets WHERE user_id = ?').bind(userId).first()).cnt;
+        if (planetCount < 9) {
+          const newId = crypto.randomUUID();
+          // Create the new planet
+          const defaultBuildings = await env.DB.prepare('SELECT data FROM default_buildings').first();
+          const defaultFleet = await env.DB.prepare('SELECT data FROM default_fleet').first();
+          
+          await env.DB.prepare(`
+            INSERT INTO planets (id, user_id, name, emoji, coords, buildings, fleet, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, unixepoch())
+          `).bind(newId, userId, result.planetName, result.emoji, mission.target_coords, defaultBuildings.data, defaultFleet.data).run();
+          
+          await env.DB.prepare(`INSERT OR IGNORE INTO galaxy_map (user_id, username, planet_name, planet_emoji, coords, score, is_main)
+             VALUES (?, ?, ?, ?, ?, ?, 0)`).bind(userId, user.username, result.planetName, result.emoji, mission.target_coords, gs.score).run();
+          
+          nextStatus = 'done'; // Colonizers don't return
         }
       }
 
-      if (mission.mission_type === 'attack' && result.loot) {
-        // Give loot to attacker
-        const state = await getState(env, userId);
-        if (state) {
-          state.resources.metal   += result.loot.metal || 0;
-          state.resources.crystal += result.loot.crystal || 0;
-          state.score += result.scoreGain || 0;
-          await saveState(env, userId, state);
-        }
-        // Bot retaliation — bot sends a message back to the attacker
-        if (mission.target_user_id) {
-          const botTarget = await env.DB.prepare(
-            'SELECT is_bot, username FROM users WHERE id = ?'
-          ).bind(mission.target_user_id).first();
-          if (botTarget?.is_bot) {
-            await env.DB.prepare(
-              'INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)'
-            ).bind(
-              crypto.randomUUID(), userId,
-              `⚔️ ${botTarget.username}`,
-              `${botTarget.username} üzenete`,
-              botRetaliationMessage(botTarget.username, result.attackerWins),
-              'combat'
-            ).run();
-          }
+      if (mission.mission_type === 'attack') {
+        // Battle happens NOW on arrival
+        const attackerState = { fleet: currentShips, research: JSON.parse(gs.research) };
+        const targetPlanet = await env.DB.prepare('SELECT * FROM planets WHERE user_id = ? AND coords = ?')
+          .bind(mission.target_user_id, mission.target_coords).first();
+        
+        if (targetPlanet) {
+          const targetUser = await env.DB.prepare('SELECT * FROM game_state WHERE user_id = ?').bind(mission.target_user_id).first();
+          const defenderState = { fleet: JSON.parse(targetPlanet.fleet), research: JSON.parse(targetUser.research), buildings: JSON.parse(targetPlanet.buildings) };
+          
+          const battleResult = runBattle(attackerState, defenderState);
+          result = { ...result, ...battleResult };
+          currentShips = battleResult.attackerRemainingFleet;
+          
+          // Save defender state
+          await env.DB.prepare('UPDATE planets SET fleet=?, resources=? WHERE id=?')
+            .bind(JSON.stringify(battleResult.defenderRemainingFleet), JSON.stringify(battleResult.defenderResources), targetPlanet.id).run();
+            
+          // If attacker won, they take resources
+          // (Simplified: added to mission result, will be added to origin planet on return)
+          result.loot = battleResult.loot;
         }
       }
 
       await env.DB.prepare(
-        `UPDATE fleet_missions SET status='done' WHERE id=?`
-      ).bind(mission.id).run();
+        `UPDATE fleet_missions SET status=?, result=?, ships=?, return_at=? WHERE id=?`
+      ).bind(nextStatus, JSON.stringify(result), JSON.stringify(currentShips), returnAt, mission.id).run();
 
-      // Send result as in-game message
-      const msgBody = formatMissionResult(mission, result);
-      await env.DB.prepare(
-        'INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)'
-      ).bind(
-        crypto.randomUUID(), userId,
-        missionIcon(mission.mission_type) + ' Küldetés',
-        missionSubject(mission.mission_type, mission.target_name),
-        msgBody, 'combat'
-      ).run();
-
-      results.push({ id: mission.id, type: mission.mission_type, result });
+      // Send message
+      await env.DB.prepare('INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)')
+        .bind(crypto.randomUUID(), userId, missionIcon(mission.mission_type) + ' Küldetés', missionSubject(mission.mission_type, mission.target_name), formatMissionResult(mission, result), 'combat').run();
     }
 
-    return jsonResponse({ ok: true, resolved: results.length, results }, 200, request);
+    // 2. Process fleets returning home
+    const returned = await env.DB.prepare(
+      `SELECT * FROM fleet_missions WHERE user_id = ? AND status = 'returning' AND return_at <= ?`
+    ).bind(userId, now).all();
+
+    for (const mission of returned.results) {
+      const originPlanet = await getPlanetState(env, mission.origin_planet_id);
+      if (originPlanet) {
+        const backShips = JSON.parse(mission.ships || '[]');
+        const result = JSON.parse(mission.result || '{}');
+        
+        // Add ships back
+        for (const s of backShips) {
+          const target = originPlanet.fleet.find(f => f.id === s.id);
+          if (target) target.count += s.count;
+        }
+        
+        // Add loot
+        if (result.loot) {
+          originPlanet.resources.metal += result.loot.metal || 0;
+          originPlanet.resources.crystal += result.loot.crystal || 0;
+        }
+        
+        await savePlanetState(env, originPlanet.id, originPlanet);
+      }
+      
+      await env.DB.prepare(`UPDATE fleet_missions SET status='done' WHERE id=?`).bind(mission.id).run();
+    }
+
+    return jsonResponse({ ok: true, resolved: arrived.results.length + returned.results.length }, 200, request);
   }
 
   // ── POST /api/missions/spy ───────────────────────────────
   if (path === '/api/missions/spy' && method === 'POST') {
     let body;
     try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
-    const { targetUserId, targetCoords, targetName } = body;
-    if (!targetCoords) return jsonError(400, 'targetCoords szükséges', request);
+    const { targetUserId, targetCoords, targetName, ships } = body;
+    
+    const planet = await getPlanetState(env, activePlanetId);
+    if (!planet) return jsonError(404, 'Bolygó nem található', request);
 
-    // Check spy tech level
-    const state = await getState(env, userId);
-    if (!state) return jsonError(404, 'Játékállapot nem található', request);
+    // Subtract ships
+    const { fleet: newFleet, sentShips } = extractShips(planet.fleet, ships);
+    if (sentShips.length === 0) return jsonError(400, 'Nincs küldhető flotta', request);
+    planet.fleet = newFleet;
+    await savePlanetState(env, planet.id, planet);
 
-    const spyTech = state.research.find(r => r.id === 'spy');
-    const spyLevel = spyTech?.level || 0;
-
-    // Gather intel on target
-    let result = { success: true, spyLevel, coords: targetCoords, name: targetName };
-
+    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(planet.coords, targetCoords, JSON.parse(gs.research), 60);
+    
+    // Result pre-calc for spy (simplified)
+    let result = { success: true };
     if (targetUserId) {
-      const targetState = await getState(env, targetUserId);
-      if (targetState) {
-        // Higher spy level = more info
-        result.resources = {
-          metal:   Math.floor(targetState.resources.metal),
-          crystal: Math.floor(targetState.resources.crystal),
-        };
-        if (spyLevel >= 3) result.resources.energy = Math.floor(targetState.resources.energy);
-        if (spyLevel >= 5) result.resources.deus = Math.floor(targetState.resources.deus);
-        if (spyLevel >= 7) result.fleet = targetState.fleet.filter(f => f.count > 0).map(f => ({ name: f.name, icon: f.icon, count: f.count }));
-        if (spyLevel >= 10) result.buildings = targetState.buildings.map(b => ({ name: b.name, icon: b.icon, level: b.level }));
-      }
-    } else {
-      result.resources = null; // empty system
+        const targetPlanet = await env.DB.prepare('SELECT * FROM planets WHERE user_id = ? AND coords = ?').bind(targetUserId, targetCoords).first();
+        if (targetPlanet) {
+            result.resources = JSON.parse(targetPlanet.resources);
+            result.fleet = JSON.parse(targetPlanet.fleet).filter(f => f.count > 0);
+        }
     }
 
-    const fromCoords = state.planets[0]?.coords || '[1:1:1]';
-    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(fromCoords, targetCoords, state, 60);
     await env.DB.prepare(
-      `INSERT INTO fleet_missions (id, user_id, target_user_id, mission_type, target_coords, target_name, status, result, arrive_at)
-       VALUES (?, ?, ?, 'spy', ?, ?, 'travelling', ?, ?)`
-    ).bind(
-      crypto.randomUUID(), userId, targetUserId || null,
-      targetCoords, targetName || 'Ismeretlen',
-      JSON.stringify(result), arriveAt
-    ).run();
+      `INSERT INTO fleet_missions (id, user_id, origin_planet_id, target_user_id, mission_type, target_coords, target_name, status, ships, result, arrive_at)
+       VALUES (?, ?, ?, ?, 'spy', ?, ?, 'travelling', ?, ?, ?)`
+    ).bind(crypto.randomUUID(), userId, planet.id, targetUserId || null, targetCoords, targetName || 'Ismeretlen', JSON.stringify(sentShips), JSON.stringify(result), arriveAt).run();
 
-    return jsonResponse({ ok: true, arriveAt, message: 'Kém úton van!' }, 200, request);
+    return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
 
   // ── POST /api/missions/attack ────────────────────────────
@@ -221,113 +232,21 @@ export async function handleMissions(request, env, url, user) {
     let body;
     try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { targetUserId, targetCoords, targetName, ships } = body;
-    if (!targetUserId || !targetCoords) return jsonError(400, 'Hiányzó paraméterek', request);
+    
+    const planet = await getPlanetState(env, activePlanetId);
+    if (!planet) return jsonError(404, 'Bolygó nem található', request);
 
-    const state = await getState(env, userId);
-    if (!state) return jsonError(404, 'Játékállapot nem található', request);
+    const { fleet: newFleet, sentShips } = extractShips(planet.fleet, ships);
+    if (sentShips.length === 0) return jsonError(400, 'Nincs küldhető flotta', request);
+    planet.fleet = newFleet;
+    await savePlanetState(env, planet.id, planet);
 
-    // Verify attacker has ships
-    const totalShips = (state.fleet || []).reduce((s, f) => s + f.count, 0);
-    if (totalShips === 0) return jsonError(400, 'Nincs flottád a támadáshoz!', request);
-
-    // Calculate battle outcome
-    const targetState = await getState(env, targetUserId);
-    if (!targetState) return jsonError(404, 'Célpont nem található', request);
-
-    // Research-aware combat calculation
-    function calcPower(fleet, research, side) {
-      const combatLevel = research?.find(r => r.id === 'combat')?.level || 0;
-      const laserLevel  = research?.find(r => r.id === 'laser')?.level  || 0;
-      const plasmaLevel = research?.find(r => r.id === 'plasma')?.level || 0;
-      const shieldLevel = research?.find(r => r.id === 'shield')?.level || 0;
-      const attackBonus = 1 + combatLevel * 0.10 + laserLevel * 0.05 + plasmaLevel * 0.12;
-      const shieldBonus = 1 + shieldLevel * 0.10;
-      const attack = fleet.reduce((s, f) => s + (f.attack * f.count * attackBonus), 0);
-      const shield = fleet.reduce((s, f) => s + (f.shield * f.count * shieldBonus), 0);
-      const cargo  = fleet.reduce((s, f) => s + (f.cargo  * f.count), 0);
-      return { attack: Math.floor(attack), shield: Math.floor(shield), cargo };
-    }
-
-    const atkPow = calcPower(state.fleet, state.research, 'attacker');
-    const defFleetPow = calcPower(targetState.fleet, targetState.research, 'defender');
-    const defBuildingBonus = (targetState.buildings?.find(b => b.id === 'defense')?.level || 0) * 500;
-    const attackPower = atkPow.attack;
-    const defPower    = defFleetPow.shield + defBuildingBonus;
-
-    const rand = 0.85 + Math.random() * 0.3; // 0.85-1.15 randomness
-    const attackerWins = attackPower * rand > defPower;
-
-    // Fleet losses — both sides take losses proportional to opponent's strength
-    const attackerLossPct = attackerWins
-      ? Math.min(0.40, 0.05 + (defPower / Math.max(1, attackPower)) * 0.30)
-      : Math.min(0.85, 0.30 + (defPower / Math.max(1, attackPower)) * 0.50);
-    const defenderLossPct = attackerWins
-      ? Math.min(0.85, 0.35 + (attackPower / Math.max(1, defPower)) * 0.40)
-      : Math.min(0.25, 0.03 + (attackPower / Math.max(1, defPower)) * 0.20);
-
-    const attackerLosses = applyFleetLosses(state.fleet, attackerLossPct);
-    const defenderLosses = applyFleetLosses(targetState.fleet, defenderLossPct);
-
-    // Persist fleet losses immediately (targeted update — no updated_at reset)
-    await env.DB.prepare('UPDATE game_state SET fleet=? WHERE user_id=?')
-      .bind(JSON.stringify(state.fleet), userId).run();
-    await env.DB.prepare('UPDATE game_state SET fleet=? WHERE user_id=?')
-      .bind(JSON.stringify(targetState.fleet), targetUserId).run();
-
-    let loot = { metal: 0, crystal: 0 };
-    let scoreGain = 0;
-
-    if (attackerWins) {
-      // Loot limited by attacker's cargo capacity
-      const maxLoot = atkPow.cargo;
-      const rawMetal   = Math.floor(targetState.resources.metal   * 0.5);
-      const rawCrystal = Math.floor(targetState.resources.crystal * 0.5);
-      const totalRaw   = rawMetal + rawCrystal;
-      const cargoRatio = totalRaw > 0 ? Math.min(1, maxLoot / totalRaw) : 0;
-      loot.metal   = Math.floor(rawMetal   * cargoRatio);
-      loot.crystal = Math.floor(rawCrystal * cargoRatio);
-      scoreGain = 50;
-
-      // Deduct from target
-      targetState.resources.metal   -= loot.metal;
-      targetState.resources.crystal -= loot.crystal;
-      await saveState(env, targetUserId, targetState);
-    }
-
-    // Defender message (includes fleet losses)
-    const defLossText = defenderLosses.length
-      ? `\n\nElveszített flotta:\n${defenderLosses.map(l => `${l.icon} ${l.name}: -${l.lost}`).join('\n')}`
-      : '';
-    const defenderMsgBody = attackerWins
-      ? `⚔️ HARCI JELENTÉS\n\nTámadó: ${user.username}\nCél: ${targetName}\n\nEredmény: VERESÉG\n\nElveszített nyersanyag:\n⚙️ Fém: ${loot.metal.toLocaleString('hu')}\n💎 Kristály: ${loot.crystal.toLocaleString('hu')}${defLossText}\n\nErősítsd meg védelmedet!`
-      : `⚔️ HARCI JELENTÉS\n\nTámadó: ${user.username} megtámadta bolygódat!\n\nEredmény: VÉDELMED TARTOTT! ✅${defLossText}`;
+    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(planet.coords, targetCoords, JSON.parse(gs.research), 180);
 
     await env.DB.prepare(
-      'INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)'
-    ).bind(
-      crypto.randomUUID(), targetUserId,
-      `⚔️ ${user.username}`,
-      `Támadás: ${user.username} megtámadta bolygódat!`,
-      defenderMsgBody, 'combat'
-    ).run();
-
-    const result = {
-      attackerWins, loot,
-      attackPower: Math.floor(attackPower), defPower: Math.floor(defPower),
-      scoreGain, cargoUsed: loot.metal + loot.crystal, cargoTotal: atkPow.cargo,
-      attackerLosses, defenderLosses,
-    };
-    const fromCoords = state.planets[0]?.coords || '[1:1:1]';
-    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(fromCoords, targetCoords, state, 180);
-
-    await env.DB.prepare(
-      `INSERT INTO fleet_missions (id, user_id, target_user_id, mission_type, target_coords, target_name, status, result, arrive_at)
-       VALUES (?, ?, ?, 'attack', ?, ?, 'travelling', ?, ?)`
-    ).bind(
-      crypto.randomUUID(), userId, targetUserId,
-      targetCoords, targetName || 'Ismeretlen',
-      JSON.stringify(result), arriveAt
-    ).run();
+      `INSERT INTO fleet_missions (id, user_id, origin_planet_id, target_user_id, mission_type, target_coords, target_name, status, ships, arrive_at)
+       VALUES (?, ?, ?, ?, 'attack', ?, ?, 'travelling', ?, ?)`
+    ).bind(crypto.randomUUID(), userId, planet.id, targetUserId, targetCoords, targetName || 'Ismeretlen', JSON.stringify(sentShips), arriveAt).run();
 
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
@@ -336,139 +255,111 @@ export async function handleMissions(request, env, url, user) {
   if (path === '/api/missions/colonize' && method === 'POST') {
     let body;
     try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
-    const { targetCoords, targetName } = body;
-    if (!targetCoords) return jsonError(400, 'targetCoords szükséges', request);
+    const { targetCoords } = body;
+    
+    const planet = await getPlanetState(env, activePlanetId);
+    const colShip = planet.fleet.find(f => f.id === 'colony');
+    if (!colShip || colShip.count < 1) return jsonError(400, 'Nincs gyarmatosító hajód');
+    
+    colShip.count--;
+    await savePlanetState(env, planet.id, planet);
 
-    const state = await getState(env, userId);
-    if (!state) return jsonError(404, 'Játékállapot nem található', request);
-
-    // Check colony ship
-    const colonyShip = state.fleet.find(f => f.id === 'colony');
-    if (!colonyShip || colonyShip.count < 1) {
-      return jsonError(400, 'Nincs gyarmatosító hajód!', request);
-    }
-
-    // Check planet limit (astro research)
-    const astro = state.research.find(r => r.id === 'astro');
-    const maxPlanets = 1 + (astro?.level || 0);
-    if (state.planets.length >= maxPlanets) {
-      return jsonError(400, `Maximum ${maxPlanets} bolygód lehet. Kutatd az Asztrofizikát!`, request);
-    }
-
-    // Check coords not already occupied
-    const existing = await env.DB.prepare(
-      'SELECT user_id FROM galaxy_map WHERE coords = ?'
-    ).bind(targetCoords).first();
-    if (existing) return jsonError(409, 'Ezt a koordinátát már elfoglalták!', request);
-
-    // Deduct colony ship
-    colonyShip.count--;
-    await saveState(env, userId, state);
-
-    const planetEmojis = ['🌍','🌎','🌏','🪐','🌕','🔵','🟣'];
-    const emoji = planetEmojis[Math.floor(Math.random() * planetEmojis.length)];
-    const planetName = `${user.username}'s Colony ${state.planets.length + 1}`;
-
-    const result = { success: true, planetName, emoji, coords: targetCoords };
-    const fromCoords = state.planets[0]?.coords || '[1:1:1]';
-    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(fromCoords, targetCoords, state, 600);
+    const planetName = `${user.username} új gyarmata`;
+    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(planet.coords, targetCoords, JSON.parse(gs.research), 600);
 
     await env.DB.prepare(
-      `INSERT INTO fleet_missions (id, user_id, target_user_id, mission_type, target_coords, target_name, status, result, arrive_at)
-       VALUES (?, ?, null, 'colonize', ?, ?, 'travelling', ?, ?)`
-    ).bind(
-      crypto.randomUUID(), userId,
-      targetCoords, targetName || targetCoords,
-      JSON.stringify(result), arriveAt
-    ).run();
+      `INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, result, arrive_at)
+       VALUES (?, ?, ?, 'colonize', ?, ?, 'travelling', ?, ?, ?)`
+    ).bind(crypto.randomUUID(), userId, planet.id, targetCoords, planetName, 'travelling', JSON.stringify([{id:'colony', count:1}]), JSON.stringify({success:true, planetName, emoji:'🪐'}), arriveAt).run();
 
-    return jsonResponse({ ok: true, arriveAt, planetName, emoji }, 200, request);
+    return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
 
   return jsonError(404, 'Mission endpoint not found', request);
 }
 
 // ── Helpers ───────────────────────────────────────────────
-function missionIcon(type) {
-  return { spy: '🔍', attack: '⚔️', colonize: '🌍' }[type] || '📡';
+
+function extractShips(currentFleet, requestedShips) {
+  const sentShips = [];
+  const newFleet = JSON.parse(JSON.stringify(currentFleet));
+  
+  // If requestedShips is not provided, send everything (fallback)
+  if (!requestedShips) {
+      newFleet.forEach(f => {
+          if (f.count > 0) {
+              sentShips.push({ ...f, count: f.count });
+              f.count = 0;
+          }
+      });
+  } else {
+      for (const req of requestedShips) {
+          const target = newFleet.find(f => f.id === req.id);
+          if (target && target.count >= req.count) {
+              target.count -= req.count;
+              sentShips.push({ ...target, count: req.count });
+          }
+      }
+  }
+  return { fleet: newFleet, sentShips };
 }
 
+function runBattle(attacker, defender) {
+    // Basic battle logic moved from attack route
+    const calcPower = (fleet, research, buildings = []) => {
+        const combatLevel = research?.find(r => r.id === 'combat')?.level || 0;
+        const shieldLevel = research?.find(r => r.id === 'shield')?.level || 0;
+        const attackBonus = 1 + combatLevel * 0.10;
+        const shieldBonus = 1 + shieldLevel * 0.10;
+        const attack = fleet.reduce((s, f) => s + (f.attack * f.count * attackBonus), 0);
+        const shield = fleet.reduce((s, f) => s + (f.shield * f.count * shieldBonus), 0);
+        const cargo  = fleet.reduce((s, f) => s + (f.cargo  * f.count), 0);
+        const defenseBonus = (buildings.find(b => b.id === 'defense')?.level || 0) * 500;
+        return { attack, shield: shield + defenseBonus, cargo };
+    };
+
+    const atkPow = calcPower(attacker.fleet, attacker.research);
+    const defPow = calcPower(defender.fleet, defender.research, defender.buildings);
+
+    const attackerWins = atkPow.attack > defPow.shield;
+    
+    // Losses
+    const applyLosses = (fleet, lossPct) => {
+        return fleet.map(f => ({ ...f, count: Math.floor(f.count * (1 - lossPct)) }));
+    };
+
+    const attackerLossPct = attackerWins ? 0.2 : 0.8;
+    const defenderLossPct = attackerWins ? 0.9 : 0.1;
+
+    const attackerRemainingFleet = applyLosses(attacker.fleet, attackerLossPct);
+    const defenderRemainingFleet = applyLosses(defender.fleet, defenderLossPct);
+
+    let loot = { metal: 0, crystal: 0 };
+    let defenderResources = { ...defender.resources };
+
+    if (attackerWins) {
+        loot.metal = Math.min(atkPow.cargo / 2, defenderResources.metal * 0.5);
+        loot.crystal = Math.min(atkPow.cargo / 2, defenderResources.crystal * 0.5);
+        defenderResources.metal -= loot.metal;
+        defenderResources.crystal -= loot.crystal;
+    }
+
+    return { attackerWins, attackerRemainingFleet, defenderRemainingFleet, defenderResources, loot };
+}
+
+function missionIcon(type) { return { spy: '🔍', attack: '⚔️', colonize: '🌍', return: '↩️' }[type] || '📡'; }
 function missionSubject(type, name) {
-  const subjects = {
-    spy:      `Kémjelentés — ${name}`,
-    attack:   `Harci jelentés — ${name}`,
-    colonize: `Gyarmatosítás — ${name}`,
-  };
+  const subjects = { spy: `Kémjelentés — ${name}`, attack: `Harci jelentés — ${name}`, colonize: `Gyarmatosítás — ${name}`, return: `Flotta visszaérkezett — ${name}` };
   return subjects[type] || `Küldetés — ${name}`;
 }
 
 function formatMissionResult(mission, result) {
   if (mission.mission_type === 'spy') {
-    if (!result.resources) return `🔍 KÉM JELENTÉS\n\nCél: ${mission.target_name} ${mission.target_coords}\n\nÜres rendszer, nincs mit kémkedni.`;
-    let report = `🔍 KÉM JELENTÉS\n\nCél: ${mission.target_name} ${mission.target_coords}\n\nNyersanyagok:\n`;
-    if (result.resources.metal   !== undefined) report += `⚙️ Fém: ${result.resources.metal.toLocaleString('hu')}\n`;
-    if (result.resources.crystal !== undefined) report += `💎 Kristály: ${result.resources.crystal.toLocaleString('hu')}\n`;
-    if (result.resources.energy  !== undefined) report += `⚡ Energia: ${result.resources.energy.toLocaleString('hu')}\n`;
-    if (result.resources.deus    !== undefined) report += `🔮 Déusium: ${result.resources.deus.toLocaleString('hu')}\n`;
-    if (result.fleet) {
-      report += `\nFlotta:\n`;
-      result.fleet.forEach(f => report += `${f.icon} ${f.name}: ${f.count}\n`);
-    }
-    return report;
+    if (!result.resources) return `🔍 KÉM JELENTÉS\n\nCél: ${mission.target_name}\n\nNincs adat.`;
+    return `🔍 KÉM JELENTÉS\n\nCél: ${mission.target_name}\n\nFém: ${Math.floor(result.resources.metal)}\nKristály: ${Math.floor(result.resources.crystal)}`;
   }
-
   if (mission.mission_type === 'attack') {
-    const r = result;
-    let report = `⚔️ HARCI JELENTÉS\n\nCél: ${mission.target_name} ${mission.target_coords}\n\nTámadóerő: ${r.attackPower?.toLocaleString('hu')}\nVédelmi erő: ${r.defPower?.toLocaleString('hu')}\n\nEredmény: ${r.attackerWins ? '✅ GYŐZELEM' : '❌ VERESÉG'}\n\n`;
-    report += r.attackerWins
-      ? `Zsákmány:\n⚙️ Fém: ${r.loot?.metal?.toLocaleString('hu')}\n💎 Kristály: ${r.loot?.crystal?.toLocaleString('hu')}\n`
-      : `Flottád visszavonult.\n`;
-    if (r.attackerLosses?.length) {
-      report += `\nSaját veszteségek:\n${r.attackerLosses.map(l => `${l.icon} ${l.name}: -${l.lost}`).join('\n')}\n`;
-    }
-    return report;
+    return `⚔️ HARCI JELENTÉS\n\nEredmény: ${result.attackerWins ? 'GYŐZELEM' : 'VERESÉG'}\nZsákmány:\nFém: ${Math.floor(result.loot.metal)}\nKristály: ${Math.floor(result.loot.crystal)}`;
   }
-
-  if (mission.mission_type === 'colonize') {
-    return result.success
-      ? `🌍 GYARMATOSÍTÁS SIKERES\n\nÚj bolygó: ${result.planetName}\nKoordináták: ${mission.target_coords}\nEmoji: ${result.emoji}\n\nBolygód hozzáadva a birodalmadhoz!`
-      : `🌍 GYARMATOSÍTÁS SIKERTELEN\n\nCél: ${mission.target_coords}\n\nA koordinátát időközben elfoglalták.`;
-  }
-
   return 'Küldetés befejezve.';
-}
-
-// ── Fleet loss helper ──────────────────────────────────────
-function applyFleetLosses(fleet, lossPct) {
-  const losses = [];
-  for (const ship of fleet) {
-    if (ship.count > 0 && lossPct > 0) {
-      const rand = 0.75 + Math.random() * 0.5; // ±25% randomness per ship type
-      const lost = Math.floor(ship.count * Math.min(0.95, lossPct * rand));
-      if (lost > 0) {
-        ship.count -= lost;
-        losses.push({ icon: ship.icon, name: ship.name, lost });
-      }
-    }
-  }
-  return losses;
-}
-
-// ── Bot retaliation messages ───────────────────────────────
-const BOT_WIN_MSGS = [
-  'Élvezd a zsákmányt, amíg lehet. Erőim már úton vannak feléd.',
-  'Ez csupán egy csata volt. A háború még nem ért véget.',
-  'Ügyes manőver. De a birodalmamat nem veszed el ilyen könnyen.',
-  'Rajtaütöttél, de a bosszú hideget tálal. Számíts rá.',
-];
-const BOT_LOSE_MSGS = [
-  'Ha azt hitted, hogy megijesztesz — tévedtél. Jöjj vissza, ha mered.',
-  'Gyenge kísérlet. Védelmi rendszerem könnyedén elbánt veled.',
-  'Legközelebb hozz több hajót. Ez nem volt elég.',
-  'Flottád nyomát sem fogják megtalálni. Következő alkalomra felejtsd el ezt a szektort.',
-];
-function botRetaliationMessage(botName, attackerWon) {
-  const pool = attackerWon ? BOT_WIN_MSGS : BOT_LOSE_MSGS;
-  const msg  = pool[Math.floor(Math.random() * pool.length)];
-  return `📡 TITKOSÍTOTT ÜZENET — Feladó: ${botName}\n\n"${msg}"`;
 }

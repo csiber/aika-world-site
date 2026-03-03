@@ -13,6 +13,31 @@
 
     <!-- CENTER: Planet + Queue -->
     <div id="planet-view">
+      <!-- Mission Control -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-icon">🚀</span>
+          <h3>Flotta Irányítás</h3>
+          <button class="btn-primary" @click="resolveMissions" :disabled="resolving" style="margin-left:auto;font-size:8px;padding:2px 6px;">
+            {{ resolving ? '...' : 'Frissítés & Feldolgozás' }}
+          </button>
+        </div>
+        <div class="panel-body">
+          <div v-if="!missions.length" class="empty-msg">Nincs aktív flotta mozgás.</div>
+          <div v-for="m in missions" :key="m.id" class="mission-item" :class="m.status">
+            <div class="mission-icon">{{ m.mission_type === 'spy' ? '🔍' : (m.mission_type === 'attack' ? '⚔️' : '🌍') }}</div>
+            <div class="mission-info">
+              <div class="m-target">{{ m.target_name }} {{ m.target_coords }}</div>
+              <div class="m-status">
+                <span v-if="m.status === 'travelling'">Úton a cél felé...</span>
+                <span v-else-if="m.status === 'returning'">Visszatérés...</span>
+                <span class="m-time">{{ formatTimeLeft(m.status === 'travelling' ? m.arrive_at : m.return_at) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Planet visual -->
       <div class="planet-visual panel">
         <div class="big-planet">🌍</div>
@@ -106,9 +131,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useGameStore } from '@/stores/game.js';
 import { useLangStore } from '@/stores/lang.js';
+import { api } from '@/api/client.js';
 import BuildingItem from '@/components/BuildingItem.vue';
 import QueueItem    from '@/components/QueueItem.vue';
 
@@ -126,11 +152,43 @@ const queue     = computed(() => game.queue);
 const activePlanet = computed(() => game.activePlanet || { name: 'Ismeretlen', coords: '[?:?:?]' });
 const totalShips    = computed(() => fleet.value.reduce((s, f) => s + f.count, 0));
 
+const missions  = ref([]);
+const resolving = ref(false);
+
 const aikaInput = ref('');
 const aikaLoading = ref(false);
 const aikaChatLog = ref([
   { role: 'assistant', text: L.t('overview.aikaGreeting') }
 ]);
+
+async function loadMissions() {
+  try {
+    const data = await api.getMissions();
+    missions.value = data.missions || [];
+  } catch {}
+}
+
+async function resolveMissions() {
+  resolving.value = true;
+  try {
+    await api.resolveMissions();
+    await loadMissions();
+    await game.loadState();
+    game.notify('Flották állapota frissítve', 'blue');
+  } catch (e) {
+    game.notify(`❌ ${e.message}`, 'red');
+  }
+  resolving.value = false;
+}
+
+function formatTimeLeft(ts) {
+  if (!ts) return '';
+  const diff = ts - Math.floor(Date.now() / 1000);
+  if (diff <= 0) return 'Megérkezett';
+  const m = Math.floor(diff / 60);
+  const s = diff % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
 
 async function sendToAika() {
   const msg = aikaInput.value.trim();
@@ -149,7 +207,8 @@ async function sendToAika() {
           rates: game.rates,
           score: game.score,
           buildingsCount: game.buildings.length,
-          fleetTotal: game.fleet.reduce((s, f) => s + f.count, 0),
+          fleetTotal: totalShips.value,
+          activeMissions: missions.value.length
         }
       })
     });
@@ -164,6 +223,12 @@ async function sendToAika() {
   }
   aikaLoading.value = false;
 }
+
+onMounted(() => {
+  loadMissions();
+  const timer = setInterval(loadMissions, 10000);
+  onUnmounted(() => clearInterval(timer));
+});
 </script>
 
 <style scoped>
@@ -205,6 +270,14 @@ async function sendToAika() {
 .stat-value { font-family: 'Orbitron', sans-serif; font-size: 13px; color: var(--text-bright); font-weight: 600; }
 
 #planet-view { display: flex; flex-direction: column; gap: 10px; }
+
+.mission-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 6px; }
+.mission-item.returning { border-color: var(--accent3); background: rgba(58,255,122,0.05); }
+.mission-icon { font-size: 18px; }
+.mission-info { flex: 1; }
+.m-target { font-size: 11px; color: var(--text-bright); font-weight: 600; }
+.m-status { font-size: 10px; color: var(--text-dim); display: flex; justify-content: space-between; margin-top: 2px; }
+.m-time { font-family: 'Orbitron', sans-serif; color: var(--accent); }
 
 .empty-msg { font-size: 11px; color: var(--text-dim); padding: 8px 0; }
 

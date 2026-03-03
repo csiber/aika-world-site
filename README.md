@@ -1,8 +1,11 @@
-# AIKA World v2.2.1 — Full-Stack Cloudflare Workers + Vue 3 + D1
+# AIKA World v2.2.2 — Full-Stack Cloudflare Workers + Vue 3 + D1
 
 **AIKA World** is a modern, real-time galactic strategy game built on the Cloudflare ecosystem (Workers, D1, Assets) using Vue 3.
 
-## Features (v2.2.1)
+## Features (v2.2.2)
+- **🚀 Real Fleet Movement**: Ships are now physically moved between planets. Launching a mission subtracts units from the origin, and survivors return after the mission is resolved.
+- **🛰️ Mission Control**: New panel on Overview to track active fleets, their status (travelling/returning), and arrival times.
+- **⚙️ Fleet Selection UI**: Choose specific ship counts when spying or attacking from the Galaxy Map.
 - **🪐 Multi-planet Economy (Beta)**: Resources, buildings, and fleets are now stored per planet instead of globally. Switch between planets to manage your empire.
 - **🗺️ Roadmap (todo.md)**: Clear development phases for future mechanics, UI/UX, and social features.
 - **🤖 NPC Bot Players**: 25 AI opponents (Elite/Advanced/Beginner tiers) populate the rankings and galaxy map. Bots grow hourly via Cloudflare Cron Triggers and retaliate when attacked.
@@ -47,6 +50,7 @@ wrangler d1 execute aika-world-db --file=./db/migration.sql
 wrangler d1 execute aika-world-db --file=./db/migration_bots.sql
 wrangler d1 execute aika-world-db --file=./db/migration_galaxy_colonies.sql
 wrangler d1 execute aika-world-db --file=./db/migration_planets.sql
+wrangler d1 execute aika-world-db --file=./db/migration_fleet_movement.sql
 ```
 
 ### 4. Secrets
@@ -68,6 +72,12 @@ curl -X POST https://your-domain/api/admin/bots/seed \
 ```
 
 ## Changelog
+
+### v2.2.2
+- **Real Fleet Movement**: Implemented unit tracking for missions, return trips, and loot transportation.
+- **Fleet Selection UI**: Added ship selection interface to Galaxy View.
+- **Mission Control**: Added real-time mission tracking to the Overview dashboard.
+- **Database**: Migrated `fleet_missions` to support origin tracking and ship persistence.
 
 ### v2.2.1
 - **Multi-planet Economy Core**: Database migration and backend logic to support per-planet resources and buildings.

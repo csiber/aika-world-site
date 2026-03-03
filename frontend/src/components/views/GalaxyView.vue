@@ -44,27 +44,49 @@
               <div v-if="selected.username" class="cd-player">👤 {{ selected.username }}</div>
             </div>
           </div>
-          <div v-if="selected.type !== 'own'" class="cd-actions" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-            <button
-              class="btn-primary"
-              :disabled="!!actionBusy"
-              @click="doSpy"
-            >{{ actionBusy === 'spy' ? '...' : '🔍 ' + L.t('galaxy.spy') }}</button>
-            <button
-              class="btn-primary"
-              v-if="selected.type === 'enemy' && selected.targetUserId"
-              :disabled="!!actionBusy"
-              @click="doAttack"
-            >{{ actionBusy === 'attack' ? '...' : '⚔️ ' + L.t('galaxy.attack') }}</button>
-            <button
-              class="btn-primary"
-              v-if="selected.type === 'empty'"
-              :disabled="!!actionBusy || !hasColonyShip"
-              @click="doColonize"
-              :title="!hasColonyShip ? L.t('galaxy.colonizeReq') : ''"
-            >{{ actionBusy === 'colony' ? '...' : '🌍 ' + L.t('galaxy.colonize') }}</button>
+
+          <div v-if="selected.type !== 'own'" class="cd-actions" style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+            <div v-if="showFleetSetup" class="fleet-setup panel" style="width:100%;">
+              <div class="panel-header"><h4>🚀 {{ L.t('galaxy.setupFleet') || 'Flotta összeállítása' }}</h4></div>
+              <div class="panel-body">
+                <div v-if="availableShips.length === 0" class="empty-msg">Nincs elérhető hajó ezen a bolygón.</div>
+                <div v-for="ship in availableShips" :key="ship.id" class="fleet-setup-row">
+                  <span>{{ ship.icon }} {{ ship.name }} ({{ ship.count }})</span>
+                  <input type="number" v-model.number="selectedShips[ship.id]" min="0" :max="ship.count" class="ship-input" />
+                </div>
+                <div class="fleet-setup-btns" style="margin-top:10px;display:flex;gap:8px;">
+                  <button class="btn-primary" @click="confirmMission" :disabled="!hasSelectedShips || !!actionBusy">
+                    {{ actionBusy ? '...' : (missionType === 'spy' ? '🔍 Kémkedés' : '⚔️ Támadás') }}
+                  </button>
+                  <button class="btn-primary red" @click="showFleetSetup = false">Mégse</button>
+                </div>
+              </div>
+            </div>
+
+            <template v-else>
+              <div style="display:flex;gap:8px;">
+                <button
+                  class="btn-primary"
+                  :disabled="!!actionBusy"
+                  @click="startFleetSetup('spy')"
+                >🔍 {{ L.t('galaxy.spy') }}</button>
+                <button
+                  class="btn-primary"
+                  v-if="selected.type === 'enemy' && selected.targetUserId"
+                  :disabled="!!actionBusy"
+                  @click="startFleetSetup('attack')"
+                >⚔️ {{ L.t('galaxy.attack') }}</button>
+                <button
+                  class="btn-primary"
+                  v-if="selected.type === 'empty'"
+                  :disabled="!!actionBusy || !hasColonyShip"
+                  @click="doColonize"
+                  :title="!hasColonyShip ? L.t('galaxy.colonizeReq') : ''"
+                >{{ actionBusy === 'colony' ? '...' : '🌍 ' + L.t('galaxy.colonize') }}</button>
+              </div>
+            </template>
           </div>
-          <div v-if="!hasColonyShip && selected.type === 'empty'" class="action-hint">
+          <div v-if="!hasColonyShip && selected.type === 'empty' && !showFleetSetup" class="action-hint">
             ⚠️ {{ L.t('galaxy.noColonyShip') }}
           </div>
         </div>
@@ -88,6 +110,30 @@ const actionBusy = ref(null);
 const loading    = ref(false);
 const players    = ref([]);
 const apiMyPlanets = ref([]);
+
+const showFleetSetup = ref(false);
+const missionType    = ref(null);
+const selectedShips  = ref({});
+
+const availableShips = computed(() => game.fleet.filter(f => f.count > 0));
+const hasSelectedShips = computed(() => Object.values(selectedShips.value).some(v => v > 0));
+
+function startFleetSetup(type) {
+  missionType.value = type;
+  showFleetSetup.value = true;
+  selectedShips.value = {};
+  availableShips.value.forEach(s => selectedShips.value[s.id] = 0);
+  // Default for spy: 1 spy ship if available
+  if (type === 'spy') {
+      const spy = availableShips.value.find(s => s.id === 'fighter_s' || s.id === 'spy');
+      if (spy) selectedShips.value[spy.id] = 1;
+  }
+}
+
+async function confirmMission() {
+  if (missionType.value === 'spy') await doSpy();
+  else if (missionType.value === 'attack') await doAttack();
+}
 
 const typeLabel = (t) => ({
   own:   L.t('galaxy.ownPlanet'),
@@ -172,14 +218,20 @@ const galaxyCells = computed(() => {
   return cells;
 });
 
-function selectCell(cell) { selected.value = cell; }
+function selectCell(cell) { selected.value = cell; showFleetSetup.value = false; }
 
 async function doSpy() {
   if (!selected.value) return;
   actionBusy.value = 'spy';
   try {
-    await api.spy(selected.value.targetUserId || null, selected.value.coords, selected.value.name);
+    const ships = Object.entries(selectedShips.value)
+      .filter(([_, count]) => count > 0)
+      .map(([id, count]) => ({ id, count }));
+
+    await api.spy(selected.value.targetUserId || null, selected.value.coords, selected.value.name, ships);
     game.notify(L.t('galaxy.spyMsg'), 'blue');
+    showFleetSetup.value = false;
+    await game.loadState(); // Refresh local fleet
   } catch (e) {
     game.notify(`❌ ${e.message}`, 'red');
   }
@@ -190,8 +242,14 @@ async function doAttack() {
   if (!selected.value) return;
   actionBusy.value = 'attack';
   try {
-    await api.attack(selected.value.targetUserId, selected.value.coords, selected.value.name);
+    const ships = Object.entries(selectedShips.value)
+      .filter(([_, count]) => count > 0)
+      .map(([id, count]) => ({ id, count }));
+
+    await api.attack(selected.value.targetUserId, selected.value.coords, selected.value.name, ships);
     game.notify(L.t('galaxy.attackMsg'), 'blue');
+    showFleetSetup.value = false;
+    await game.loadState(); // Refresh local fleet
   } catch (e) {
     game.notify(`❌ ${e.message}`, 'red');
   }
@@ -206,6 +264,7 @@ async function doColonize() {
     game.notify(L.t('galaxy.colonizeMsg', { coords: selected.value.coords }), 'blue');
     selected.value = null;
     await loadGalaxy();
+    await game.loadState();
   } catch (e) {
     game.notify(`❌ ${e.message}`, 'red');
   }
@@ -240,6 +299,10 @@ onMounted(loadGalaxy);
 .text-empty   { color: var(--text-dim); }
 .action-hint { font-size: 10px; color: var(--accent4); margin-top: 6px; }
 .cd-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.fleet-setup-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px; }
+.ship-input { width: 60px; background: #000; border: 1px solid var(--border); color: #fff; padding: 2px 5px; font-size: 11px; border-radius: 3px; }
+.btn-primary.red { border-color: var(--accent2); color: var(--accent2); }
 
 .slide-enter-active, .slide-leave-active { transition: all 0.3s ease; }
 .slide-enter-from, .slide-leave-to { opacity: 0; transform: translateY(-10px); }
