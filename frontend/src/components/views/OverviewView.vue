@@ -125,6 +125,13 @@
             <span class="sv">{{ ship.count }}</span>
           </div>
         </div>
+        <div class="section-title" style="margin-top:12px;">{{ L.t('overview.defenseSummary') || '🛡️ Védelem' }}</div>
+        <div class="stat-block">
+          <div v-for="d in game.defense" :key="d.id" class="stat-row">
+            <span>{{ d.icon }} {{ d.name }}</span>
+            <span class="sv">{{ d.count }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>

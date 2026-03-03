@@ -26,6 +26,7 @@ export const api = {
   upgradeBuilding: (buildingId) => request('POST', '/game/upgrade', { buildingId }),
   startResearch: (researchId) => request('POST', '/game/research', { researchId }),
   buildFleet: (shipId, amount) => request('POST', '/game/fleet/build', { shipId, amount }),
+  buildDefense: (defenseId, amount) => request('POST', '/game/defense/build', { defenseId, amount }),
   getQueue: () => request('GET', '/game/queue'),
   renamePlanet: (planetId, name, emoji) => request('POST', '/game/planet/rename', { planetId, name, emoji }),
 

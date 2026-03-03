@@ -17,6 +17,7 @@ export const useGameStore = defineStore('game', () => {
   const rates        = computed(() => activePlanet.value.rates || {});
   const buildings    = computed(() => activePlanet.value.buildings || []);
   const fleet        = computed(() => activePlanet.value.fleet     || []);
+  const defense      = computed(() => activePlanet.value.defense   || []);
   
   const research     = computed(() => state.value?.research  || []);
   const planets      = computed(() => state.value?.planets   || []);
@@ -25,14 +26,12 @@ export const useGameStore = defineStore('game', () => {
   const prodBuildings  = computed(() => buildings.value.filter(b => b.type === 'production'));
   const infraBuildings = computed(() => buildings.value.filter(b => b.type === 'infra'));
 
-  // Storage fill percentages (0-100)
   const storageFill = computed(() => ({
     metal:   Math.min(100, Math.floor((resources.value.metal   || 0) / (storage.value.metal   || 1) * 100)),
     crystal: Math.min(100, Math.floor((resources.value.crystal || 0) / (storage.value.crystal || 1) * 100)),
     deus:    Math.min(100, Math.floor((resources.value.deus    || 0) / (storage.value.deus    || 1) * 100)),
   }));
 
-  // Energy efficiency warning
   const energyWarning = computed(() => {
     const eff = rates.value.energyEff;
     if (eff === undefined) return null;
@@ -50,11 +49,8 @@ export const useGameStore = defineStore('game', () => {
       state.value   = data.state;
       queue.value   = data.queue || [];
       if (data.storage) storage.value = data.storage;
-    } catch (e) {
-      error.value = e.message;
-    } finally {
-      loading.value = false;
-    }
+    } catch (e) { error.value = e.message; }
+    finally { loading.value = false; }
   }
 
   async function switchPlanet(planetId) {
@@ -62,7 +58,6 @@ export const useGameStore = defineStore('game', () => {
     try {
       await api.switchPlanet(planetId);
       await loadState();
-      notify(useLangStore().t('game.planetSwitched'), 'blue');
       return true;
     } catch (e) {
       notify(`❌ ${e.message}`, 'red');
@@ -76,93 +71,53 @@ export const useGameStore = defineStore('game', () => {
     try {
       const data = await api.upgradeBuilding(buildingId);
       state.value = data.state;
-      if (data.storage) storage.value = data.storage;
-      const b = buildings.value.find(x => x.id === buildingId);
-      if (b) {
-        queue.value.push({
-          item_id: buildingId, item_type: 'building',
-          item_name: `${b.icon} ${b.name} → Szint ${b.level + 1}`,
-          finish_at: data.finishAt,
-        });
-      }
-      const L    = useLangStore();
-      const mins = Math.floor((data.seconds || 0) / 60);
-      const time = mins > 0 ? `${mins} ${L.t('time.min')}` : L.t('game.lessThanMin');
-      notify(L.t('game.buildingStarted', { time }), 'blue');
+      notify('Építkezés elindítva', 'blue');
       return true;
-    } catch (e) {
-      notify(`❌ ${e.message}`, 'red');
-      return false;
-    }
+    } catch (e) { notify(`❌ ${e.message}`, 'red'); return false; }
   }
 
   async function startResearch(researchId) {
     try {
       const data = await api.startResearch(researchId);
       state.value = data.state;
-      const r = research.value.find(x => x.id === researchId);
-      if (r) {
-        queue.value.push({
-          item_id: researchId, item_type: 'research',
-          item_name: `🔬 ${r.name} → Szint ${r.level + 1}`,
-          finish_at: data.finishAt,
-        });
-      }
-      const L    = useLangStore();
-      const mins = Math.floor((data.seconds || 0) / 60);
-      const time = mins > 0 ? `${mins} ${L.t('time.min')}` : L.t('game.lessThanMin');
-      notify(L.t('game.researchStarted', { time }), 'blue');
+      notify('Kutatás elindítva', 'blue');
       return true;
-    } catch (e) {
-      notify(`❌ ${e.message}`, 'red');
-      return false;
-    }
+    } catch (e) { notify(`❌ ${e.message}`, 'red'); return false; }
   }
 
   async function buildFleet(shipId, amount) {
     try {
       const data = await api.buildFleet(shipId, amount);
       state.value = data.state;
-      const ship = fleet.value.find(x => x.id === shipId);
-      if (ship) {
-        queue.value.push({
-          item_id: shipId, item_type: 'fleet',
-          item_name: `${ship.icon} ${ship.name} ×${amount}`,
-          finish_at: data.finishAt,
-        });
-      }
-      const L    = useLangStore();
-      const hrs  = Math.floor((data.seconds || 0) / 3600);
-      const mins = Math.floor(((data.seconds || 0) % 3600) / 60);
-      const time = hrs > 0 ? `${hrs}${L.t('time.hour')} ${mins}${L.t('time.min')}` : `${mins} ${L.t('time.min')}`;
-      notify(L.t('game.fleetStarted', { time }), 'blue');
+      notify('Hajóépítés elindítva', 'blue');
       return true;
-    } catch (e) {
-      notify(`❌ ${e.message}`, 'red');
-      return false;
-    }
+    } catch (e) { notify(`❌ ${e.message}`, 'red'); return false; }
+  }
+
+  async function buildDefense(defenseId, amount) {
+    try {
+      const data = await api.buildDefense(defenseId, amount);
+      state.value = data.state;
+      notify('Védelem építése elindítva', 'blue');
+      return true;
+    } catch (e) { notify(`❌ ${e.message}`, 'red'); return false; }
   }
 
   async function syncResources() {
     try {
       const data = await api.syncState();
       state.value = data.state;
-      if (data.storage) storage.value = data.storage;
       const qData = await api.getQueue();
       queue.value = qData.queue || [];
-    } catch (e) { /* silent */ }
+    } catch (e) {}
   }
 
   async function renamePlanet(planetId, name, emoji) {
     try {
       const data = await api.renamePlanet(planetId, name, emoji);
       if (state.value) state.value.planets = data.planets;
-      notify(useLangStore().t('game.planetRenamed'), 'green');
       return true;
-    } catch (e) {
-      notify(`❌ ${e.message}`, 'red');
-      return false;
-    }
+    } catch (e) { notify(`❌ ${e.message}`, 'red'); return false; }
   }
 
   function tickResources() {
@@ -170,7 +125,6 @@ export const useGameStore = defineStore('game', () => {
     const r  = state.value.activePlanet.resources;
     const rt = state.value.activePlanet.rates;
     const s  = storage.value;
-    
     state.value.activePlanet.resources = {
       ...r,
       metal:   Math.min(s.metal,   (r.metal   || 0) + (rt.metal   || 0) / 3600),
@@ -193,30 +147,23 @@ export const useGameStore = defineStore('game', () => {
 
   function getBuildCost(building) {
     const mult = Math.pow(1.5, building.level);
-    return {
-      metal:   Math.floor(building.baseCost.metal   * mult),
-      crystal: Math.floor(building.baseCost.crystal * mult),
-    };
+    return { metal: Math.floor(building.baseCost.metal * mult), crystal: Math.floor(building.baseCost.crystal * mult) };
   }
 
   function getResearchCost(r) {
-    return {
-      metal:   Math.floor(200 * Math.pow(2, r.level)),
-      crystal: Math.floor(400 * Math.pow(2, r.level)),
-    };
+    return { metal: Math.floor(200 * Math.pow(2, r.level)), crystal: Math.floor(400 * Math.pow(2, r.level)) };
   }
 
   function canAfford(cost) {
     if (!state.value || !state.value.activePlanet) return false;
-    return state.value.activePlanet.resources.metal   >= cost.metal &&
-           state.value.activePlanet.resources.crystal >= cost.crystal;
+    return state.value.activePlanet.resources.metal >= cost.metal && state.value.activePlanet.resources.crystal >= cost.crystal;
   }
 
   return {
     state, queue, storage, loading, error, notifications,
-    activePlanet, resources, rates, buildings, research, fleet, planets, score,
+    activePlanet, resources, rates, buildings, research, fleet, defense, planets, score,
     prodBuildings, infraBuildings, storageFill, energyWarning,
-    loadState, switchPlanet, upgradeBuilding, startResearch, buildFleet, syncResources, renamePlanet,
+    loadState, switchPlanet, upgradeBuilding, startResearch, buildFleet, buildDefense, syncResources, renamePlanet,
     tickResources, notify, queueItemIsActive, getBuildCost, getResearchCost, canAfford,
   };
 });

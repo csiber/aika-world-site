@@ -10,17 +10,17 @@ Ez a dokumentum összefoglalja a folyamatban lévő és tervezett fejlesztéseke
 - [x] **Bolygó-specifikus gazdaság:** 
     - [x] A `game_state` átalakítása, hogy a nyersanyagok, épületek és flották bolygónként legyenek tárolva.
     - [x] Nyersanyagszállítás (Transport) implementálása bolygók között.
-    - [x] **BUGFIX:** Háttérben futó termelés minden bolygón (nem csak az aktívon).
+    - [x] **BUGFIX:** Háttérben futó termelés minden bolygón.
 - [x] **Valódi Flotta Mozgás:**
     - [x] Küldetés indításakor a hajók tényleges levonása az indulási bolygóról.
     - [x] A küldetés befejeztével a túlélő hajók visszatérése.
-    - [x] **BUGFIX:** Sorban álló hajók/épületek helyes bolygóhoz rendelése (`planet_id`).
 - [x] **Automatizált Küldetéskezelés:**
-    - [x] Cloudflare Worker `scheduled` (Cron) esemény bővítése minden felhasználó beérkezett küldetésének automatikus feldolgozására.
+    - [x] Cloudflare Worker `scheduled` (Cron) esemény bővítése.
 - [x] **Technológiai Fa (Tech Tree):**
-    - [x] Épületek és kutatások előfeltételeinek (Prerequisites) szigorúbb ellenőrzése és megjelenítése a UI-on.
-- [ ] **Védelmi Rendszerek:**
-    - [ ] A `defense` épület ne csak bónuszt adjon, hanem legyenek konkrét védelmi egységek (pl. Rakétatorony, Lézerágyú).
+    - [x] Épületek és kutatások előfeltételeinek (Prerequisites) ellenőrzése és megjelenítése.
+- [x] **Védelmi Rendszerek:**
+    - [x] Buildable védelmi egységek (Rakétatorony, Lézerágyú, Pajzskupola) implementálása.
+    - [x] Védelem integrálása a harci szimulációba.
 
 ## 🎨 Phase 2: Felhasználói Élmény & Vizualitás (UI/UX)
 *A játék kényelmesebbé és látványosabbá tétele.*

@@ -77,6 +77,7 @@
       <BuildingsView v-if="activeTab === 'buildings'" />
       <ResearchView  v-if="activeTab === 'research'"  />
       <FleetView     v-if="activeTab === 'fleet'"     />
+      <DefenseView   v-if="activeTab === 'defense'"   />
       <GalaxyView    v-if="activeTab === 'galaxy'"    />
       <AllianceView  v-if="activeTab === 'alliance'"  />
       <RankingsView  v-if="activeTab === 'rankings'"  />
@@ -116,6 +117,7 @@ import OverviewView  from '@/components/views/OverviewView.vue';
 import BuildingsView from '@/components/views/BuildingsView.vue';
 import ResearchView  from '@/components/views/ResearchView.vue';
 import FleetView     from '@/components/views/FleetView.vue';
+import DefenseView   from '@/components/views/DefenseView.vue';
 import GalaxyView    from '@/components/views/GalaxyView.vue';
 import AllianceView  from '@/components/views/AllianceView.vue';
 import RankingsView  from '@/components/views/RankingsView.vue';
@@ -151,6 +153,7 @@ const tabs = computed(() => {
     { id: 'buildings', label: L.t('nav.buildings') },
     { id: 'research',  label: L.t('nav.research')  },
     { id: 'fleet',     label: L.t('nav.fleet')     },
+    { id: 'defense',   label: L.t('nav.defense') || '🛡️ Védelem' },
     { id: 'galaxy',    label: L.t('nav.galaxy')    },
     { id: 'alliance',  label: L.t('nav.alliance')  },
     { id: 'messages',  label: L.t('nav.messages')  },
