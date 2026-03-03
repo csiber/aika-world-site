@@ -1,9 +1,10 @@
 /**
  * Game routes (all protected — user injected by middleware)
- * Refactored for v2.4.0: Security audit + State Sync refinement
+ * Refactored for v2.7.0: Instant mission resolution integration
  */
 
 import { jsonResponse, jsonError } from '../utils/response.js';
+import { resolveMissionsForUser } from '../utils/mission_resolver.js';
 
 // ── Game formulas ─────────────────────────────────────────────────────────────
 
@@ -140,7 +141,7 @@ async function getFullState(env, userId) {
   }));
   let activePlanetId = gsRow.active_planet_id;
   let activePlanet = planets.find(p => p.id === activePlanetId) || planets[0];
-  let state = { research: JSON.parse(gsRow.research), score: gsRow.score, allianceLevel, planets, activePlanet };
+  let state = { username: gsRow.username, research: JSON.parse(gsRow.research), score: gsRow.score, allianceLevel, planets, activePlanet };
   return await mergeTemplates(env, state);
 }
 
@@ -234,13 +235,15 @@ export async function handleGame(request, env, url, user) {
   const path   = url.pathname;
   const method = request.method;
 
+  // 10/10 FIX: Resolve missions for THIS user instantly on any game request
+  await resolveMissionsForUser(env, userId);
+
   await ensureDailyQuests(env, userId);
   let fullState = await getFullState(env, userId);
   if (!fullState) return jsonError(404, 'Game state not found', request);
   fullState = accrueAllResources(fullState);
   fullState = await processQueue(env, userId, fullState);
 
-  // v2.4.0 Sync logic: Include server time for precise client ticking
   const responseData = (base) => ({ ...base, serverTime: Math.floor(Date.now() / 1000) });
 
   if (path === '/api/game/quests' && method === 'GET') {
@@ -275,7 +278,6 @@ export async function handleGame(request, env, url, user) {
     let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { defenseId, amount = 1 } = body;
     if (amount < 1 || amount > 10000) return jsonError(400, 'Érvénytelen mennyiség', request);
-
     const def = fullState.activePlanet.defense.find(x => x.id === defenseId);
     if (!def) return jsonError(404, 'Defense type not found', request);
     const preCheck = checkPrerequisites(def, fullState.activePlanet.buildings, fullState.research);
@@ -325,7 +327,8 @@ export async function handleGame(request, env, url, user) {
     const cost = researchCost(r);
     if (fullState.activePlanet.resources.metal < cost.metal || fullState.activePlanet.resources.crystal < cost.crystal) return jsonError(400, 'Nincs elég nyersanyag', request);
     fullState.activePlanet.resources.metal -= cost.metal; fullState.activePlanet.resources.crystal -= cost.crystal;
-    const seconds = researchTime(r.level, fullState.activePlanet.buildings.find(x => x.id === 'lab')?.level || 1); const finishAt = Math.floor(Date.now() / 1000) + seconds;
+    const labLevel = fullState.activePlanet.buildings.find(x => x.id === 'lab')?.level || 1;
+    const seconds = researchTime(r.level, labLevel); const finishAt = Math.floor(Date.now() / 1000) + seconds;
     await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at) VALUES (?, ?, ?, ?, 'research', ?, ?, ?)`).bind(crypto.randomUUID(), userId, fullState.activePlanet.id, researchId, `🔬 ${r.name} → Szint ${r.level + 1}`, r.level + 1, finishAt).run();
     await saveFullState(env, userId, fullState);
     return jsonResponse(responseData({ ok: true, finishAt, cost, seconds, state: fullState }), 200, request);

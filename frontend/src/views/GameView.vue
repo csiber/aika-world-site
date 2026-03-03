@@ -183,7 +183,7 @@ onMounted(async () => {
   await allianceStore.load();
   await gameStore.syncResources(); 
   tickTimer = setInterval(() => gameStore.tickResources(), 1000);
-  syncTimer = setInterval(() => gameStore.syncResources(), 60000);
+  syncTimer = setInterval(() => gameStore.syncResources(), 30000);
 });
 
 onUnmounted(() => {

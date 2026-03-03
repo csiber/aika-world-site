@@ -30,14 +30,17 @@ export default {
 
     try {
       if (url.pathname.startsWith('/api/')) {
+        // Public / Special Auth
         if (url.pathname.startsWith('/api/auth/')) {
           return await handleAuth(request, env, url);
         }
 
+        // Admin (Internal auth check in route)
         if (url.pathname.startsWith('/api/admin/')) {
           return await handleAdmin(request, env, url);
         }
 
+        // Protected Routes
         const authResult = await verifyJWT(request, env);
         if (!authResult.ok) return jsonError(401, authResult.error, request);
         const user = authResult.user;
@@ -54,12 +57,8 @@ export default {
         return jsonError(404, 'Not found', request);
       }
 
-      // Try to serve the actual static asset first (CSS, JS, images, etc.)
       const assetResponse = await env.ASSETS.fetch(request);
-      if (assetResponse.status !== 404) {
-        return assetResponse;
-      }
-      // Fall back to index.html for SPA client-side routing
+      if (assetResponse.status !== 404) return assetResponse;
       return await env.ASSETS.fetch(new Request(new URL('/', request.url)));
     } catch (err) {
       console.error('Worker error:', err);
