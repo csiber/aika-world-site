@@ -80,6 +80,68 @@ function recalcRates(buildings, research) {
   };
 }
 
+// ── Prerequisites Logic ───────────────────────────────────────────────────────
+
+function checkPrerequisites(item, allBuildings, allResearch) {
+  if (!item.req) return { ok: true };
+
+  const missing = [];
+  if (item.req.buildings) {
+    for (const [id, reqLevel] of Object.entries(item.req.buildings)) {
+      const b = allBuildings.find(x => x.id === id);
+      if (!b || b.level < reqLevel) {
+        missing.push(`${b?.name || id} Szint ${reqLevel}`);
+      }
+    }
+  }
+  if (item.req.research) {
+    for (const [id, reqLevel] of Object.entries(item.req.research)) {
+      const r = allResearch.find(x => x.id === id);
+      if (!r || r.level < reqLevel) {
+        missing.push(`${r?.name || id} Szint ${reqLevel}`);
+      }
+    }
+  }
+
+  return missing.length === 0 ? { ok: true } : { ok: false, missing };
+}
+
+async function mergeTemplates(env, state) {
+  const defBuildings = JSON.parse((await env.DB.prepare('SELECT data FROM default_buildings').first()).data);
+  const defResearch  = JSON.parse((await env.DB.prepare('SELECT data FROM default_research').first()).data);
+  const defFleet     = JSON.parse((await env.DB.prepare('SELECT data FROM default_fleet').first()).data);
+
+  // Merge req field from templates into active state
+  state.research.forEach(r => {
+    const t = defResearch.find(x => x.id === r.id);
+    if (t) r.req = t.req;
+  });
+
+  state.planets.forEach(p => {
+    p.buildings.forEach(b => {
+      const t = defBuildings.find(x => x.id === b.id);
+      if (t) b.req = t.req;
+    });
+    p.fleet.forEach(f => {
+      const t = defFleet.find(x => x.id === f.id);
+      if (t) f.req = t.req;
+    });
+  });
+
+  if (state.activePlanet) {
+      state.activePlanet.buildings.forEach(b => {
+          const t = defBuildings.find(x => x.id === b.id);
+          if (t) b.req = t.req;
+      });
+      state.activePlanet.fleet.forEach(f => {
+          const t = defFleet.find(x => x.id === f.id);
+          if (t) f.req = t.req;
+      });
+  }
+
+  return state;
+}
+
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
 async function getFullState(env, userId) {
@@ -103,27 +165,33 @@ async function getFullState(env, userId) {
   let activePlanetId = gsRow.active_planet_id;
   let activePlanet = planets.find(p => p.id === activePlanetId) || planets[0];
 
-  return {
+  let state = {
     research: JSON.parse(gsRow.research),
     score: gsRow.score,
     planets,
     activePlanet
   };
+
+  return await mergeTemplates(env, state);
 }
 
 async function saveFullState(env, userId, fullState) {
-  // 1. Update game_state
+  // Strip req field before saving to DB to keep it clean (and avoid data stale if template changes)
+  const cleanResearch = fullState.research.map(r => { const {req, ...rest} = r; return rest; });
+  
   await env.DB.prepare('UPDATE game_state SET research=?, score=?, updated_at=unixepoch() WHERE user_id=?')
-    .bind(JSON.stringify(fullState.research), fullState.score, userId).run();
+    .bind(JSON.stringify(cleanResearch), fullState.score, userId).run();
 
-  // 2. Update each planet
   for (const p of fullState.planets) {
+    const cleanBuildings = p.buildings.map(b => { const {req, ...rest} = b; return rest; });
+    const cleanFleet     = p.fleet.map(f => { const {req, ...rest} = f; return rest; });
+    
     await env.DB.prepare(`
       UPDATE planets SET resources=?, rates=?, buildings=?, fleet=?, updated_at=?
       WHERE id=?
     `).bind(
       JSON.stringify(p.resources), JSON.stringify(p.rates),
-      JSON.stringify(p.buildings), JSON.stringify(p.fleet),
+      JSON.stringify(cleanBuildings), JSON.stringify(cleanFleet),
       p.updatedAt, p.id
     ).run();
   }
@@ -150,7 +218,6 @@ async function processQueue(env, userId, fullState) {
       const r = fullState.research.find(x => x.id === item.item_id);
       if (r) {
         r.level = item.target_level;
-        // Recalc rates for ALL planets if energy tech finished
         if (item.item_id === 'energy_tech') {
           for (const p of fullState.planets) {
             p.rates = recalcRates(p.buildings, fullState.research);
@@ -210,22 +277,11 @@ export async function handleGame(request, env, url, user) {
       'SELECT * FROM build_queue WHERE user_id = ? ORDER BY finish_at ASC'
     ).bind(userId).all();
 
-    // Map planets for summary (to keep response size small)
     const planetsSummary = fullState.planets.map(p => ({
         id: p.id, name: p.name, emoji: p.emoji, coords: p.coords, isMain: p.isMain
     }));
 
-    return jsonResponse({ 
-        ok: true, 
-        state: { 
-            research: fullState.research, 
-            score: fullState.score, 
-            activePlanet: fullState.activePlanet,
-            planets: planetsSummary
-        }, 
-        queue: queue.results, 
-        storage 
-    }, 200, request);
+    return jsonResponse({ ok: true, state: { research: fullState.research, score: fullState.score, activePlanet: fullState.activePlanet, planets: planetsSummary }, queue: queue.results, storage }, 200, request);
   }
 
   // ── POST /api/game/planet/switch ─────────────────────────
@@ -249,6 +305,10 @@ export async function handleGame(request, env, url, user) {
 
     const b = fullState.activePlanet.buildings.find(x => x.id === buildingId);
     if (!b) return jsonError(404, 'Building not found', request);
+
+    // Prerequisite check
+    const preCheck = checkPrerequisites(b, fullState.activePlanet.buildings, fullState.research);
+    if (!preCheck.ok) return jsonError(400, `Előfeltételek hiányoznak: ${preCheck.missing.join(', ')}`, request);
 
     const roboticsLevel = fullState.activePlanet.buildings.find(x => x.id === 'robotics')?.level || 1;
     const maxQueue = roboticsLevel >= 5 ? 3 : 2;
@@ -277,6 +337,44 @@ export async function handleGame(request, env, url, user) {
     return jsonResponse({ ok: true, finishAt, cost, seconds, state: fullState }, 200, request);
   }
 
+  // ── POST /api/game/research ──────────────────────────────
+  if (path === '/api/game/research' && method === 'POST') {
+    let body;
+    try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    const { researchId } = body;
+
+    const r = fullState.research.find(x => x.id === researchId);
+    if (!r) return jsonError(404, 'Research not found', request);
+    if (r.level >= r.max) return jsonError(400, 'Már maximum szinten van', request);
+
+    // Prerequisite check
+    const preCheck = checkPrerequisites(r, fullState.activePlanet.buildings, fullState.research);
+    if (!preCheck.ok) return jsonError(400, `Előfeltételek hiányoznak: ${preCheck.missing.join(', ')}`, request);
+
+    const activeResearch = await env.DB.prepare(
+      'SELECT COUNT(*) as cnt FROM build_queue WHERE user_id = ? AND item_type = ?'
+    ).bind(userId, 'research').first();
+    if (activeResearch.cnt >= 1) return jsonError(409, 'Már fut egy kutatás', request);
+
+    const cost = researchCost(r);
+    if (fullState.activePlanet.resources.metal < cost.metal || fullState.activePlanet.resources.crystal < cost.crystal) {
+      return jsonError(400, 'Nincs elég nyersanyag', request);
+    }
+
+    fullState.activePlanet.resources.metal   -= cost.metal;
+    fullState.activePlanet.resources.crystal -= cost.crystal;
+    const labLevel = fullState.activePlanet.buildings.find(x => x.id === 'lab')?.level || 1;
+    const seconds  = researchTime(r.level, labLevel);
+    const finishAt = Math.floor(Date.now() / 1000) + seconds;
+
+    await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at)
+        VALUES (?, ?, ?, ?, 'research', ?, ?, ?)`)
+        .bind(crypto.randomUUID(), userId, fullState.activePlanet.id, researchId, `🔬 ${r.name} → Szint ${r.level + 1}`, r.level + 1, finishAt).run();
+
+    await saveFullState(env, userId, fullState);
+    return jsonResponse({ ok: true, finishAt, cost, seconds, state: fullState }, 200, request);
+  }
+
   // ── POST /api/game/fleet/build ───────────────────────────
   if (path === '/api/game/fleet/build' && method === 'POST') {
     let body;
@@ -285,6 +383,10 @@ export async function handleGame(request, env, url, user) {
 
     const ship = fullState.activePlanet.fleet.find(x => x.id === shipId);
     if (!ship) return jsonError(404, 'Ship type not found', request);
+
+    // Prerequisite check
+    const preCheck = checkPrerequisites(ship, fullState.activePlanet.buildings, fullState.research);
+    if (!preCheck.ok) return jsonError(400, `Előfeltételek hiányoznak: ${preCheck.missing.join(', ')}`, request);
 
     const shipyardLevel = fullState.activePlanet.buildings.find(b => b.id === 'shipyard')?.level || 1;
     const totalCost = { metal: ship.cost.metal * amount, crystal: ship.cost.crystal * amount };

@@ -17,8 +17,11 @@ Ez a dokumentum összefoglalja a folyamatban lévő és tervezett fejlesztéseke
     - [x] **BUGFIX:** Sorban álló hajók/épületek helyes bolygóhoz rendelése (`planet_id`).
 - [x] **Automatizált Küldetéskezelés:**
     - [x] Cloudflare Worker `scheduled` (Cron) esemény bővítése minden felhasználó beérkezett küldetésének automatikus feldolgozására.
-- [ ] **Technológiai Fa (Tech Tree):**
-    - [ ] Épületek és kutatások előfeltételeinek (Prerequisites) szigorúbb ellenőrzése és megjelenítése a UI-on.
+- [x] **Technológiai Fa (Tech Tree):**
+    - [x] Épületek és kutatások előfeltételeinek (Prerequisites) szigorúbb ellenőrzése és megjelenítése a UI-on.
 - [ ] **Védelmi Rendszerek:**
     - [ ] A `defense` épület ne csak bónuszt adjon, hanem legyenek konkrét védelmi egységek (pl. Rakétatorony, Lézerágyú).
+
+## 🎨 Phase 2: Felhasználói Élmény & Vizualitás (UI/UX)
+*A játék kényelmesebbé és látványosabbá tétele.*
 ...

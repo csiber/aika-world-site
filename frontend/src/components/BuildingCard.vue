@@ -1,5 +1,5 @@
 <template>
-  <div class="bcard" :class="{ 'in-queue': inQueue }">
+  <div class="bcard" :class="{ 'in-queue': inQueue, 'locked': !checkPre.ok }">
     <div class="bcard-header">
       <span class="bcard-icon">{{ building.icon }}</span>
       <div>
@@ -15,7 +15,13 @@
       <div class="bcard-progress-fill" :style="{ width: levelPct + '%' }"></div>
     </div>
 
-    <div class="bcard-costs">
+    <!-- Prerequisites -->
+    <div v-if="!checkPre.ok" class="req-box">
+      <div class="req-title">Követelmények:</div>
+      <div v-for="m in checkPre.missing" :key="m" class="req-item missing">❌ {{ m }}</div>
+    </div>
+
+    <div class="bcard-costs" v-if="checkPre.ok">
       <div class="cost-row">
         <span>{{ L.t('buildings.nextLevel') }}</span>
         <span>{{ building.level + 1 }}</span>
@@ -36,11 +42,12 @@
 
     <button
       class="btn-primary upgrade-btn"
-      :disabled="!canAfford || inQueue || loading"
+      :disabled="!canAfford || inQueue || loading || !checkPre.ok"
       @click="onUpgrade"
     >
       <span v-if="inQueue">⏳ {{ L.t('buildings.inProgress') }}</span>
       <span v-else-if="loading">{{ L.t('buildings.sending') }}</span>
+      <span v-else-if="!checkPre.ok">Lezárva</span>
       <span v-else-if="!canAfford">{{ L.t('buildings.notEnough') }}</span>
       <span v-else>⬆️ {{ L.t('buildings.upgrade') }}</span>
     </button>
@@ -68,6 +75,25 @@ const buildSeconds  = computed(() => {
   const base      = Math.floor(props.building.level * 90 + 30);
   const reduction = Math.max(0.2, 1 - (roboticsLevel.value - 1) * 0.07);
   return Math.floor(base * reduction);
+});
+
+const checkPre = computed(() => {
+  const item = props.building;
+  if (!item.req) return { ok: true };
+  const missing = [];
+  if (item.req.buildings) {
+    for (const [id, lvl] of Object.entries(item.req.buildings)) {
+      const b = game.buildings.find(x => x.id === id);
+      if (!b || b.level < lvl) missing.push(`${b?.name || id} ${lvl}`);
+    }
+  }
+  if (item.req.research) {
+    for (const [id, lvl] of Object.entries(item.req.research)) {
+      const r = game.research.find(x => x.id === id);
+      if (!r || r.level < lvl) missing.push(`${r?.name || id} ${lvl}`);
+    }
+  }
+  return { ok: missing.length === 0, missing };
 });
 
 function formatTime(s) {
@@ -99,6 +125,7 @@ async function onUpgrade() {
 }
 .bcard:hover { border-color: var(--border-glow); box-shadow: 0 0 15px rgba(0,200,255,0.06); }
 .bcard.in-queue { border-color: rgba(255,215,0,0.3); }
+.bcard.locked { opacity: 0.7; border-style: dashed; }
 
 .bcard-header { display: flex; align-items: center; gap: 10px; }
 .bcard-icon { font-size: 28px; }
@@ -113,6 +140,11 @@ async function onUpgrade() {
 .cost-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); }
 .cost-row span:last-child { color: var(--text); font-family: 'Orbitron', sans-serif; font-size: 10px; }
 .cost-row span.not-enough { color: var(--accent2) !important; }
+
+.req-box { background: rgba(0,0,0,0.2); border-radius: 4px; padding: 8px; margin: 4px 0; }
+.req-title { font-size: 9px; color: var(--text-dim); margin-bottom: 4px; text-transform: uppercase; }
+.req-item { font-size: 10px; margin-bottom: 2px; }
+.req-item.missing { color: var(--red); }
 
 .upgrade-btn { width: 100%; padding: 8px; }
 </style>
