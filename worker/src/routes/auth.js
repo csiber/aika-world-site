@@ -116,5 +116,27 @@ export async function handleAuth(request, env, url) {
     return jsonResponse({ ok: true, user: { id: user.id, username: user.username, email: user.email, isAdmin: !!user.is_admin } }, 200, request);
   }
 
+  // ── POST /api/auth/change-password ─────────────────────
+  if (path === '/api/auth/change-password' && method === 'POST') {
+    const authResult = await verifyJWT(request, env);
+    if (!authResult.ok) return jsonError(401, authResult.error, request);
+    
+    let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    const { currentPassword, newPassword } = body;
+    if (!currentPassword || !newPassword) return jsonError(400, 'Minden mező megadása kötelező', request);
+    if (newPassword.length < 6) return jsonError(400, 'Az új jelszónak legalább 6 karakternek kell lennie', request);
+
+    const user = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(authResult.user.sub).first();
+    if (!user) return jsonError(404, 'Felhasználó nem található', request);
+
+    const isMatch = await verifyPassword(currentPassword, user.password);
+    if (!isMatch) return jsonError(401, 'A jelenlegi jelszó hibás', request);
+
+    const hashed = await hashPassword(newPassword);
+    await env.DB.prepare('UPDATE users SET password = ? WHERE id = ?').bind(hashed, user.id).run();
+
+    return jsonResponse({ ok: true, message: 'Jelszó sikeresen megváltoztatva' }, 200, request);
+  }
+
   return jsonError(404, 'Auth endpoint not found', request);
 }

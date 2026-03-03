@@ -1,6 +1,6 @@
 /**
  * Game routes (all protected — user injected by middleware)
- * Refactored for v2.7.0: Instant mission resolution integration
+ * Refactored for v2.7.2: Fix 500 errors and missing endpoints
  */
 
 import { jsonResponse, jsonError } from '../utils/response.js';
@@ -126,22 +126,29 @@ async function mergeTemplates(env, state) {
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
 async function getFullState(env, userId) {
+  const userRow = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(userId).first();
+  if (!userRow) return null;
+
   const gsRow = await env.DB.prepare('SELECT * FROM game_state WHERE user_id = ?').bind(userId).first();
   if (!gsRow) return null;
+
   const membership = await env.DB.prepare('SELECT alliance_id FROM alliance_members WHERE user_id = ?').bind(userId).first();
   let allianceLevel = 1;
   if (membership) {
     const alliance = await env.DB.prepare('SELECT level FROM alliances WHERE id = ?').bind(membership.alliance_id).first();
     if (alliance) allianceLevel = alliance.level;
   }
+
   const { results: pRows } = await env.DB.prepare('SELECT * FROM planets WHERE user_id = ?').bind(userId).all();
   const planets = pRows.map(p => ({
     id: p.id, name: p.name, emoji: p.emoji, coords: p.coords, updatedAt: p.updated_at,
     resources: JSON.parse(p.resources), rates: JSON.parse(p.rates), buildings: JSON.parse(p.buildings), fleet: JSON.parse(p.fleet), defense: JSON.parse(p.defense || '[]'), isMain: p.is_main === 1
   }));
+
   let activePlanetId = gsRow.active_planet_id;
   let activePlanet = planets.find(p => p.id === activePlanetId) || planets[0];
-  let state = { username: gsRow.username, research: JSON.parse(gsRow.research), score: gsRow.score, allianceLevel, planets, activePlanet };
+
+  let state = { username: userRow.username, research: JSON.parse(gsRow.research), score: gsRow.score, allianceLevel, planets, activePlanet };
   return await mergeTemplates(env, state);
 }
 
@@ -235,9 +242,7 @@ export async function handleGame(request, env, url, user) {
   const path   = url.pathname;
   const method = request.method;
 
-  // 10/10 FIX: Resolve missions for THIS user instantly on any game request
   await resolveMissionsForUser(env, userId);
-
   await ensureDailyQuests(env, userId);
   let fullState = await getFullState(env, userId);
   if (!fullState) return jsonError(404, 'Game state not found', request);

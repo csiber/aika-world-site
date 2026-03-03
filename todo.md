@@ -9,5 +9,7 @@ Ez a dokumentum összefoglalja a folyamatban lévő és tervezett fejlesztéseke
 - [x] API Biztonsági Felülvizsgálat
 - [x] Topbar Layout Fix
 - [x] Admin Menu Fix
-- [x] **Auth Hotfix (v2.7.1):** Visszafelé kompatibilitás a régi jelszó-hashekkel a sikeres belépéshez.
+- [x] **Auth & Game State Fix (v2.7.2):** 500-as hibák javítása a hiányzó mezők és végpontok pótlásával.
+- [x] **Security:** Jelszó módosítási lehetőség a profilban.
 - [x] Localization (HU/EN)
+...

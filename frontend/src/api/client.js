@@ -23,6 +23,7 @@ export const api = {
   login: (email, password, captcha) => request('POST', '/auth/login', { email, password, captcha }, false),
   register: (username, email, password, captcha) => request('POST', '/auth/register', { username, email, password, captcha }, false),
   getMe: () => request('GET', '/auth/me'),
+  changePassword: (currentPassword, newPassword) => request('POST', '/auth/change-password', { currentPassword, newPassword }),
 
   // Game
   getState: () => request('GET', '/game/state'),
