@@ -258,6 +258,11 @@ export async function handleGame(request, env, url, user) {
     return jsonResponse(responseData({ ok: true, reward: { metal: q.reward_metal, deus: q.reward_deus } }), 200, request);
   }
 
+  if (path === '/api/game/queue' && method === 'GET') {
+    const queue = await env.DB.prepare('SELECT * FROM build_queue WHERE user_id = ? ORDER BY finish_at ASC').bind(userId).all();
+    return jsonResponse(responseData({ ok: true, queue: queue.results }), 200, request);
+  }
+
   if (path === '/api/game/state' && method === 'GET') {
     await saveFullState(env, userId, fullState);
     const storage = calcStorage(fullState.activePlanet.buildings, fullState.research);

@@ -8,6 +8,8 @@ Ez a dokumentum összefoglalja a folyamatban lévő és tervezett fejlesztéseke
 - [x] State Sync refinement
 - [x] API Biztonsági Felülvizsgálat
 - [x] Topbar Layout Fix
-- [x] **Admin Menu Fix (v2.6.2):** Szigorúbb jogosultság-ellenőrzés kliensoldalon a menü eltűnésének megakadályozására.
+- [x] Admin Menu Fix
+- [x] **API Robustness (v2.6.3):** Fix 404 on `/api/game/queue` and 500 on `/api/auth/me`.
+- [x] **User Registration Fix:** Automatic coordinate assignment for new users.
 - [x] Localization (HU/EN)
 ...
