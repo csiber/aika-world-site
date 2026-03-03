@@ -7,7 +7,7 @@ import { handleGame }     from './routes/game.js';
 import { handleRankings } from './routes/rankings.js';
 import { handleMessages } from './routes/messages.js';
 import { handleAikaChat } from './routes/aika.js';
-import { handleMissions } from './routes/missions.js';
+import { handleMissions, resolveAllMissions } from './routes/missions.js';
 import { handleAlliance } from './routes/alliance.js';
 import { handleProfile }  from './routes/profile.js';
 import { handleAdmin }    from './routes/admin.js';
@@ -18,6 +18,7 @@ import { simulateBots } from './utils/bots.js';
 export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(simulateBots(env));
+    ctx.waitUntil(resolveAllMissions(env));
   },
 
   async fetch(request, env, ctx) {
