@@ -5,8 +5,8 @@ Ez a dokumentum összefoglalja a folyamatban lévő és tervezett fejlesztéseke
 ---
 
 ## 🧹 Phase 4: Refaktorálás & Biztonság (STABLE 10/10)
-- [x] **Emergency Fix (v2.9.5):** Turnstile kulcsok és szerver oldali titkok teljes visszaállítása az eredeti állapotra.
-- [x] **Design Restoration:** Globális CSS reset és a fehér keretek eltávolítása a dark mode-ban.
+- [x] **Turnstile Fix (v2.9.6):** Sitekey szinkronizáció és Emergency Secret beállítása a belépéshez.
+- [x] **PWA Support (v2.9.6):** Telepíthető mobilalkalmazás mód (Progressive Web App).
+- [x] **Design Restoration:** Fehér keretek eltávolítása, sötét mód optimalizálása.
 - [x] SEO & Social Optimization (v2.9.2)
-- [x] Terminal Intro & Tour (v2.7.6)
 ...

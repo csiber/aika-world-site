@@ -66,7 +66,7 @@ import LangSwitch     from '@/components/LangSwitch.vue';
 import ChangelogModal from '@/components/ChangelogModal.vue';
 
 // RESTORING ORIGINAL SITEKEY
-const SITE_KEY = '0x4AAAAAACjkTbgtjRtTiQo_';
+const SITE_KEY = '0x4AAAAAACjkTSOlxZq6QAcbdOBQfdtmOAE';
 
 const router      = useRouter();
 const auth        = useAuthStore();
