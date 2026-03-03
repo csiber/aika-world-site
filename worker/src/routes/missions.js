@@ -3,6 +3,7 @@
  */
 
 import { jsonResponse, jsonError } from '../utils/response.js';
+import { incrementQuest } from './game.js';
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
@@ -92,7 +93,7 @@ export async function resolveMissionsForUser(env, userId) {
 
     if (mission.mission_type === 'attack') {
       const attackerGS = await getGlobalState(env, userId);
-      const attackerState = { username: user.username, fleet: currentShips, research: JSON.parse(attackerGS.research) };
+      const attackerState = { username: user?.username || 'Játékos', fleet: currentShips, research: JSON.parse(attackerGS.research) };
       const targetPlanet = await getPlanetState(env, (await env.DB.prepare('SELECT id FROM planets WHERE user_id = ? AND coords = ?').bind(mission.target_user_id, mission.target_coords).first())?.id);
       
       if (targetPlanet) {
@@ -112,8 +113,6 @@ export async function resolveMissionsForUser(env, userId) {
     }
 
     await env.DB.prepare(`UPDATE fleet_missions SET status=?, result=?, ships=?, return_at=? WHERE id=?`).bind(nextStatus, JSON.stringify(result), JSON.stringify(currentShips), returnAt, mission.id).run();
-    
-    // Store mission_id in metadata for frontend linking
     const msgId = crypto.randomUUID();
     await env.DB.prepare('INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)')
       .bind(msgId, userId, missionIcon(mission.mission_type) + ' Küldetés', missionSubject(mission.mission_type, mission.target_name), formatMissionResult(mission, result), 'combat').run();
@@ -147,14 +146,7 @@ export async function handleMissions(request, env, url, user) {
     const gal = url.searchParams.get('galaxy') || '1';
     const sys = url.searchParams.get('system') || '1';
     const pattern = `[${gal}:${sys}:%`;
-
-    const rows = await env.DB.prepare(`
-      SELECT user_id, username, planet_name, planet_emoji, coords, score 
-      FROM galaxy_map 
-      WHERE coords LIKE ?
-      ORDER BY coords ASC
-    `).bind(pattern).all();
-
+    const rows = await env.DB.prepare(`SELECT user_id, username, planet_name, planet_emoji, coords, score FROM galaxy_map WHERE coords LIKE ? ORDER BY coords ASC`).bind(pattern).all();
     const { results: myPlanets } = await env.DB.prepare('SELECT id, name, emoji, coords FROM planets WHERE user_id = ?').bind(userId).all();
     return jsonResponse({ ok: true, players: rows.results, myPlanets, galaxy: parseInt(gal), system: parseInt(sys) }, 200, request);
   }
@@ -174,17 +166,12 @@ export async function handleMissions(request, env, url, user) {
   if (path.startsWith('/api/missions/recall/') && method === 'POST') {
       const mid = path.split('/').pop();
       const m = await env.DB.prepare('SELECT * FROM fleet_missions WHERE id = ? AND user_id = ?').bind(mid, userId).first();
-      
       if (!m) return jsonError(404, 'Mission not found', request);
       if (m.status !== 'travelling') return jsonError(400, 'Csak úton lévő flotta hívható vissza', request);
-
       const now = Math.floor(Date.now() / 1000);
       const elapsed = now - m.created_at;
-      const returnAt = now + elapsed; // Takes the same time to get back as it has travelled so far
-
-      await env.DB.prepare(`UPDATE fleet_missions SET status = 'returning', return_at = ? WHERE id = ?`)
-        .bind(returnAt, mid).run();
-
+      const returnAt = now + elapsed;
+      await env.DB.prepare(`UPDATE fleet_missions SET status = 'returning', return_at = ? WHERE id = ?`).bind(returnAt, mid).run();
       return jsonResponse({ ok: true, returnAt }, 200, request);
   }
 
@@ -215,6 +202,7 @@ export async function handleMissions(request, env, url, user) {
     }
     await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, target_user_id, mission_type, target_coords, target_name, status, ships, result, arrive_at, created_at) VALUES (?, ?, ?, ?, 'spy', ?, ?, 'travelling', ?, ?, ?, unixepoch())`)
       .bind(crypto.randomUUID(), userId, planet.id, targetUserId || null, targetCoords, targetName || 'Ismeretlen', JSON.stringify(sentShips), JSON.stringify(res), arriveAt).run();
+    await incrementQuest(env, userId, 'mission', 'spy');
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
 
@@ -229,6 +217,7 @@ export async function handleMissions(request, env, url, user) {
     const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(planet.coords, targetCoords, JSON.parse(gs.research), 180);
     await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, target_user_id, mission_type, target_coords, target_name, status, ships, arrive_at, created_at) VALUES (?, ?, ?, ?, 'attack', ?, ?, 'travelling', ?, ?, unixepoch())`)
       .bind(crypto.randomUUID(), userId, planet.id, targetUserId, targetCoords, targetName || 'Ismeretlen', JSON.stringify(sentShips), arriveAt).run();
+    await incrementQuest(env, userId, 'mission', 'attack');
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
 
@@ -241,8 +230,9 @@ export async function handleMissions(request, env, url, user) {
     colShip.count--; await savePlanetState(env, planet.id, planet);
     const pName = `${user.username} új gyarmata`;
     const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(planet.coords, targetCoords, JSON.parse(gs.research), 600);
-    await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, result, arrive_at, created_at) VALUES (?, ?, ?, 'colonize', ?, ?, 'travelling', ?, ?, ?, unixepoch())`)
+    await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, result, arrive_at, created_at) VALUES (?, ?, ?, ?, 'colonize', ?, ?, 'travelling', ?, ?, ?, unixepoch())`)
       .bind(crypto.randomUUID(), userId, planet.id, targetCoords, pName, JSON.stringify([{id:'colony', count:1}]), JSON.stringify({success:true, planetName:pName, emoji:'🪐'}), arriveAt).run();
+    await incrementQuest(env, userId, 'mission', 'colonize');
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
 
@@ -281,33 +271,25 @@ function runBattle(attacker, defender) {
     let curDefFleet = JSON.parse(JSON.stringify(defender.fleet));
     let curDefDefense = JSON.parse(JSON.stringify(defender.defense));
 
-    // Simulate 3 rounds
     for (let r = 1; r <= 3; r++) {
         const atkStats = getStats(curAtkFleet, attacker.research);
         const defStats = getStats([...curDefFleet, ...curDefDefense], defender.research, defender.buildings);
-        
         rounds.push({ round: r, attackerPower: atkStats.attack, defenderPower: defStats.shield });
-
-        // Apply damage (simplified linear distribution)
         const atkDamage = atkStats.attack;
-        const defDamage = defStats.shield / 2; // Attacker takes less relative damage if winning
-
+        const defDamage = defStats.shield / 2;
         const applyLoss = (units, dmg, totalShield) => {
             if (totalShield <= 0) return units.map(u => ({ ...u, count: 0 }));
             const lossPct = Math.min(1, dmg / (totalShield * 1.5 + 1));
             return units.map(u => ({ ...u, count: Math.floor(u.count * (1 - lossPct)) }));
         };
-
         curDefFleet = applyLoss(curDefFleet, atkDamage, defStats.shield);
         curDefDefense = applyLoss(curDefDefense, atkDamage, defStats.shield);
         curAtkFleet = applyLoss(curAtkFleet, defDamage, atkStats.shield || 1000);
-        
         if (atkStats.attack <= 0 || defStats.shield <= 0) break;
     }
 
     const finalAtkStats = getStats(curAtkFleet, attacker.research);
     const finalDefStats = getStats([...curDefFleet, ...curDefDefense], defender.research, defender.buildings);
-    
     const attackerWins = finalAtkStats.attack > finalDefStats.shield;
     
     let loot = { metal: 0, crystal: 0 };
@@ -321,18 +303,10 @@ function runBattle(attacker, defender) {
     }
 
     return {
-        attackerWins,
-        attackerName: attacker.username,
-        defenderName: defender.username,
-        initialAtkFleet: attacker.fleet,
-        initialDefFleet: defender.fleet,
-        initialDefDefense: defender.defense,
-        attackerRemainingFleet: curAtkFleet,
-        defenderRemainingFleet: curDefFleet,
-        defenderRemainingDefense: curDefDefense,
-        defenderResources,
-        loot,
-        rounds
+        attackerWins, attackerName: attacker.username, defenderName: defender.username,
+        initialAtkFleet: attacker.fleet, initialDefFleet: defender.fleet, initialDefDefense: defender.defense,
+        attackerRemainingFleet: curAtkFleet, defenderRemainingFleet: curDefFleet, defenderRemainingDefense: curDefDefense,
+        defenderResources, loot, rounds
     };
 }
 

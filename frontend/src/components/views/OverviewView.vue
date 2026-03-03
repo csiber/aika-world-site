@@ -13,6 +13,30 @@
 
     <!-- CENTER: Planet + Queue -->
     <div id="planet-view">
+      <!-- Daily Quests -->
+      <div class="panel quest-panel">
+        <div class="panel-header">
+          <span class="panel-icon">🎯</span>
+          <h3>Napi Küldetések</h3>
+        </div>
+        <div class="panel-body">
+          <div v-for="q in quests" :key="q.id" class="quest-item" :class="{ completed: q.current >= q.required, claimed: q.is_claimed }">
+            <div class="q-info">
+              <div class="q-desc">{{ questLabel(q) }}</div>
+              <div class="q-progress">
+                <div class="q-bar"><div class="q-fill" :style="{ width: Math.min(100, (q.current/q.required)*100) + '%' }"></div></div>
+                <span class="q-count">{{ q.current }} / {{ q.required }}</span>
+              </div>
+            </div>
+            <div class="q-reward">
+              <button v-if="q.current >= q.required && !q.is_claimed" class="btn-claim" @click="claimQuest(q.id)">🎁 Átvétel</button>
+              <span v-else-if="q.is_claimed" class="claimed-tag">✓ Átvéve</span>
+              <span v-else class="reward-tag">💰 {{ q.reward_metal }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Mission Control -->
       <div class="panel">
         <div class="panel-header">
@@ -148,6 +172,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useGameStore } from '@/stores/game.js';
 import { useLangStore } from '@/stores/lang.js';
 import { api } from '@/api/client.js';
+import { audio } from '@/utils/botAudio.js';
 import BuildingItem from '@/components/BuildingItem.vue';
 import QueueItem    from '@/components/QueueItem.vue';
 
@@ -167,18 +192,29 @@ const totalShips    = computed(() => fleet.value.reduce((s, f) => s + f.count, 0
 
 const missions  = ref([]);
 const resolving = ref(false);
+const quests    = ref([]);
 
-const aikaInput = ref('');
-const aikaLoading = ref(false);
-const aikaChatLog = ref([
-  { role: 'assistant', text: L.t('overview.aikaGreeting') }
-]);
+async function loadMissions() { try { const data = await api.getMissions(); missions.value = data.missions || []; } catch {} }
+async function loadQuests() { try { const data = await api.get('/game/quests'); quests.value = data.quests || []; } catch {} }
 
-async function loadMissions() {
+function questLabel(q) {
+  const types = { 
+    upgrade: 'Építs fel vagy fejlessz bármilyen épületet',
+    build: `Építs ${q.required} egységet (${q.target_id || 'bármilyen'})`,
+    mission: `Indíts ${q.required} ${q.target_id === 'spy' ? 'kémkedést' : 'támadást'}`,
+    donate: 'Adományozz a szövetségnek'
+  };
+  return types[q.quest_type] || 'Napi küldetés';
+}
+
+async function claimQuest(qid) {
   try {
-    const data = await api.getMissions();
-    missions.value = data.missions || [];
-  } catch {}
+    await api.post(`/game/quests/claim/${qid}`);
+    audio.success();
+    game.notify('Jutalom átvéve!', 'green');
+    await loadQuests();
+    await game.loadState();
+  } catch (e) { game.notify(`Hiba: ${e.message}`, 'red'); }
 }
 
 async function resolveMissions() {
@@ -188,9 +224,7 @@ async function resolveMissions() {
     await loadMissions();
     await game.loadState();
     game.notify('Flották állapota frissítve', 'blue');
-  } catch (e) {
-    game.notify(`❌ ${e.message}`, 'red');
-  }
+  } catch (e) { game.notify(`❌ ${e.message}`, 'red'); }
   resolving.value = false;
 }
 
@@ -198,118 +232,61 @@ function formatTimeLeft(ts) {
   if (!ts) return '';
   const diff = ts - Math.floor(Date.now() / 1000);
   if (diff <= 0) return 'Megérkezett';
-  const m = Math.floor(diff / 60);
-  const s = diff % 60;
+  const m = Math.floor(diff / 60); const s = diff % 60;
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
 async function sendToAika() {
   const msg = aikaInput.value.trim();
   if (!msg || aikaLoading.value) return;
-  aikaInput.value = '';
-  aikaChatLog.value.push({ role: 'user', text: msg });
+  aikaInput.value = ''; aikaChatLog.value.push({ role: 'user', text: msg });
   aikaLoading.value = true;
   try {
     const res = await fetch('/api/aika-chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('aika_token')}` },
-      body: JSON.stringify({
-        message: msg,
-        context: {
-          resources: game.resources,
-          rates: game.rates,
-          score: game.score,
-          buildingsCount: game.buildings.length,
-          fleetTotal: totalShips.value,
-          activeMissions: missions.value.length
-        }
-      })
+      body: JSON.stringify({ message: msg, context: { resources: game.resources, rates: game.rates, score: game.score, buildingsCount: game.buildings.length, fleetTotal: totalShips.value, activeMissions: missions.value.length } })
     });
     const data = await res.json();
-    if (!res.ok) {
-      aikaChatLog.value.push({ role: 'assistant', text: `⚠️ ${data.error || 'Ismeretlen hiba'}` });
-    } else {
-      aikaChatLog.value.push({ role: 'assistant', text: data.reply || 'Hiba történt.' });
-    }
-  } catch (e) {
-    aikaChatLog.value.push({ role: 'assistant', text: `⚠️ ${L.t('overview.connError')}` });
-  }
+    if (!res.ok) { aikaChatLog.value.push({ role: 'assistant', text: `⚠️ ${data.error || 'Ismeretlen hiba'}` }); }
+    else { aikaChatLog.value.push({ role: 'assistant', text: data.reply || 'Hiba történt.' }); }
+  } catch (e) { aikaChatLog.value.push({ role: 'assistant', text: `⚠️ ${L.t('overview.connError')}` }); }
   aikaLoading.value = false;
 }
 
 onMounted(() => {
   loadMissions();
-  const timer = setInterval(loadMissions, 10000);
+  loadQuests();
+  const timer = setInterval(() => { loadMissions(); loadQuests(); }, 10000);
   onUnmounted(() => clearInterval(timer));
 });
 </script>
 
 <style scoped>
-.overview-grid {
-  display: grid;
-  grid-template-columns: 220px 1fr 220px;
-  gap: 10px;
-  min-height: calc(100vh - 140px);
-}
+.overview-grid { display: grid; grid-template-columns: 220px 1fr 220px; gap: 10px; min-height: calc(100vh - 140px); }
 .scroll-list { max-height: calc(100vh - 200px); overflow-y: auto; }
 
-.planet-visual {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
-}
-.planet-visual::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(600px 400px at 70% 50%, rgba(0,100,200,0.06) 0%, transparent 70%);
-  pointer-events: none;
-}
+.quest-item { background: rgba(255,215,0,0.03); border: 1px solid rgba(255,215,0,0.1); border-radius: 4px; padding: 10px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+.quest-item.completed { border-color: var(--accent3); background: rgba(58,255,122,0.03); }
+.quest-item.claimed { opacity: 0.5; filter: grayscale(1); }
+.q-info { flex: 1; }
+.q-desc { font-size: 11px; color: var(--text-bright); margin-bottom: 4px; }
+.q-progress { display: flex; align-items: center; gap: 8px; }
+.q-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
+.q-fill { height: 100%; background: var(--accent4); transition: width 0.3s; }
+.q-count { font-size: 10px; font-family: 'Orbitron', sans-serif; color: var(--text-dim); }
+.btn-claim { background: var(--accent3); color: #000; border: none; padding: 4px 10px; border-radius: 3px; font-size: 10px; font-family: 'Orbitron', sans-serif; cursor: pointer; }
+.claimed-tag { font-size: 10px; color: var(--accent3); }
+.reward-tag { font-size: 10px; color: var(--accent4); font-family: 'Orbitron', sans-serif; }
+
+.planet-visual { display: flex; align-items: center; gap: 20px; padding: 20px; position: relative; overflow: hidden; }
+.planet-visual::before { content: ''; position: absolute; inset: 0; background: radial-gradient(600px 400px at 70% 50%, rgba(0,100,200,0.06) 0%, transparent 70%); pointer-events: none; }
 .scanner-container { position: relative; width: 100px; height: 100px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-
-.planet-sphere {
-  width: 80px; height: 80px;
-  border-radius: 50%;
-  position: relative;
-  overflow: hidden;
-  box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 20px rgba(0,200,255,0.2);
-  display: flex; align-items: center; justify-content: center;
-  background: #050c1c;
-}
-.sphere-texture {
-  font-size: 60px;
-  animation: rotate-3d 12s linear infinite;
-  display: flex; align-items: center; justify-content: center;
-  width: 200%; height: 100%;
-}
-.sphere-glow {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-@keyframes rotate-3d {
-  0% { transform: translateX(-25%) rotate(0deg); }
-  50% { transform: translateX(25%) rotate(5deg); }
-  100% { transform: translateX(-25%) rotate(0deg); }
-}
-
-.planet-scanner {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  box-shadow: 0 0 10px var(--accent);
-  opacity: 0.4;
-  animation: scanline 4s linear infinite;
-  pointer-events: none;
-  z-index: 10;
-}
+.planet-sphere { width: 80px; height: 80px; border-radius: 50%; position: relative; overflow: hidden; box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 20px rgba(0,200,255,0.2); display: flex; align-items: center; justify-content: center; background: #050c1c; }
+.sphere-texture { font-size: 60px; animation: rotate-3d 12s linear infinite; display: flex; align-items: center; justify-content: center; width: 200%; height: 100%; }
+.sphere-glow { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 70%); pointer-events: none; }
+@keyframes rotate-3d { 0% { transform: translateX(-25%) rotate(0deg); } 50% { transform: translateX(25%) rotate(5deg); } 100% { transform: translateX(-25%) rotate(0deg); } }
+.planet-scanner { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); box-shadow: 0 0 10px var(--accent); opacity: 0.4; animation: scanline 4s linear infinite; pointer-events: none; z-index: 10; }
 @keyframes scanline { 0% { top: 0%; opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { top: 100%; opacity: 0; } }
 .planet-stats h2 { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; color: var(--text-bright); margin-bottom: 4px; }
 .planet-coords-big { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--accent); margin-bottom: 12px; letter-spacing: 2px; }
@@ -319,7 +296,6 @@ onMounted(() => {
 .stat-value { font-family: 'Orbitron', sans-serif; font-size: 13px; color: var(--text-bright); font-weight: 600; }
 
 #planet-view { display: flex; flex-direction: column; gap: 10px; }
-
 .mission-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 6px; }
 .mission-item.returning { border-color: var(--accent3); background: rgba(58,255,122,0.05); }
 .mission-icon { font-size: 18px; }
@@ -327,54 +303,24 @@ onMounted(() => {
 .m-target { font-size: 11px; color: var(--text-bright); font-weight: 600; }
 .m-status { font-size: 10px; color: var(--text-dim); display: flex; justify-content: space-between; margin-top: 2px; }
 .m-time { font-family: 'Orbitron', sans-serif; color: var(--accent); }
-
 .empty-msg { font-size: 11px; color: var(--text-dim); padding: 8px 0; }
 
 .aika-chat { background: rgba(0,0,0,0.4); border: 1px solid rgba(0,200,255,0.2); border-radius: 4px; padding: 10px; }
 .aika-messages { max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
-.aika-bubble { }
 .aika-bubble.assistant .aika-text { background: rgba(0,200,255,0.08); border: 1px solid rgba(0,200,255,0.2); border-radius: 4px; padding: 6px 10px; font-size: 11px; color: var(--text); line-height: 1.5; }
 .aika-bubble.user .aika-text { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 6px 10px; font-size: 11px; color: var(--text-dim); line-height: 1.5; text-align: right; }
-.aika-typing { letter-spacing: 3px; animation: blink 1.2s infinite; }
-@keyframes blink { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
 .aika-input-row { display: flex; gap: 6px; margin-top: 6px; }
 .aika-input { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; font-size: 11px; border-radius: 3px; font-family: 'Exo 2', sans-serif; outline: none; transition: border-color 0.2s; }
-.aika-input:focus { border-color: var(--accent); }
-.aika-input:disabled { opacity: 0.5; }
 .aika-send { padding: 5px 12px; background: rgba(0,200,255,0.15); border: 1px solid var(--accent); color: var(--accent); border-radius: 3px; cursor: pointer; font-size: 11px; font-family: 'Orbitron', sans-serif; transition: all 0.2s; }
-.aika-send:hover { background: rgba(0,200,255,0.3); }
-.aika-send:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .stat-block { display: flex; flex-direction: column; gap: 4px; }
 .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid rgba(26,42,74,0.3); font-size: 11px; color: var(--text); }
 .sv { font-family: 'Orbitron', sans-serif; font-size: 10px; }
-.sv.metal   { color: var(--metal); }
+.sv.metal { color: var(--metal); }
 .sv.crystal { color: var(--crystal); }
-.sv.energy  { color: var(--energy); }
-.sv.deus    { color: var(--accent); }
+.sv.energy { color: var(--energy); }
+.sv.deus { color: var(--accent); }
 
-@media (max-width: 900px) {
-  .overview-grid { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 480px) {
-  .planet-visual {
-    flex-direction: column;
-    text-align: center;
-    gap: 10px;
-  }
-  .planet-visual h2 {
-    font-size: 16px;
-  }
-  .planet-coords-big {
-    margin-bottom: 8px;
-  }
-  .stat-grid {
-    width: 100%;
-    gap: 4px;
-  }
-  .stat-item {
-    padding: 4px 6px;
-  }
-}
+@media (max-width: 900px) { .overview-grid { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .planet-visual { flex-direction: column; text-align: center; gap: 10px; } .planet-visual h2 { font-size: 16px; } .stat-grid { width: 100%; gap: 4px; } .stat-item { padding: 4px 6px; } }
 </style>

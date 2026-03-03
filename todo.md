@@ -15,13 +15,15 @@ Ez a dokumentum összefoglalja a folyamatban lévő és tervezett fejlesztéseke
 - [x] Részletes Harci Jelentések
 - [x] Galaxis Térkép Bővítése
 - [x] Flotta Irányítóközpont
-- [x] Animációk & Effektek:
-    - [x] **3D Planet Effect:** Forgó, textúrázott bolygók az áttekintőben.
-    - [x] **UI Audio:** Szintetizált hanghatások építéshez, küldetésekhez és hibákhoz.
-    - [x] **Ikonizáció:** Minden menüelem egységes ikont kapott.
+- [x] Animációk & Effektek
 
-## 🤝 Phase 3: Közösségi Funkciók & Tartalom (Folyamatban)
+## 🤝 Phase 3: Közösségi Funkciók & Tartalom (Befejezve)
 - [x] Szövetségi Fejlesztések (Szintek, Bank).
 - [x] Okosabb Botok (AIKA v2 - Aktív küldetések).
-- [ ] **Események & Küldetések:** Napi kihívások és globális eventek.
+- [x] **Események & Küldetések:** Napi kihívások (Daily Quests) jutalmakkal.
+
+## 🧹 Phase 4: Refaktorálás & Biztonság (Következő)
+- [ ] **State Sync refinement:** Pontosabb kliensoldali tickek.
+- [ ] **API Biztonsági Felülvizsgálat:** Paraméter validáció.
+- [ ] **Lokalizáció:** Hiányzó szövegek pótlása.
 ...
