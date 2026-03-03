@@ -50,12 +50,12 @@ onMounted(() => {
   --bg-deep:    #030610;
   --bg-panel:   #070d1f;
   --bg-card:    #0b1428;
-  --border:     #1a2a4a;
+  --border:     #16223a;
   --border-glow:#1e4080;
   --text:       #c8deff;
   --text-dim:   #4a6a9a;
   --text-bright:#e8f4ff;
-  --panel-shadow: 0 0 30px rgba(0,200,255,0.08);
+  --panel-shadow: 0 0 30px rgba(0,200,255,0.05);
 }
 
 /* Light Theme */
@@ -103,8 +103,8 @@ onMounted(() => {
 }
 
 /* ── Shared component styles ── */
-.panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--panel-shadow); overflow: hidden; }
-.panel-header { background: linear-gradient(90deg, rgba(0,200,255,0.05) 0%, transparent 100%); border-bottom: 1px solid var(--border); padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
+.panel { background: var(--bg-panel); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; box-shadow: var(--panel-shadow); overflow: hidden; }
+.panel-header { background: linear-gradient(90deg, rgba(0,200,255,0.05) 0%, transparent 100%); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
 .panel-header h3 { font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
 .panel-body { padding: 10px; }
 

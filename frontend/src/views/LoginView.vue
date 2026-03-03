@@ -175,10 +175,10 @@ onMounted(() => {
 .auth-card {
   background: rgba(10, 20, 40, 0.8);
   backdrop-filter: blur(15px);
-  border: 1px solid rgba(0, 200, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   padding: 40px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 20px rgba(0,200,255,0.1);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
   text-align: center;
 }
 
@@ -192,7 +192,7 @@ onMounted(() => {
 .input-group { text-align: left; margin-bottom: 20px; }
 .input-group label { display: block; font-size: 11px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
 .input-group input {
-  width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+  width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05);
   border-radius: 6px; padding: 12px 15px; color: #fff; font-size: 14px; outline: none; transition: all 0.3s;
 }
 .input-group input:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(0,200,255,0.2); }
@@ -212,7 +212,7 @@ onMounted(() => {
 .auth-footer a:hover { text-decoration: underline; }
 
 .intro-trigger {
-  margin-top: 20px; background: none; border: 1px solid rgba(255,255,255,0.1); color: var(--text-dim);
+  margin-top: 20px; background: none; border: 1px solid rgba(255,255,255,0.05); color: var(--text-dim);
   padding: 6px 15px; border-radius: 20px; font-size: 11px; cursor: pointer; transition: all 0.2s;
 }
 .intro-trigger:hover { border-color: var(--accent); color: var(--accent); }
@@ -225,8 +225,8 @@ onMounted(() => {
   display: flex; align-items: center; justify-content: center; padding: 20px;
 }
 .terminal-window {
-  width: 100%; max-width: 600px; background: #0a0c10; border: 1px solid #1a1c24;
-  border-radius: 8px; overflow: hidden; box-shadow: 0 30px 100px rgba(0,0,0,0.8), 0 0 40px rgba(0,255,0,0.05);
+  width: 100%; max-width: 600px; background: #0a0c10; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px; overflow: hidden; box-shadow: 0 30px 100px rgba(0,0,0,0.8);
 }
 .terminal-header {
   background: #1a1c24; padding: 10px 15px; display: flex; align-items: center; gap: 15px;
