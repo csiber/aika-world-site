@@ -58,16 +58,31 @@ export async function hashPassword(pw) {
     { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
     key, 256
   );
+  // Using the newer Base64 format for new hashes
   return `${btoa(String.fromCharCode(...salt))}:${btoa(String.fromCharCode(...new Uint8Array(derived)))}`;
 }
 
-export async function verifyPassword(pw, hash) {
-  const [saltB64, derivedB64] = hash.split(':');
-  const salt = new Uint8Array(atob(saltB64).split('').map(c => c.charCodeAt(0)));
-  const key = await crypto.subtle.importKey('raw', encoder.encode(pw), 'PBKDF2', false, ['deriveBits']);
-  const derived = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
-    key, 256
-  );
-  return btoa(String.fromCharCode(...new Uint8Array(derived))) === derivedB64;
+export async function verifyPassword(pw, stored) {
+  if (stored.startsWith('pbkdf2:')) {
+    // Older Hex-based format compatibility
+    const [, saltHex, hashHex] = stored.split(':');
+    const salt = new Uint8Array(saltHex.match(/.{2}/g).map(h => parseInt(h, 16)));
+    const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(pw), 'PBKDF2', false, ['deriveBits']);
+    const derived = await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+      keyMaterial, 256
+    );
+    const computedHex = [...new Uint8Array(derived)].map(b => b.toString(16).padStart(2, '0')).join('');
+    return computedHex === hashHex;
+  } else {
+    // Newer Base64 format
+    const [saltB64, derivedB64] = stored.split(':');
+    const salt = new Uint8Array(atob(saltB64).split('').map(c => c.charCodeAt(0)));
+    const key = await crypto.subtle.importKey('raw', encoder.encode(pw), 'PBKDF2', false, ['deriveBits']);
+    const derived = await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+      key, 256
+    );
+    return btoa(String.fromCharCode(...new Uint8Array(derived))) === derivedB64;
+  }
 }

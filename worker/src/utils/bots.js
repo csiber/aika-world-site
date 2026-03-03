@@ -2,7 +2,7 @@
  * AIKA WORLD — NPC Bot utilities v2 (Active Intelligence)
  */
 
-import { resolveMissionsForUser } from '../routes/missions.js';
+import { resolveMissionsForUser } from './mission_resolver.js';
 
 // ── Bot definitions ────────────────────────────────────────────────────────
 const BOT_DEFINITIONS = [
