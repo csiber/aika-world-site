@@ -32,6 +32,24 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('aika_is_admin');
   }
 
+  /**
+   * Refreshes user data from server to ensure sync (esp. isAdmin)
+   */
+  async function checkMe() {
+    if (!token.value) return;
+    try {
+      const data = await api.getMe();
+      if (data.user) {
+        isAdmin.value = !!data.user.isAdmin;
+        username.value = data.user.username;
+        localStorage.setItem('aika_is_admin', isAdmin.value ? 'true' : 'false');
+        localStorage.setItem('aika_username', username.value);
+      }
+    } catch (e) {
+      if (e.message.includes('401')) logout();
+    }
+  }
+
   async function register(uname, email, password, tsToken) {
     const data = await api.register(uname, email, password, tsToken);
     setAuth(data);
@@ -44,5 +62,5 @@ export const useAuthStore = defineStore('auth', () => {
     return data;
   }
 
-  return { token, username, userId, isAdmin, isLoggedIn, register, login, logout };
+  return { token, username, userId, isAdmin, isLoggedIn, register, login, logout, checkMe };
 });

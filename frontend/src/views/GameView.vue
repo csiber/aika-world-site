@@ -177,6 +177,7 @@ function onLogout() {
 let tickTimer, syncTimer;
 
 onMounted(async () => {
+  await auth.checkMe(); // Ensure session and admin status are fresh
   await gameStore.loadState();
   await msgStore.loadMessages();
   await allianceStore.load();
