@@ -1,6 +1,6 @@
 /**
  * Fleet Missions routes
- * v2.5.0: Debris Fields and Harvesting
+ * v2.6.0: Expeditions (Slot 16)
  */
 
 import { jsonResponse, jsonError } from '../utils/response.js';
@@ -111,12 +111,9 @@ export async function resolveMissionsForUser(env, userId) {
         await savePlanetState(env, targetPlanet.id, targetPlanet);
         result.loot = battle.loot;
 
-        // Create Debris Field from losses
         if (battle.debris) {
-            await env.DB.prepare(`
-                UPDATE galaxy_map SET debris_metal = debris_metal + ?, debris_crystal = debris_crystal + ?
-                WHERE coords = ?
-            `).bind(battle.debris.metal, battle.debris.crystal, mission.target_coords).run();
+            await env.DB.prepare(`UPDATE galaxy_map SET debris_metal = debris_metal + ?, debris_crystal = debris_crystal + ? WHERE coords = ?`)
+                .bind(battle.debris.metal, battle.debris.crystal, mission.target_coords).run();
         }
       }
     }
@@ -127,12 +124,16 @@ export async function resolveMissionsForUser(env, userId) {
             const totalCargo = currentShips.reduce((s, u) => s + (u.cargo * u.count), 0);
             const harvestedMetal   = Math.min(galaxyEntry.debris_metal, totalCargo / 2);
             const harvestedCrystal = Math.min(galaxyEntry.debris_crystal, totalCargo / 2);
-            
             result.loot = { metal: harvestedMetal, crystal: harvestedCrystal };
-            
             await env.DB.prepare('UPDATE galaxy_map SET debris_metal = debris_metal - ?, debris_crystal = debris_crystal - ? WHERE coords = ?')
                 .bind(harvestedMetal, harvestedCrystal, mission.target_coords).run();
         }
+    }
+
+    if (mission.mission_type === 'expedition') {
+        const outcome = runExpedition(currentShips);
+        result = { ...result, ...outcome };
+        currentShips = outcome.remainingShips;
     }
 
     await env.DB.prepare(`UPDATE fleet_missions SET status=?, result=?, ships=?, return_at=? WHERE id=?`).bind(nextStatus, JSON.stringify(result), JSON.stringify(currentShips), returnAt, mission.id).run();
@@ -148,7 +149,7 @@ export async function resolveMissionsForUser(env, userId) {
       const backShips = JSON.parse(mission.ships || '[]');
       const res = JSON.parse(mission.result || '{}');
       for (const s of backShips) { const t = originPlanet.fleet.find(f => f.id === s.id); if (t) t.count += s.count; }
-      if (res.loot) { originPlanet.resources.metal += res.loot.metal || 0; originPlanet.resources.crystal += res.loot.crystal || 0; }
+      if (res.loot) { originPlanet.resources.metal += res.loot.metal || 0; originPlanet.resources.crystal += res.loot.crystal || 0; originPlanet.resources.deus += res.loot.deus || 0; }
       await savePlanetState(env, originPlanet.id, originPlanet);
     }
     await env.DB.prepare(`UPDATE fleet_missions SET status='done' WHERE id=?`).bind(mission.id).run();
@@ -257,6 +258,21 @@ export async function handleMissions(request, env, url, user) {
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
 
+  if (path === '/api/missions/expedition' && method === 'POST') {
+    let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    const { targetCoords, ships } = body;
+    const planet = await getPlanetState(env, activePlanetId);
+    if (!planet) return jsonError(404, 'Planet not found', request);
+    const { fleet: newFleet, sentShips } = extractShips(planet.fleet, ships);
+    if (sentShips.length === 0) return jsonError(400, 'Nincs küldhető flotta', request);
+    planet.fleet = newFleet; await savePlanetState(env, planet.id, planet);
+    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(planet.coords, targetCoords, JSON.parse(gs.research), 300);
+    await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, arrive_at, created_at) VALUES (?, ?, ?, 'expedition', ?, 'Mélyűr', 'travelling', ?, ?, unixepoch())`)
+      .bind(crypto.randomUUID(), userId, planet.id, targetCoords, JSON.stringify(sentShips), arriveAt).run();
+    await incrementQuest(env, userId, 'mission', 'expedition');
+    return jsonResponse({ ok: true, arriveAt }, 200, request);
+  }
+
   if (path === '/api/missions/colonize' && method === 'POST') {
     let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { targetCoords } = body;
@@ -283,6 +299,38 @@ function extractShips(currentFleet, requestedShips) {
   if (!requestedShips) { newFleet.forEach(f => { if (f.count > 0) { sentShips.push({ ...f, count: f.count }); f.count = 0; } }); }
   else { for (const req of requestedShips) { const t = newFleet.find(f => f.id === req.id); if (t && t.count >= req.count) { t.count -= req.count; sentShips.push({ ...t, count: req.count }); } } }
   return { fleet: newFleet, sentShips };
+}
+
+function runExpedition(ships) {
+    const roll = Math.random();
+    const cargo = ships.reduce((s, u) => s + ((u.cargo || 0) * u.count), 0);
+    const remainingShips = JSON.parse(JSON.stringify(ships));
+    let loot = null;
+    let message = "";
+
+    if (roll < 0.3) {
+        loot = { metal: Math.floor(cargo * 0.4 * Math.random()), crystal: Math.floor(cargo * 0.2 * Math.random()), deus: Math.floor(cargo * 0.05 * Math.random()) };
+        message = "A legénység értékes nyersanyagokat talált egy elhagyatott aszteroidán.";
+    } else if (roll < 0.5) {
+        message = "Az expedíció eseménytelenül telt, de a legénység tapasztaltabb lett.";
+    } else if (roll < 0.6) {
+        // Find small ship reward
+        const bonus = Math.floor(Math.random() * 5) + 1;
+        const target = remainingShips.find(s => s.id === 'fighter_s' || s.id === 'miner');
+        if (target) { target.count += bonus; message = `Találtunk ${bonus} elhagyatott hajót, amiket sikerült üzembe helyezni.`; }
+        else { message = "Találtunk egy régi űrállomást, de nem tudtuk hasznosítani."; }
+    } else if (roll < 0.7) {
+        const lossPct = 0.1 + Math.random() * 0.2;
+        remainingShips.forEach(s => s.count = Math.floor(s.count * (1 - lossPct)));
+        message = "Egy kisebb aszteroida-vihar megrongálta a flottát. Veszteségeink vannak.";
+    } else if (roll < 0.8) {
+        loot = { deus: Math.floor(Math.random() * 500) + 100 };
+        message = "Ritka gázfelhőt találtunk, amiből Déusiumot tudtunk kinyern mission.";
+    } else {
+        message = "A flotta különös rádiójeleket észlelt, de mire a forráshoz értek, már nem találtak semmit.";
+    }
+
+    return { loot, message, remainingShips };
 }
 
 function runBattle(attacker, defender) {
@@ -318,7 +366,6 @@ function runBattle(attacker, defender) {
         rounds.push({ round: r, attackerPower: atkStats.attack, defenderPower: defStats.shield });
         const atkDamage = atkStats.attack;
         const defDamage = defStats.shield / 2;
-        
         const applyLoss = (units, dmg, totalShield) => {
             if (totalShield <= 0) return units.map(u => ({ ...u, count: 0 }));
             const lossPct = Math.min(1, dmg / (totalShield * 1.5 + 1));
@@ -330,7 +377,6 @@ function runBattle(attacker, defender) {
                 return { ...u, count: u.count - countLost };
             });
         };
-
         curDefFleet = applyLoss(curDefFleet, atkDamage, defStats.shield);
         curDefDefense = applyLoss(curDefDefense, atkDamage, defStats.shield);
         curAtkFleet = applyLoss(curAtkFleet, defDamage, atkStats.shield || 1000);
@@ -360,9 +406,9 @@ function runBattle(attacker, defender) {
     };
 }
 
-function missionIcon(type) { return { spy: '🔍', attack: '⚔️', colonize: '🌍', return: '↩️', harvest: '🚛' }[type] || '📡'; }
+function missionIcon(type) { return { spy: '🔍', attack: '⚔️', colonize: '🌍', return: '↩️', harvest: '🚛', expedition: '🌌' }[type] || '📡'; }
 function missionSubject(type, name) {
-  const subjects = { spy: `Kémjelentés — ${name}`, attack: `Harci jelentés — ${name}`, colonize: `Gyarmatosítás — ${name}`, return: `Flotta visszaérkezett — ${name}`, harvest: `Újrahasznosítás — ${name}` };
+  const subjects = { spy: `Kémjelentés — ${name}`, attack: `Harci jelentés — ${name}`, colonize: `Gyarmatosítás — ${name}`, return: `Flotta visszaérkezett — ${name}`, harvest: `Újrahasznosítás — ${name}`, expedition: `Expedíció Jelentés — ${name}` };
   return subjects[type] || `Küldetés — ${name}`;
 }
 
@@ -376,6 +422,9 @@ function formatMissionResult(mission, result) {
   }
   if (mission.mission_type === 'harvest') {
       return `🚛 ÚJRAHASZNOSÍTÁS JELENTÉS\n\nKoordináta: ${mission.target_coords}\nGyűjtött fém: ${Math.floor(result.loot.metal)}\nGyűjtött kristály: ${Math.floor(result.loot.crystal)}`;
+  }
+  if (mission.mission_type === 'expedition') {
+      return `🌌 EXPEDÍCIÓ JELENTÉS\n\n${result.message}\n\nTalált nyersanyagok:\nFém: ${Math.floor(result.loot?.metal || 0)}\nKristály: ${Math.floor(result.loot?.crystal || 0)}\nDéusium: ${Math.floor(result.loot?.deus || 0)}`;
   }
   return 'Küldetés befejezve.';
 }

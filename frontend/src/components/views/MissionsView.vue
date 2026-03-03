@@ -70,7 +70,7 @@ const missions = ref([]);
 const loading  = ref(false);
 const busy     = ref(null);
 
-const typeLabel = (t) => ({ spy: 'Kémkedés', attack: 'Támadás', colonize: 'Gyarmatosítás' }[t] || t);
+const typeLabel = (t) => ({ spy: 'Kémkedés', attack: 'Támadás', colonize: 'Gyarmatosítás', harvest: 'Újrahasznosítás', expedition: 'Expedíció' }[t] || t);
 const statusLabel = (s) => ({ travelling: 'Úton', returning: 'Visszatérés', done: 'Befejezve' }[s] || s);
 
 function getPlanetName(id) {

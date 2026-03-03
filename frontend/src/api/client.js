@@ -40,6 +40,7 @@ export const api = {
   spy: (targetUserId, targetCoords, targetName, ships) => request('POST', '/missions/spy', { targetUserId, targetCoords, targetName, ships }),
   attack: (targetUserId, targetCoords, targetName, ships) => request('POST', '/missions/attack', { targetUserId, targetCoords, targetName, ships }),
   harvest: (targetCoords, targetName, ships) => request('POST', '/missions/harvest', { targetCoords, targetName, ships }),
+  expedition: (targetCoords, ships) => request('POST', '/missions/expedition', { targetCoords, ships }),
   colonize: (targetCoords, targetName) => request('POST', '/missions/colonize', { targetCoords, targetName }),
   getMissions: () => request('GET', '/missions'),
   getMissionReport: (mid) => request('GET', `/missions/report/${mid}`),

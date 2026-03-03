@@ -41,6 +41,7 @@
               </tr>
             </thead>
             <tbody>
+              <!-- Slots 1-15 (Planets) -->
               <tr v-for="slot in 15" :key="slot" :class="getCell(slot).type">
                 <td class="slot-num">{{ slot }}</td>
                 <td class="slot-visual">
@@ -65,19 +66,28 @@
                 </td>
                 <td class="slot-actions">
                   <div class="action-btns">
-                    <!-- Enemy actions -->
                     <template v-if="getCell(slot).type === 'enemy'">
                       <button class="btn-icon" @click="selectCell(getCell(slot), 'spy')" title="Kémkedés">🔍</button>
                       <button class="btn-icon" @click="selectCell(getCell(slot), 'attack')" title="Támadás">⚔️</button>
                     </template>
-                    <!-- Debris action -->
                     <button v-if="getCell(slot).debris_metal > 0 || getCell(slot).debris_crystal > 0" 
                       class="btn-icon harvest" @click="selectCell(getCell(slot), 'harvest')" title="Újrahasznosítás">🚛</button>
-                    <!-- Empty slot actions -->
                     <button v-if="getCell(slot).type === 'empty'" 
                       class="btn-icon" @click="doQuickColonize(getCell(slot))" :disabled="!hasColonyShip" title="Gyarmatosítás">🌍</button>
-                    <!-- Own slot -->
                     <span v-if="getCell(slot).type === 'own'" class="own-tag">Saját</span>
+                  </div>
+                </td>
+              </tr>
+              <!-- Slot 16 (Expedition) -->
+              <tr class="expedition-row">
+                <td class="slot-num">16</td>
+                <td class="slot-visual"><span class="p-emoji">✨</span></td>
+                <td class="slot-name">Mélyűr (Expedíció)</td>
+                <td>—</td>
+                <td>—</td>
+                <td class="slot-actions">
+                  <div class="action-btns">
+                    <button class="btn-icon expedition" @click="selectCell({ slot: 16, coords: `[${currentGal}:${currentSys}:16]`, name: 'Mélyűr' }, 'expedition')" title="Expedíció indítása">🚀</button>
                   </div>
                 </td>
               </tr>
@@ -154,13 +164,13 @@ const missionTitle = computed(() => {
     if (missionType.value === 'spy') return 'Kémflotta';
     if (missionType.value === 'attack') return 'Támadó flotta';
     if (missionType.value === 'harvest') return 'Recycle flotta';
+    if (missionType.value === 'expedition') return 'Expedíciós flotta';
     return 'Flotta';
 });
 
 const availableShips = computed(() => {
     let ships = game.fleet.filter(f => f.count > 0);
     if (missionType.value === 'harvest') {
-        // For harvesting, suggest recyclers first but allow any cargo ship
         return ships.sort((a,b) => (b.id === 'recycler') - (a.id === 'recycler'));
     }
     return ships;
@@ -231,6 +241,7 @@ async function confirmMission() {
   if (missionType.value === 'spy') await doSpy();
   else if (missionType.value === 'attack') await doAttack();
   else if (missionType.value === 'harvest') await doHarvest();
+  else if (missionType.value === 'expedition') await doExpedition();
 }
 
 async function doSpy() {
@@ -266,6 +277,19 @@ async function doHarvest() {
         await api.harvest(selected.value.coords, 'Törmelékmező', ships);
         audio.mission();
         game.notify('Recycler flotta elindult', 'blue');
+        showFleetSetup.value = false;
+        await game.loadState();
+    } catch (e) { audio.error(); game.notify(`❌ ${e.message}`, 'red'); }
+    actionBusy.value = null;
+}
+
+async function doExpedition() {
+    actionBusy.value = 'expedition';
+    try {
+        const ships = Object.entries(selectedShips.value).filter(([_, c]) => c > 0).map(([id, count]) => ({ id, count }));
+        await api.expedition(selected.value.coords, ships);
+        audio.mission();
+        game.notify('Expedíciós flotta elindult a mélyűrbe', 'blue');
         showFleetSetup.value = false;
         await game.loadState();
     } catch (e) { audio.error(); game.notify(`❌ ${e.message}`, 'red'); }
@@ -309,6 +333,9 @@ onMounted(() => {
 .system-table td { padding: 10px 15px; border-bottom: 1px solid rgba(26,42,74,0.3); }
 .system-table tr:hover td { background: rgba(255,255,255,0.02); }
 
+.expedition-row { background: rgba(0,200,255,0.03); }
+.expedition-row td { border-bottom: none; }
+
 .slot-num { font-family: 'Orbitron', sans-serif; color: var(--text-dim); font-size: 10px; }
 .p-emoji { font-size: 20px; }
 .p-empty { opacity: 0.2; font-size: 18px; }
@@ -325,6 +352,7 @@ onMounted(() => {
 .btn-icon { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 4px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
 .btn-icon:hover { border-color: var(--accent); background: rgba(0,200,255,0.1); transform: translateY(-2px); }
 .btn-icon.harvest { border-color: var(--accent3); color: var(--accent3); }
+.btn-icon.expedition { border-color: var(--accent4); color: var(--accent4); }
 .btn-icon:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* Modal Styles */
