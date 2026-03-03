@@ -126,17 +126,12 @@ function missionTravelTime(fleet, research, baseSeconds = 300) {
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
 async function getFullState(env, userId) {
-  // Get global game state (research, score, etc.)
   const gsRow = await env.DB.prepare('SELECT * FROM game_state WHERE user_id = ?').bind(userId).first();
   if (!gsRow) return null;
 
-  // Get all planets for the user
   const { results: planets } = await env.DB.prepare('SELECT * FROM planets WHERE user_id = ?').all();
-  
-  // Find active planet (or default to the first one)
   let activePlanetId = gsRow.active_planet_id;
   let activePlanet = planets.find(p => p.id === activePlanetId) || planets[0];
-
   if (!activePlanet) return null;
 
   return {
@@ -189,8 +184,6 @@ async function processQueue(env, userId, fullState) {
 
   for (const item of finished.results) {
     if (item.item_type === 'building') {
-      // Building is specific to a planet (note: build_queue needs planet_id update later,
-      // but for now we assume the current active planet or the one it was started on)
       const b = fullState.activePlanet.buildings.find(x => x.id === item.item_id);
       if (b) {
         b.level = item.target_level;
@@ -215,24 +208,24 @@ async function processQueue(env, userId, fullState) {
   await env.DB.batch(
     finished.results.map(r => env.DB.prepare('DELETE FROM build_queue WHERE id = ?').bind(r.id))
   );
-  await env.DB.prepare('UPDATE rankings SET score=?, updated_at=unixepoch() WHERE user_id=?')
-    .bind(fullState.score, userId).run();
-
   return fullState;
 }
 
-function accrueResources(planetState) {
+function accruePlanetResources(fullState) {
   const now = Math.floor(Date.now() / 1000);
-  const elapsed = Math.min(now - planetState.updatedAt, 3600 * 8);
-  if (elapsed <= 0) return planetState;
-
-  // Need buildings/research to calc storage
-  // Note: simplified for this step, using static or passing it
-  // But for better logic, storage needs to be recalc'd.
-  // Assuming storage cap logic moved inside if possible.
-  
-  // (Internal state update)
-  return planetState;
+  const planet = fullState.activePlanet;
+  const elapsed = Math.min(now - planet.updatedAt, 3600 * 8);
+  if (elapsed > 0) {
+    const storage = calcStorage(planet.buildings, fullState.research);
+    const rates = planet.rates;
+    const res = planet.resources;
+    planet.resources.metal   = Math.min(storage.metal,   res.metal   + (rates.metal   / 3600) * elapsed);
+    planet.resources.crystal = Math.min(storage.crystal, res.crystal + (rates.crystal / 3600) * elapsed);
+    planet.resources.energy  = Math.min(storage.energy,  res.energy  + (rates.energy  / 3600) * elapsed);
+    planet.resources.deus    = Math.min(storage.deus,    res.deus    + (rates.deus    / 3600) * elapsed);
+    planet.updatedAt = now;
+  }
+  return fullState;
 }
 
 // ── Route handler ─────────────────────────────────────────────────────────────
@@ -242,26 +235,19 @@ export async function handleGame(request, env, url, user) {
   const path   = url.pathname;
   const method = request.method;
 
+  // Common pre-fetch for most routes
+  let fullState = null;
+  if (method === 'GET' || method === 'POST') {
+    fullState = await getFullState(env, userId);
+    if (fullState) {
+      fullState = accruePlanetResources(fullState);
+      fullState = await processQueue(env, userId, fullState);
+    }
+  }
+
   // ── GET /api/game/state ───────────────────────────────────
   if (path === '/api/game/state' && method === 'GET') {
-    let fullState = await getFullState(env, userId);
     if (!fullState) return jsonError(404, 'Game state not found', request);
-
-    // Accrue local resources for active planet
-    const now = Math.floor(Date.now() / 1000);
-    const elapsed = Math.min(now - fullState.activePlanet.updatedAt, 3600 * 8);
-    if (elapsed > 0) {
-      const storage = calcStorage(fullState.activePlanet.buildings, fullState.research);
-      const rates = fullState.activePlanet.rates;
-      const res = fullState.activePlanet.resources;
-      fullState.activePlanet.resources.metal   = Math.min(storage.metal,   res.metal   + (rates.metal   / 3600) * elapsed);
-      fullState.activePlanet.resources.crystal = Math.min(storage.crystal, res.crystal + (rates.crystal / 3600) * elapsed);
-      fullState.activePlanet.resources.energy  = Math.min(storage.energy,  res.energy  + (rates.energy  / 3600) * elapsed);
-      fullState.activePlanet.resources.deus    = Math.min(storage.deus,    res.deus    + (rates.deus    / 3600) * elapsed);
-      fullState.activePlanet.updatedAt = now;
-    }
-
-    fullState = await processQueue(env, userId, fullState);
     
     await savePlanetState(env, fullState.activePlanet.id, fullState.activePlanet);
     await saveGlobalState(env, userId, fullState.research, fullState.score);
@@ -287,7 +273,6 @@ export async function handleGame(request, env, url, user) {
     return jsonResponse({ ok: true, activePlanetId: planetId }, 200, request);
   }
 
-
   // ── GET /api/game/queue ───────────────────────────────────
   if (path === '/api/game/queue' && method === 'GET') {
     const queue = await env.DB.prepare(
@@ -298,19 +283,15 @@ export async function handleGame(request, env, url, user) {
 
   // ── POST /api/game/upgrade ───────────────────────────────
   if (path === '/api/game/upgrade' && method === 'POST') {
+    if (!fullState) return jsonError(404, 'Game state not found', request);
     let body;
     try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { buildingId } = body;
 
-    let state = await getState(env, userId);
-    state = accrueResources(state);
-    state = await processQueue(env, userId, state);
-
-    const b = state.buildings.find(x => x.id === buildingId);
+    const b = fullState.activePlanet.buildings.find(x => x.id === buildingId);
     if (!b) return jsonError(404, 'Building not found', request);
 
-    // Queue limit: max 2 concurrent builds (robotics unlocks 3rd slot at level 5)
-    const roboticsLevel = state.buildings.find(x => x.id === 'robotics')?.level || 1;
+    const roboticsLevel = fullState.activePlanet.buildings.find(x => x.id === 'robotics')?.level || 1;
     const maxQueue = roboticsLevel >= 5 ? 3 : 2;
     const activeBuilds = await env.DB.prepare(
       'SELECT COUNT(*) as cnt FROM build_queue WHERE user_id = ? AND item_type = ?'
@@ -325,90 +306,76 @@ export async function handleGame(request, env, url, user) {
     if (inQueue) return jsonError(409, 'Ez az épület már fejlesztés alatt áll', request);
 
     const cost = buildCost(b);
-    if (state.resources.metal < cost.metal || state.resources.crystal < cost.crystal) {
+    if (fullState.activePlanet.resources.metal < cost.metal || fullState.activePlanet.resources.crystal < cost.crystal) {
       return jsonError(400, 'Nincs elég nyersanyag', request);
     }
 
-    state.resources.metal   -= cost.metal;
-    state.resources.crystal -= cost.crystal;
-    const robotics = state.buildings.find(x => x.id === 'robotics')?.level || 1;
-    const seconds  = buildTime(b.level, robotics);
+    fullState.activePlanet.resources.metal   -= cost.metal;
+    fullState.activePlanet.resources.crystal -= cost.crystal;
+    const seconds  = buildTime(b.level, roboticsLevel);
     const finishAt = Math.floor(Date.now() / 1000) + seconds;
 
-    await env.DB.batch([
-      env.DB.prepare(`INSERT INTO build_queue (id, user_id, item_id, item_type, item_name, target_level, finish_at)
+    await env.DB.prepare(`INSERT INTO build_queue (id, user_id, item_id, item_type, item_name, target_level, finish_at)
         VALUES (?, ?, ?, 'building', ?, ?, ?)`)
-        .bind(crypto.randomUUID(), userId, buildingId, `${b.icon} ${b.name} → Szint ${b.level + 1}`, b.level + 1, finishAt),
-    ]);
+        .bind(crypto.randomUUID(), userId, buildingId, `${b.icon} ${b.name} → Szint ${b.level + 1}`, b.level + 1, finishAt).run();
 
-    await saveState(env, userId, state);
-    const storage = calcStorage(state.buildings, state.research);
-    return jsonResponse({ ok: true, finishAt, cost, seconds, state, storage }, 200, request);
+    await savePlanetState(env, fullState.activePlanet.id, fullState.activePlanet);
+    const storage = calcStorage(fullState.activePlanet.buildings, fullState.research);
+    return jsonResponse({ ok: true, finishAt, cost, seconds, state: fullState, storage }, 200, request);
   }
 
   // ── POST /api/game/research ──────────────────────────────
   if (path === '/api/game/research' && method === 'POST') {
+    if (!fullState) return jsonError(404, 'Game state not found', request);
     let body;
     try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { researchId } = body;
 
-    let state = await getState(env, userId);
-    state = accrueResources(state);
-    state = await processQueue(env, userId, state);
-
-    const r = state.research.find(x => x.id === researchId);
+    const r = fullState.research.find(x => x.id === researchId);
     if (!r) return jsonError(404, 'Research not found', request);
     if (r.level >= r.max) return jsonError(400, 'Már maximum szinten van', request);
 
-    // Plasma requires Laser 10
     if (researchId === 'plasma') {
-      const laserLevel = state.research.find(x => x.id === 'laser')?.level || 0;
+      const laserLevel = fullState.research.find(x => x.id === 'laser')?.level || 0;
       if (laserLevel < 10) return jsonError(400, 'Plazma Technológiához Lézer Technológia Szint 10 szükséges!', request);
     }
 
-    // Only 1 research at a time
     const activeResearch = await env.DB.prepare(
       'SELECT COUNT(*) as cnt FROM build_queue WHERE user_id = ? AND item_type = ?'
     ).bind(userId, 'research').first();
     if (activeResearch.cnt >= 1) return jsonError(409, 'Már fut egy kutatás', request);
 
     const cost = researchCost(r);
-    if (state.resources.metal < cost.metal || state.resources.crystal < cost.crystal) {
+    if (fullState.activePlanet.resources.metal < cost.metal || fullState.activePlanet.resources.crystal < cost.crystal) {
       return jsonError(400, 'Nincs elég nyersanyag', request);
     }
 
-    state.resources.metal   -= cost.metal;
-    state.resources.crystal -= cost.crystal;
-    const labLevel = state.buildings.find(x => x.id === 'lab')?.level || 1;
+    fullState.activePlanet.resources.metal   -= cost.metal;
+    fullState.activePlanet.resources.crystal -= cost.crystal;
+    const labLevel = fullState.activePlanet.buildings.find(x => x.id === 'lab')?.level || 1;
     const seconds  = researchTime(r.level, labLevel);
     const finishAt = Math.floor(Date.now() / 1000) + seconds;
 
-    await env.DB.batch([
-      env.DB.prepare(`INSERT INTO build_queue (id, user_id, item_id, item_type, item_name, target_level, finish_at)
+    await env.DB.prepare(`INSERT INTO build_queue (id, user_id, item_id, item_type, item_name, target_level, finish_at)
         VALUES (?, ?, ?, 'research', ?, ?, ?)`)
-        .bind(crypto.randomUUID(), userId, researchId, `🔬 ${r.name} → Szint ${r.level + 1}`, r.level + 1, finishAt),
-    ]);
+        .bind(crypto.randomUUID(), userId, researchId, `🔬 ${r.name} → Szint ${r.level + 1}`, r.level + 1, finishAt).run();
 
-    await saveState(env, userId, state);
-    return jsonResponse({ ok: true, finishAt, cost, seconds, state }, 200, request);
+    await savePlanetState(env, fullState.activePlanet.id, fullState.activePlanet);
+    return jsonResponse({ ok: true, finishAt, cost, seconds, state: fullState }, 200, request);
   }
 
   // ── POST /api/game/fleet/build ───────────────────────────
   if (path === '/api/game/fleet/build' && method === 'POST') {
+    if (!fullState) return jsonError(404, 'Game state not found', request);
     let body;
     try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { shipId, amount = 1 } = body;
     if (amount < 1 || amount > 1000) return jsonError(400, 'Érvénytelen mennyiség', request);
 
-    let state = await getState(env, userId);
-    state = accrueResources(state);
-    state = await processQueue(env, userId, state);
-
-    const ship = state.fleet.find(x => x.id === shipId);
+    const ship = fullState.activePlanet.fleet.find(x => x.id === shipId);
     if (!ship) return jsonError(404, 'Ship type not found', request);
 
-    // Shipyard check — need level 1+ to build, higher level for advanced ships
-    const shipyardLevel = state.buildings.find(b => b.id === 'shipyard')?.level || 1;
+    const shipyardLevel = fullState.activePlanet.buildings.find(b => b.id === 'shipyard')?.level || 1;
     const shipTier = { fighter_s: 1, miner: 1, fighter_l: 2, colony: 2, cruiser: 3, battleship: 4 };
     const requiredShipyard = shipTier[shipId] || 1;
     if (shipyardLevel < requiredShipyard) {
@@ -419,77 +386,75 @@ export async function handleGame(request, env, url, user) {
       metal:   ship.cost.metal   * amount,
       crystal: ship.cost.crystal * amount,
     };
-    if (state.resources.metal < totalCost.metal || state.resources.crystal < totalCost.crystal) {
+    if (fullState.activePlanet.resources.metal < totalCost.metal || fullState.activePlanet.resources.crystal < totalCost.crystal) {
       return jsonError(400, 'Nincs elég nyersanyag', request);
     }
 
-    state.resources.metal   -= totalCost.metal;
-    state.resources.crystal -= totalCost.crystal;
-    const shipyard = state.buildings.find(b => b.id === 'shipyard')?.level || 1;
-    const seconds  = fleetBuildTime(amount, totalCost, shipyard);
+    fullState.activePlanet.resources.metal   -= totalCost.metal;
+    fullState.activePlanet.resources.crystal -= totalCost.crystal;
+    const seconds  = fleetBuildTime(amount, totalCost, shipyardLevel);
     const finishAt = Math.floor(Date.now() / 1000) + seconds;
 
-    await env.DB.batch([
-      env.DB.prepare(`INSERT INTO build_queue (id, user_id, item_id, item_type, item_name, target_level, finish_at)
+    await env.DB.prepare(`INSERT INTO build_queue (id, user_id, item_id, item_type, item_name, target_level, finish_at)
         VALUES (?, ?, ?, 'fleet', ?, ?, ?)`)
-        .bind(crypto.randomUUID(), userId, shipId, `${ship.icon} ${ship.name} ×${amount}`, amount, finishAt),
-    ]);
+        .bind(crypto.randomUUID(), userId, shipId, `${ship.icon} ${ship.name} ×${amount}`, amount, finishAt).run();
 
-    await saveState(env, userId, state);
-    return jsonResponse({ ok: true, finishAt, cost: totalCost, seconds, state }, 200, request);
+    await savePlanetState(env, fullState.activePlanet.id, fullState.activePlanet);
+    return jsonResponse({ ok: true, finishAt, cost: totalCost, seconds, state: fullState }, 200, request);
   }
 
   // ── POST /api/game/sync ──────────────────────────────────
   if (path === '/api/game/sync' && method === 'POST') {
-    let state = await getState(env, userId);
-    state = accrueResources(state);
-    state = await processQueue(env, userId, state);
-    await saveState(env, userId, state);
+    if (!fullState) return jsonError(404, 'Game state not found', request);
+    
+    await savePlanetState(env, fullState.activePlanet.id, fullState.activePlanet);
+    await saveGlobalState(env, userId, fullState.research, fullState.score);
 
-    // Rankings always up-to-date after sync
     await env.DB.prepare('UPDATE rankings SET score=?, updated_at=unixepoch() WHERE user_id=?')
-      .bind(state.score, userId).run();
+      .bind(fullState.score, userId).run();
 
     try {
-      const mainPlanet = state.planets?.[0];
+      const mainPlanet = fullState.planets.find(p => p.isMain) || fullState.planets[0];
       if (mainPlanet) {
-        // Update score on all user planets, name/emoji only on main planet
         await env.DB.prepare('UPDATE galaxy_map SET score=?, updated_at=unixepoch() WHERE user_id=?')
-          .bind(state.score, userId).run();
-        await env.DB.prepare(
-          'UPDATE galaxy_map SET planet_name=?, planet_emoji=?, updated_at=unixepoch() WHERE user_id=? AND is_main=1'
-        ).bind(mainPlanet.name, mainPlanet.emoji || '🌍', userId).run();
+          .bind(fullState.score, userId).run();
+        // (Simplified: only update main planet name/emoji on galaxy map)
+        if (fullState.activePlanet.id === mainPlanet.id) {
+            await env.DB.prepare(
+                'UPDATE galaxy_map SET planet_name=?, planet_emoji=?, updated_at=unixepoch() WHERE user_id=? AND is_main=1'
+            ).bind(fullState.activePlanet.name, fullState.activePlanet.emoji || '🌍', userId).run();
+        }
       }
     } catch (e) { console.warn('galaxy_map update skipped:', e.message); }
 
-    const storage = calcStorage(state.buildings, state.research);
-    return jsonResponse({ ok: true, state, storage }, 200, request);
+    const storage = calcStorage(fullState.activePlanet.buildings, fullState.research);
+    return jsonResponse({ ok: true, state: fullState, storage }, 200, request);
   }
 
   // ── POST /api/game/planet/rename ─────────────────────────
   if (path === '/api/game/planet/rename' && method === 'POST') {
+    if (!fullState) return jsonError(404, 'Game state not found', request);
     let body;
     try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
-    const { planetIdx, name, emoji } = body;
-    if (typeof planetIdx !== 'number') return jsonError(400, 'planetIdx szükséges', request);
-    if (name && (name.length < 1 || name.length > 30)) return jsonError(400, 'Név 1-30 karakter legyen', request);
+    const { planetId, name, emoji } = body;
+    if (!planetId) return jsonError(400, 'planetId szükséges', request);
+    
+    const planet = fullState.planets.find(p => p.id === planetId);
+    if (!planet) return jsonError(404, 'Bolygó nem található', request);
 
-    let state = await getState(env, userId);
-    if (!state?.planets?.[planetIdx]) return jsonError(404, 'Bolygó nem található', request);
+    if (name)  planet.name  = name.trim();
+    if (emoji) planet.emoji = emoji;
 
-    if (name)  state.planets[planetIdx].name  = name.trim();
-    if (emoji) state.planets[planetIdx].emoji = emoji;
+    await env.DB.prepare('UPDATE planets SET name=?, emoji=? WHERE id=?')
+      .bind(planet.name, planet.emoji, planetId).run();
 
-    await saveState(env, userId, state);
-
-    const renamedPlanet = state.planets[planetIdx];
     try {
       await env.DB.prepare(
         'UPDATE galaxy_map SET planet_name=?, planet_emoji=?, updated_at=unixepoch() WHERE user_id=? AND coords=?'
-      ).bind(renamedPlanet.name, renamedPlanet.emoji, userId, renamedPlanet.coords).run();
+      ).bind(planet.name, planet.emoji, userId, planet.coords).run();
     } catch (e) { console.warn('galaxy_map rename skipped:', e.message); }
 
-    return jsonResponse({ ok: true, planets: state.planets }, 200, request);
+    return jsonResponse({ ok: true, planets: fullState.planets }, 200, request);
   }
 
   return jsonError(404, 'Game endpoint not found', request);

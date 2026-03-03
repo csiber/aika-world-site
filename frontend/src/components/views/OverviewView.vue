@@ -112,8 +112,6 @@ import { useLangStore } from '@/stores/lang.js';
 import BuildingItem from '@/components/BuildingItem.vue';
 import QueueItem    from '@/components/QueueItem.vue';
 
-const props = defineProps({ activePlanetIdx: { type: Number, default: 0 } });
-
 const game = useGameStore();
 const L    = useLangStore();
 const prodBuildings  = computed(() => game.prodBuildings);
@@ -125,7 +123,7 @@ const fleet     = computed(() => game.fleet);
 const score     = computed(() => game.score);
 const planets   = computed(() => game.planets);
 const queue     = computed(() => game.queue);
-const activePlanet = computed(() => planets.value[props.activePlanetIdx] || planets.value[0] || { name: 'Ismeretlen', coords: '[?:?:?]' });
+const activePlanet = computed(() => game.activePlanet || { name: 'Ismeretlen', coords: '[?:?:?]' });
 const totalShips    = computed(() => fleet.value.reduce((s, f) => s + f.count, 0));
 
 const aikaInput = ref('');
@@ -147,9 +145,9 @@ async function sendToAika() {
       body: JSON.stringify({
         message: msg,
         context: {
-          resources: game.state?.resources,
-          rates: game.state?.rates,
-          score: game.state?.score,
+          resources: game.resources,
+          rates: game.rates,
+          score: game.score,
           buildingsCount: game.buildings.length,
           fleetTotal: game.fleet.reduce((s, f) => s + f.count, 0),
         }

@@ -22,11 +22,12 @@ export const api = {
   // Game
   getState: () => request('GET', '/game/state'),
   syncState: () => request('POST', '/game/sync'),
+  switchPlanet: (planetId) => request('POST', '/game/planet/switch', { planetId }),
   upgradeBuilding: (buildingId) => request('POST', '/game/upgrade', { buildingId }),
   startResearch: (researchId) => request('POST', '/game/research', { researchId }),
   buildFleet: (shipId, amount) => request('POST', '/game/fleet/build', { shipId, amount }),
   getQueue: () => request('GET', '/game/queue'),
-  renamePlanet: (planetIdx, name, emoji) => request('POST', '/game/planet/rename', { planetIdx, name, emoji }),
+  renamePlanet: (planetId, name, emoji) => request('POST', '/game/planet/rename', { planetId, name, emoji }),
 
   // Rankings
   getRankings: (page = 1) => request('GET', `/rankings?page=${page}`),

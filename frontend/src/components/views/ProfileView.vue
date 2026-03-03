@@ -52,22 +52,22 @@
     <div class="panel" v-if="planets.length">
       <div class="panel-header"><span class="panel-icon">🌍</span><h3>{{ L.t('profile.myPlanets') }}</h3></div>
       <div class="panel-body">
-        <div v-for="(planet, idx) in planets" :key="idx" class="planet-row">
+        <div v-for="planet in planets" :key="planet.id" class="planet-row">
           <div class="planet-emoji-pick">
-            <span class="current-emoji" @click="toggleEmojiPicker(idx)">{{ planet.emoji || '🌍' }}</span>
-            <div v-if="emojiPickerFor === idx" class="emoji-picker">
-              <span v-for="e in planetEmojis" :key="e" class="emoji-opt" @click="pickEmoji(idx, e)">{{ e }}</span>
+            <span class="current-emoji" @click="toggleEmojiPicker(planet.id)">{{ planet.emoji || '🌍' }}</span>
+            <div v-if="emojiPickerFor === planet.id" class="emoji-picker">
+              <span v-for="e in planetEmojis" :key="e" class="emoji-opt" @click="pickEmoji(planet.id, e)">{{ e }}</span>
             </div>
           </div>
           <div class="planet-info">
-            <div v-if="editingIdx === idx" class="rename-form">
-              <input v-model="editName" class="input" @keydown.enter="saveRename(idx)" @keydown.escape="editingIdx = null" autofocus />
-              <button class="btn-primary" @click="saveRename(idx)" :disabled="saving">{{ saving ? '...' : '✓' }}</button>
-              <button class="btn-secondary" @click="editingIdx = null">✕</button>
+            <div v-if="editingId === planet.id" class="rename-form">
+              <input v-model="editName" class="input" @keydown.enter="saveRename(planet.id)" @keydown.escape="editingId = null" autofocus />
+              <button class="btn-primary" @click="saveRename(planet.id)" :disabled="saving">{{ saving ? '...' : '✓' }}</button>
+              <button class="btn-secondary" @click="editingId = null">✕</button>
             </div>
             <div v-else class="planet-name-row">
               <span class="planet-name">{{ planet.name }}</span>
-              <button class="btn-sm" @click="startEdit(idx, planet.name)">✏️ {{ L.t('profile.rename') }}</button>
+              <button class="btn-sm" @click="startEdit(planet.id, planet.name)">✏️ {{ L.t('profile.rename') }}</button>
             </div>
             <div class="planet-coords">{{ planet.coords }}</div>
           </div>
@@ -93,7 +93,7 @@ const { lang } = storeToRefs(L);
 const profile = ref(null);
 const planets = computed(() => game.planets);
 
-const editingIdx    = ref(null);
+const editingId     = ref(null);
 const editName      = ref('');
 const saving        = ref(false);
 const emojiPickerFor = ref(null);
@@ -107,27 +107,27 @@ function formatDate(ts) {
   return new Date(ts * 1000).toLocaleDateString(lang.value === 'hu' ? 'hu-HU' : 'en-US');
 }
 
-function startEdit(idx, currentName) {
-  editingIdx.value = idx;
+function startEdit(id, currentName) {
+  editingId.value = id;
   editName.value   = currentName;
   emojiPickerFor.value = null;
 }
 
-async function saveRename(idx) {
+async function saveRename(id) {
   if (!editName.value.trim()) return;
   saving.value = true;
-  await game.renamePlanet(idx, editName.value.trim(), null);
-  editingIdx.value = null;
+  await game.renamePlanet(id, editName.value.trim(), null);
+  editingId.value = null;
   saving.value = false;
 }
 
-function toggleEmojiPicker(idx) {
-  emojiPickerFor.value = emojiPickerFor.value === idx ? null : idx;
+function toggleEmojiPicker(id) {
+  emojiPickerFor.value = emojiPickerFor.value === id ? null : id;
 }
 
-async function pickEmoji(idx, emoji) {
+async function pickEmoji(id, emoji) {
   emojiPickerFor.value = null;
-  await game.renamePlanet(idx, null, emoji);
+  await game.renamePlanet(id, null, emoji);
 }
 
 onMounted(async () => {

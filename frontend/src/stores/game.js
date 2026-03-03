@@ -12,13 +12,15 @@ export const useGameStore = defineStore('game', () => {
   const notifications = ref([]);
 
   // ── Computed ──────────────────────────────────────────────
-  const resources = computed(() => state.value?.resources || {});
-  const rates     = computed(() => state.value?.rates || {});
-  const buildings = computed(() => state.value?.buildings || []);
-  const research  = computed(() => state.value?.research  || []);
-  const fleet     = computed(() => state.value?.fleet     || []);
-  const planets   = computed(() => state.value?.planets   || []);
-  const score     = computed(() => state.value?.score     || 0);
+  const activePlanet = computed(() => state.value?.activePlanet || {});
+  const resources    = computed(() => activePlanet.value.resources || {});
+  const rates        = computed(() => activePlanet.value.rates || {});
+  const buildings    = computed(() => activePlanet.value.buildings || []);
+  const fleet        = computed(() => activePlanet.value.fleet     || []);
+  
+  const research     = computed(() => state.value?.research  || []);
+  const planets      = computed(() => state.value?.planets   || []);
+  const score        = computed(() => state.value?.score     || 0);
 
   const prodBuildings  = computed(() => buildings.value.filter(b => b.type === 'production'));
   const infraBuildings = computed(() => buildings.value.filter(b => b.type === 'infra'));
@@ -30,7 +32,7 @@ export const useGameStore = defineStore('game', () => {
     deus:    Math.min(100, Math.floor((resources.value.deus    || 0) / (storage.value.deus    || 1) * 100)),
   }));
 
-  // Energy efficiency warning — message formatted in component with i18n
+  // Energy efficiency warning
   const energyWarning = computed(() => {
     const eff = rates.value.energyEff;
     if (eff === undefined) return null;
@@ -50,6 +52,21 @@ export const useGameStore = defineStore('game', () => {
       if (data.storage) storage.value = data.storage;
     } catch (e) {
       error.value = e.message;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function switchPlanet(planetId) {
+    loading.value = true;
+    try {
+      await api.switchPlanet(planetId);
+      await loadState();
+      notify(useLangStore().t('game.planetSwitched'), 'blue');
+      return true;
+    } catch (e) {
+      notify(`❌ ${e.message}`, 'red');
+      return false;
     } finally {
       loading.value = false;
     }
@@ -136,9 +153,9 @@ export const useGameStore = defineStore('game', () => {
     } catch (e) { /* silent */ }
   }
 
-  async function renamePlanet(planetIdx, name, emoji) {
+  async function renamePlanet(planetId, name, emoji) {
     try {
-      const data = await api.renamePlanet(planetIdx, name, emoji);
+      const data = await api.renamePlanet(planetId, name, emoji);
       if (state.value) state.value.planets = data.planets;
       notify(useLangStore().t('game.planetRenamed'), 'green');
       return true;
@@ -149,13 +166,12 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function tickResources() {
-    if (!state.value) return;
-    const r  = state.value.resources;
-    const rt = state.value.rates;
+    if (!state.value || !state.value.activePlanet) return;
+    const r  = state.value.activePlanet.resources;
+    const rt = state.value.activePlanet.rates;
     const s  = storage.value;
     
-    // Immutable update for reactivity
-    state.value.resources = {
+    state.value.activePlanet.resources = {
       ...r,
       metal:   Math.min(s.metal,   (r.metal   || 0) + (rt.metal   || 0) / 3600),
       crystal: Math.min(s.crystal, (r.crystal || 0) + (rt.crystal || 0) / 3600),
@@ -191,16 +207,16 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function canAfford(cost) {
-    if (!state.value) return false;
-    return state.value.resources.metal   >= cost.metal &&
-           state.value.resources.crystal >= cost.crystal;
+    if (!state.value || !state.value.activePlanet) return false;
+    return state.value.activePlanet.resources.metal   >= cost.metal &&
+           state.value.activePlanet.resources.crystal >= cost.crystal;
   }
 
   return {
     state, queue, storage, loading, error, notifications,
-    resources, rates, buildings, research, fleet, planets, score,
+    activePlanet, resources, rates, buildings, research, fleet, planets, score,
     prodBuildings, infraBuildings, storageFill, energyWarning,
-    loadState, upgradeBuilding, startResearch, buildFleet, syncResources, renamePlanet,
+    loadState, switchPlanet, upgradeBuilding, startResearch, buildFleet, syncResources, renamePlanet,
     tickResources, notify, queueItemIsActive, getBuildCost, getResearchCost, canAfford,
   };
 });

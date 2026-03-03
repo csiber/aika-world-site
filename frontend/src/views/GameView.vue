@@ -58,11 +58,11 @@
     <!-- ── PLANET BAR ── -->
     <div class="planet-bar">
       <div
-        v-for="(planet, idx) in planets"
-        :key="idx"
+        v-for="planet in planets"
+        :key="planet.id"
         class="planet-slot"
-        :class="{ active: activePlanet === idx }"
-        @click="activePlanet = idx"
+        :class="{ active: gameStore.activePlanet.id === planet.id }"
+        @click="gameStore.switchPlanet(planet.id)"
       >
         <span class="planet-emoji">{{ planet.emoji || '🌍' }}</span>
         <span class="planet-name">{{ planet.name }}</span>
@@ -73,7 +73,7 @@
 
     <!-- ── VIEWS ── -->
     <main class="main-content">
-      <OverviewView  v-if="activeTab === 'overview'"  :activePlanetIdx="activePlanet" />
+      <OverviewView  v-if="activeTab === 'overview'" />
       <BuildingsView v-if="activeTab === 'buildings'" />
       <ResearchView  v-if="activeTab === 'research'"  />
       <FleetView     v-if="activeTab === 'fleet'"     />
