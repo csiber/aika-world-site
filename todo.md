@@ -15,15 +15,22 @@ Ez a dokumentum összefoglalja a folyamatban lévő és tervezett fejlesztéseke
 - [x] Részletes Harci Jelentések
 - [x] Galaxis Térkép Bővítése
 - [x] Flotta Irányítóközpont
-- [x] Animációk & Effektek (3D Planets, Audio).
+- [x] Animációk & Effektek
 
 ## 🤝 Phase 3: Közösségi Funkciók & Tartalom (Befejezve)
 - [x] Szövetségi Fejlesztések
 - [x] Okosabb Botok (AIKA v2)
-- [x] Események & Küldetések (Daily Quests)
+- [x] Események & Küldetések
+
+## 🛰️ Phase 5: Mélységi Mechanikák (Folyamatban)
+- [x] **Törmelékmezők & Újrahasznosítás:** 
+    - [x] Csaták után törmelék keletkezik.
+    - [x] **Recycler (Újrahasznosító):** Új hajótípus a törmelék gyűjtéséhez.
+    - [x] **Harvest Mission:** Speciális küldetés a nyersanyagok visszanyerésére.
+- [ ] **Holdak (Moons):** Nagy csaták utáni esély hold keletkezésére.
+- [ ] **Expedíciók:** Távoli űr felfedezése (Slot 16).
 
 ## 🧹 Phase 4: Refaktorálás & Biztonság (Befejezve)
-- [x] **State Sync refinement:** Szerver-idő alapú pontosabb kliensoldali tickelés.
-- [x] **API Biztonsági Felülvizsgálat:** Szigorú bemeneti validáció (negatív értékek és tartomány ellenőrzés).
-- [ ] **Lokalizáció:** További nyelvi csomagok finomítása.
+- [x] State Sync refinement
+- [x] API Biztonsági Felülvizsgálat
 ...

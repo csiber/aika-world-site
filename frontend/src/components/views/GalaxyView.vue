@@ -34,7 +34,7 @@
               <tr>
                 <th style="width:40px;">#</th>
                 <th style="width:60px;">Bolygó</th>
-                <th>Név</th>
+                <th>Név / Törmelék</th>
                 <th>Játékos</th>
                 <th>Pontszám</th>
                 <th style="text-align:right;">Akciók</th>
@@ -48,8 +48,12 @@
                   <span v-else class="p-empty">🌑</span>
                 </td>
                 <td class="slot-name">
-                  <span v-if="getCell(slot).type !== 'empty'">{{ getCell(slot).name }}</span>
-                  <span v-else class="empty-text">Üres világűr</span>
+                  <div v-if="getCell(slot).type !== 'empty'">{{ getCell(slot).name }}</div>
+                  <div v-else class="empty-text">Üres világűr</div>
+                  <!-- Debris Field -->
+                  <div v-if="getCell(slot).debris_metal > 0 || getCell(slot).debris_crystal > 0" class="debris-info" title="Törmelékmező">
+                    🚛 <span class="d-m">{{ L.n(getCell(slot).debris_metal) }}</span> / <span class="d-c">{{ L.n(getCell(slot).debris_crystal) }}</span>
+                  </div>
                 </td>
                 <td class="slot-player">
                   <span v-if="getCell(slot).username" @click="openProfile(getCell(slot).username)" class="player-link">
@@ -60,15 +64,20 @@
                   <span v-if="getCell(slot).score">{{ getCell(slot).score.toLocaleString('hu') }}</span>
                 </td>
                 <td class="slot-actions">
-                  <div v-if="getCell(slot).type === 'enemy'" class="action-btns">
-                    <button class="btn-icon" @click="selectCell(getCell(slot), 'spy')" title="Kémkedés">🔍</button>
-                    <button class="btn-icon" @click="selectCell(getCell(slot), 'attack')" title="Támadás">⚔️</button>
-                  </div>
-                  <div v-else-if="getCell(slot).type === 'empty'" class="action-btns">
-                    <button class="btn-icon" @click="doQuickColonize(getCell(slot))" :disabled="!hasColonyShip" title="Gyarmatosítás">🌍</button>
-                  </div>
-                  <div v-else-if="getCell(slot).type === 'own'" class="action-btns">
-                    <span class="own-tag">Saját</span>
+                  <div class="action-btns">
+                    <!-- Enemy actions -->
+                    <template v-if="getCell(slot).type === 'enemy'">
+                      <button class="btn-icon" @click="selectCell(getCell(slot), 'spy')" title="Kémkedés">🔍</button>
+                      <button class="btn-icon" @click="selectCell(getCell(slot), 'attack')" title="Támadás">⚔️</button>
+                    </template>
+                    <!-- Debris action -->
+                    <button v-if="getCell(slot).debris_metal > 0 || getCell(slot).debris_crystal > 0" 
+                      class="btn-icon harvest" @click="selectCell(getCell(slot), 'harvest')" title="Újrahasznosítás">🚛</button>
+                    <!-- Empty slot actions -->
+                    <button v-if="getCell(slot).type === 'empty'" 
+                      class="btn-icon" @click="doQuickColonize(getCell(slot))" :disabled="!hasColonyShip" title="Gyarmatosítás">🌍</button>
+                    <!-- Own slot -->
+                    <span v-if="getCell(slot).type === 'own'" class="own-tag">Saját</span>
                   </div>
                 </td>
               </tr>
@@ -83,12 +92,12 @@
       <div v-if="showFleetSetup" class="modal-overlay" @click.self="showFleetSetup = false">
         <div class="panel fleet-setup-modal">
           <div class="panel-header">
-            <h3>🚀 {{ missionType === 'spy' ? 'Kémflotta' : 'Támadó flotta' }} indítása</h3>
+            <h3>🚀 {{ missionTitle }} indítása</h3>
             <button class="close-btn" @click="showFleetSetup = false">✕</button>
           </div>
           <div class="panel-body">
             <div class="target-summary">
-              Célpont: <strong>{{ selected?.name }}</strong> {{ selected?.coords }}
+              Célpont: <strong>{{ selected?.name || 'Törmelékmező' }}</strong> {{ selected?.coords }}
             </div>
             
             <div v-if="availableShips.length === 0" class="empty-msg">Nincs elérhető hajó ezen a bolygón.</div>
@@ -141,7 +150,22 @@ const showFleetSetup = ref(false);
 const missionType    = ref(null);
 const selectedShips  = ref({});
 
-const availableShips = computed(() => game.fleet.filter(f => f.count > 0));
+const missionTitle = computed(() => {
+    if (missionType.value === 'spy') return 'Kémflotta';
+    if (missionType.value === 'attack') return 'Támadó flotta';
+    if (missionType.value === 'harvest') return 'Recycle flotta';
+    return 'Flotta';
+});
+
+const availableShips = computed(() => {
+    let ships = game.fleet.filter(f => f.count > 0);
+    if (missionType.value === 'harvest') {
+        // For harvesting, suggest recyclers first but allow any cargo ship
+        return ships.sort((a,b) => (b.id === 'recycler') - (a.id === 'recycler'));
+    }
+    return ships;
+});
+
 const hasSelectedShips = computed(() => Object.values(selectedShips.value).some(v => v > 0));
 const hasColonyShip = computed(() => game.fleet.some(f => f.id === 'colony' && f.count > 0));
 
@@ -170,7 +194,7 @@ async function loadGalaxy() {
 function getCell(slot) {
   const coords = `[${currentGal.value}:${currentSys.value}:${slot}]`;
   const p = players.value.find(x => x.coords === coords);
-  if (!p) return { slot, coords, type: 'empty' };
+  if (!p) return { slot, coords, type: 'empty', debris_metal: 0, debris_crystal: 0 };
   
   const isOwn = p.username === auth.username;
   return {
@@ -180,7 +204,9 @@ function getCell(slot) {
     name: p.planet_name,
     username: p.username,
     score: p.score,
-    targetUserId: p.user_id
+    targetUserId: p.user_id,
+    debris_metal: p.debris_metal || 0,
+    debris_crystal: p.debris_crystal || 0
   };
 }
 
@@ -191,15 +217,20 @@ function selectCell(cell, type) {
   showFleetSetup.value = true;
   selectedShips.value = {};
   availableShips.value.forEach(s => selectedShips.value[s.id] = 0);
+  
   if (type === 'spy') {
     const s = availableShips.value.find(x => x.id === 'fighter_s' || x.id === 'spy');
     if (s) selectedShips.value[s.id] = 1;
+  } else if (type === 'harvest') {
+    const r = availableShips.value.find(x => x.id === 'recycler');
+    if (r) selectedShips.value[r.id] = Math.min(r.count, Math.ceil((cell.debris_metal + cell.debris_crystal) / 20000) || 1);
   }
 }
 
 async function confirmMission() {
   if (missionType.value === 'spy') await doSpy();
   else if (missionType.value === 'attack') await doAttack();
+  else if (missionType.value === 'harvest') await doHarvest();
 }
 
 async function doSpy() {
@@ -226,6 +257,19 @@ async function doAttack() {
     await game.loadState();
   } catch (e) { audio.error(); game.notify(`❌ ${e.message}`, 'red'); }
   actionBusy.value = null;
+}
+
+async function doHarvest() {
+    actionBusy.value = 'harvest';
+    try {
+        const ships = Object.entries(selectedShips.value).filter(([_, c]) => c > 0).map(([id, count]) => ({ id, count }));
+        await api.harvest(selected.value.coords, 'Törmelékmező', ships);
+        audio.mission();
+        game.notify('Recycler flotta elindult', 'blue');
+        showFleetSetup.value = false;
+        await game.loadState();
+    } catch (e) { audio.error(); game.notify(`❌ ${e.message}`, 'red'); }
+    actionBusy.value = null;
 }
 
 async function doQuickColonize(cell) {
@@ -273,9 +317,14 @@ onMounted(() => {
 .player-link:hover { text-decoration: underline; }
 .own-tag { font-size: 9px; color: var(--accent3); border: 1px solid var(--accent3); padding: 1px 5px; border-radius: 10px; }
 
+.debris-info { font-size: 9px; margin-top: 4px; background: rgba(0,200,255,0.05); padding: 2px 6px; border-radius: 3px; display: inline-block; color: var(--text-dim); }
+.d-m { color: var(--metal); }
+.d-c { color: var(--crystal); }
+
 .action-btns { display: flex; justify-content: flex-end; gap: 6px; }
 .btn-icon { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 4px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
 .btn-icon:hover { border-color: var(--accent); background: rgba(0,200,255,0.1); transform: translateY(-2px); }
+.btn-icon.harvest { border-color: var(--accent3); color: var(--accent3); }
 .btn-icon:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* Modal Styles */

@@ -1,5 +1,6 @@
 /**
  * Fleet Missions routes
+ * v2.5.0: Debris Fields and Harvesting
  */
 
 import { jsonResponse, jsonError } from '../utils/response.js';
@@ -93,7 +94,7 @@ export async function resolveMissionsForUser(env, userId) {
 
     if (mission.mission_type === 'attack') {
       const attackerGS = await getGlobalState(env, userId);
-      const attackerState = { username: user?.username || 'Játékos', fleet: currentShips, research: JSON.parse(attackerGS.research) };
+      const attackerState = { username: gs.username, fleet: currentShips, research: JSON.parse(attackerGS.research) };
       const targetPlanet = await getPlanetState(env, (await env.DB.prepare('SELECT id FROM planets WHERE user_id = ? AND coords = ?').bind(mission.target_user_id, mission.target_coords).first())?.id);
       
       if (targetPlanet) {
@@ -109,7 +110,29 @@ export async function resolveMissionsForUser(env, userId) {
         targetPlanet.resources = battle.defenderResources;
         await savePlanetState(env, targetPlanet.id, targetPlanet);
         result.loot = battle.loot;
+
+        // Create Debris Field from losses
+        if (battle.debris) {
+            await env.DB.prepare(`
+                UPDATE galaxy_map SET debris_metal = debris_metal + ?, debris_crystal = debris_crystal + ?
+                WHERE coords = ?
+            `).bind(battle.debris.metal, battle.debris.crystal, mission.target_coords).run();
+        }
       }
+    }
+
+    if (mission.mission_type === 'harvest') {
+        const galaxyEntry = await env.DB.prepare('SELECT debris_metal, debris_crystal FROM galaxy_map WHERE coords = ?').bind(mission.target_coords).first();
+        if (galaxyEntry) {
+            const totalCargo = currentShips.reduce((s, u) => s + (u.cargo * u.count), 0);
+            const harvestedMetal   = Math.min(galaxyEntry.debris_metal, totalCargo / 2);
+            const harvestedCrystal = Math.min(galaxyEntry.debris_crystal, totalCargo / 2);
+            
+            result.loot = { metal: harvestedMetal, crystal: harvestedCrystal };
+            
+            await env.DB.prepare('UPDATE galaxy_map SET debris_metal = debris_metal - ?, debris_crystal = debris_crystal - ? WHERE coords = ?')
+                .bind(harvestedMetal, harvestedCrystal, mission.target_coords).run();
+        }
     }
 
     await env.DB.prepare(`UPDATE fleet_missions SET status=?, result=?, ships=?, return_at=? WHERE id=?`).bind(nextStatus, JSON.stringify(result), JSON.stringify(currentShips), returnAt, mission.id).run();
@@ -146,7 +169,7 @@ export async function handleMissions(request, env, url, user) {
     const gal = url.searchParams.get('galaxy') || '1';
     const sys = url.searchParams.get('system') || '1';
     const pattern = `[${gal}:${sys}:%`;
-    const rows = await env.DB.prepare(`SELECT user_id, username, planet_name, planet_emoji, coords, score FROM galaxy_map WHERE coords LIKE ? ORDER BY coords ASC`).bind(pattern).all();
+    const rows = await env.DB.prepare(`SELECT user_id, username, planet_name, planet_emoji, coords, score, debris_metal, debris_crystal FROM galaxy_map WHERE coords LIKE ? ORDER BY coords ASC`).bind(pattern).all();
     const { results: myPlanets } = await env.DB.prepare('SELECT id, name, emoji, coords FROM planets WHERE user_id = ?').bind(userId).all();
     return jsonResponse({ ok: true, players: rows.results, myPlanets, galaxy: parseInt(gal), system: parseInt(sys) }, 200, request);
   }
@@ -221,6 +244,19 @@ export async function handleMissions(request, env, url, user) {
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
 
+  if (path === '/api/missions/harvest' && method === 'POST') {
+    let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    const { targetCoords, targetName, ships } = body;
+    const planet = await getPlanetState(env, activePlanetId);
+    const { fleet: newFleet, sentShips } = extractShips(planet.fleet, ships);
+    if (sentShips.length === 0) return jsonError(400, 'Nincs küldhető flotta', request);
+    planet.fleet = newFleet; await savePlanetState(env, planet.id, planet);
+    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(planet.coords, targetCoords, JSON.parse(gs.research), 120);
+    await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, arrive_at, created_at) VALUES (?, ?, ?, 'harvest', ?, ?, 'travelling', ?, ?, unixepoch())`)
+      .bind(crypto.randomUUID(), userId, planet.id, targetCoords, targetName || 'Törmelékmező', JSON.stringify(sentShips), arriveAt).run();
+    return jsonResponse({ ok: true, arriveAt }, 200, request);
+  }
+
   if (path === '/api/missions/colonize' && method === 'POST') {
     let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { targetCoords } = body;
@@ -271,17 +307,30 @@ function runBattle(attacker, defender) {
     let curDefFleet = JSON.parse(JSON.stringify(defender.fleet));
     let curDefDefense = JSON.parse(JSON.stringify(defender.defense));
 
+    let lostMetal = 0;
+    let lostCrystal = 0;
+
+    const shipCosts = { fighter_s: {m:3000, c:1000}, fighter_l: {m:25000, c:7500}, cruiser: {m:50000, c:15000}, battleship: {m:150000, c:50000}, recycler: {m:10000, c:6000}, miner: {m:10000, c:20000}, colony: {m:10000, c:20000} };
+
     for (let r = 1; r <= 3; r++) {
         const atkStats = getStats(curAtkFleet, attacker.research);
         const defStats = getStats([...curDefFleet, ...curDefDefense], defender.research, defender.buildings);
         rounds.push({ round: r, attackerPower: atkStats.attack, defenderPower: defStats.shield });
         const atkDamage = atkStats.attack;
         const defDamage = defStats.shield / 2;
+        
         const applyLoss = (units, dmg, totalShield) => {
             if (totalShield <= 0) return units.map(u => ({ ...u, count: 0 }));
             const lossPct = Math.min(1, dmg / (totalShield * 1.5 + 1));
-            return units.map(u => ({ ...u, count: Math.floor(u.count * (1 - lossPct)) }));
+            return units.map(u => {
+                const countLost = Math.floor(u.count * lossPct);
+                const cost = shipCosts[u.id] || {m:0,c:0};
+                lostMetal += countLost * cost.m;
+                lostCrystal += countLost * cost.c;
+                return { ...u, count: u.count - countLost };
+            });
         };
+
         curDefFleet = applyLoss(curDefFleet, atkDamage, defStats.shield);
         curDefDefense = applyLoss(curDefDefense, atkDamage, defStats.shield);
         curAtkFleet = applyLoss(curAtkFleet, defDamage, atkStats.shield || 1000);
@@ -306,13 +355,14 @@ function runBattle(attacker, defender) {
         attackerWins, attackerName: attacker.username, defenderName: defender.username,
         initialAtkFleet: attacker.fleet, initialDefFleet: defender.fleet, initialDefDefense: defender.defense,
         attackerRemainingFleet: curAtkFleet, defenderRemainingFleet: curDefFleet, defenderRemainingDefense: curDefDefense,
-        defenderResources, loot, rounds
+        defenderResources, loot, rounds,
+        debris: { metal: Math.floor(lostMetal * 0.3), crystal: Math.floor(lostCrystal * 0.3) }
     };
 }
 
-function missionIcon(type) { return { spy: '🔍', attack: '⚔️', colonize: '🌍', return: '↩️' }[type] || '📡'; }
+function missionIcon(type) { return { spy: '🔍', attack: '⚔️', colonize: '🌍', return: '↩️', harvest: '🚛' }[type] || '📡'; }
 function missionSubject(type, name) {
-  const subjects = { spy: `Kémjelentés — ${name}`, attack: `Harci jelentés — ${name}`, colonize: `Gyarmatosítás — ${name}`, return: `Flotta visszaérkezett — ${name}` };
+  const subjects = { spy: `Kémjelentés — ${name}`, attack: `Harci jelentés — ${name}`, colonize: `Gyarmatosítás — ${name}`, return: `Flotta visszaérkezett — ${name}`, harvest: `Újrahasznosítás — ${name}` };
   return subjects[type] || `Küldetés — ${name}`;
 }
 
@@ -323,6 +373,9 @@ function formatMissionResult(mission, result) {
   }
   if (mission.mission_type === 'attack') {
     return `⚔️ HARCI JELENTÉS — ${result.attackerWins ? 'GYŐZELEM' : 'VERESÉG'}\n\nZsákmány:\nFém: ${Math.floor(result.loot.metal)}\nKristály: ${Math.floor(result.loot.crystal)}\n\n[DETAILED_REPORT:${mission.id}]`;
+  }
+  if (mission.mission_type === 'harvest') {
+      return `🚛 ÚJRAHASZNOSÍTÁS JELENTÉS\n\nKoordináta: ${mission.target_coords}\nGyűjtött fém: ${Math.floor(result.loot.metal)}\nGyűjtött kristály: ${Math.floor(result.loot.crystal)}`;
   }
   return 'Küldetés befejezve.';
 }
