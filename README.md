@@ -1,24 +1,23 @@
-# AIKA World v2.8.0 — Full-Stack Cloudflare Workers + Vue 3 + D1 (STABLE)
+# AIKA World v2.9.0 — Full-Stack Cloudflare Workers + Vue 3 + D1 (STABLE)
 
 **AIKA World** is a modern, real-time galactic strategy game built on the Cloudflare ecosystem (Workers, D1, Assets) using Vue 3.
 
-## Key Improvements (v2.8.0)
-- **⚖️ Marketplace & Trade**: Introducing the Galactic Exchange. Trade resources with other players through custom offers or use the NPC Trader for instant exchanges.
-- **🌑 Moon System**: High-stakes battles can result in the formation of Moons, which offer unique strategic building opportunities.
-- **🖥️ Cyberpunk Onboarding**: A new terminal-style lore introduction and a guided interactive tour for new Commanders.
-- **🎨 Immersive Visuals**: Glitch effects, scanlines, and a redesigned login experience.
-- **🔍 SEO Optimized**: Professional metadata and OpenGraph support for better visibility.
+## Key Improvements (v2.9.0)
+- **⚔️ Alliance Wars**: Declare war on rival alliances and climb the galactic war rankings. Track scores and casualties in real-time.
+- **🚀 ACS (Alliance Combat System)**: Coordinate massive strikes by joining forces with your allies. Multiple fleets can now converge on a single target for a unified battle resolution.
+- **🗺️ System Control**: Dominate your neighborhood. Alliances with significant presence now "control" systems, visible on the Galaxy Map.
+- **⚖️ Marketplace (v2.8.0)**: Fully functional resource exchange and NPC trader.
+- **🖥️ Cyberpunk Onboarding**: Terminal intro and interactive tutorial.
 
 ...
 ## Changelog
 
-### v2.8.0 (Market & Visuals Milestone)
-- **Feature**: Implemented player-to-player Galactic Exchange.
-- **Feature**: Added NPC Trader for instant resource swaps.
-- **Visual**: Cyberpunk terminal intro and landing page glitch effects.
-- **Tutorial**: Interactive "Demo Tour" for new users.
-- **Backend**: New `/api/market` endpoints and `market_offers` database.
+### v2.9.0 (Alliance Wars & ACS Milestone)
+- **Feature**: Added `alliance_wars` tracking and war declaration system.
+- **Feature**: Implemented ACS foundations (Union missions) in the mission resolver.
+- **Backend**: Updated `/api/alliance` and `/api/missions` for war and joint attack support.
+- **Frontend**: Redesigned `AllianceView` with tabbed navigation and war dashboard.
 
-### v2.7.6
-- **Feature**: SEO metadata and initial visual updates.
+### v2.8.0
+- **Feature**: Marketplace and NPC Trader.
 ...

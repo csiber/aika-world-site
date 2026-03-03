@@ -154,5 +154,56 @@ export async function handleAlliance(request, env, url, user) {
     return jsonResponse({ ok: true, level: newLevel, exp: newExp, vault }, 200, request);
   }
 
+  if (path === '/api/alliance/list' && method === 'GET') {
+    const rows = await env.DB.prepare(`
+      SELECT a.*, u.username as leader_name, (SELECT COUNT(*) FROM alliance_members WHERE alliance_id = a.id) as member_count
+      FROM alliances a
+      JOIN users u ON a.leader_id = u.id
+      ORDER BY a.total_score DESC
+    `).all();
+    return jsonResponse({ ok: true, alliances: rows.results }, 200, request);
+  }
+
+  // ── POST /api/alliance/war/declare ──────────────────────
+  if (path === '/api/alliance/war/declare' && method === 'POST') {
+    const myMember = await env.DB.prepare('SELECT alliance_id, role FROM alliance_members WHERE user_id = ?').bind(userId).first();
+    if (!myMember || (myMember.role !== 'leader' && myMember.role !== 'officer')) return jsonError(403, 'Nincs jogosultságod hadüzenetre', request);
+
+    let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    const { targetAllianceId } = body;
+    if (targetAllianceId === myMember.alliance_id) return jsonError(400, 'Önmagadnak nem üzenhetsz hadat', request);
+
+    const target = await env.DB.prepare('SELECT id, name FROM alliances WHERE id = ?').bind(targetAllianceId).first();
+    if (!target) return jsonError(404, 'Cél szövetség nem található', request);
+
+    const existing = await env.DB.prepare('SELECT id FROM alliance_wars WHERE status = "active" AND ((attacker_id = ? AND defender_id = ?) OR (attacker_id = ? AND defender_id = ?))')
+      .bind(myMember.alliance_id, targetAllianceId, targetAllianceId, myMember.alliance_id).first();
+    if (existing) return jsonError(400, 'Már háborúban álltok', request);
+
+    await env.DB.prepare('INSERT INTO alliance_wars (attacker_id, defender_id) VALUES (?, ?)')
+      .bind(myMember.alliance_id, targetAllianceId).run();
+
+    // Notify target leader
+    const targetLeader = await env.DB.prepare('SELECT leader_id FROM alliances WHERE id = ?').bind(targetAllianceId).first();
+    if (targetLeader) {
+        await env.DB.prepare('INSERT INTO messages (user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?)')
+          .bind(targetLeader.leader_id, 'Hadi Tanács', 'HADÜZENET!', `A(z) ${(await env.DB.prepare('SELECT name FROM alliances WHERE id = ?').bind(myMember.alliance_id).first()).name} szövetség hadat üzent nektek!`, 'system').run();
+    }
+
+    return jsonResponse({ ok: true, message: 'Hadiállapot kihirdetve!' }, 200, request);
+  }
+
+  // ── GET /api/alliance/wars ──────────────────────────────
+  if (path === '/api/alliance/wars' && method === 'GET') {
+    const wars = await env.DB.prepare(`
+      SELECT w.*, a1.name as attacker_name, a1.tag as attacker_tag, a2.name as defender_name, a2.tag as defender_tag
+      FROM alliance_wars w
+      JOIN alliances a1 ON w.attacker_id = a1.id
+      JOIN alliances a2 ON w.defender_id = a2.id
+      WHERE w.status = 'active'
+    `).all();
+    return jsonResponse({ ok: true, wars: wars.results }, 200, request);
+  }
+
   return jsonError(404, 'Alliance endpoint not found', request);
 }

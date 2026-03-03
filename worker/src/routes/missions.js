@@ -75,14 +75,45 @@ export async function handleMissions(request, env, url, user) {
     const pattern = `[${gal}:${sys}:%`;
     const rows = await env.DB.prepare(`
       SELECT g.user_id, g.username, g.planet_name, g.planet_emoji, g.coords, g.score, g.debris_metal, g.debris_crystal,
-      EXISTS(SELECT 1 FROM moons m JOIN planets p ON m.planet_id = p.id WHERE p.coords = g.coords) as has_moon
+      EXISTS(SELECT 1 FROM moons m JOIN planets p ON m.planet_id = p.id WHERE p.coords = g.coords) as has_moon,
+      am.alliance_id, a.tag as alliance_tag
       FROM galaxy_map g
+      LEFT JOIN alliance_members am ON g.user_id = am.user_id
+      LEFT JOIN alliances a ON am.alliance_id = a.id
       WHERE g.coords LIKE ?
       ORDER BY g.coords ASC
     `).bind(pattern).all();
+    
+    // Calculate system control
+    const allianceCounts = {};
+    rows.results.forEach(r => { if (r.alliance_tag) allianceCounts[r.alliance_tag] = (allianceCounts[r.alliance_tag] || 0) + 1; });
+    let controller = null;
+    for (const [tag, count] of Object.entries(allianceCounts)) { if (count > 7) controller = tag; }
+
     const { results: myPlanets } = await env.DB.prepare('SELECT id, name, emoji, coords FROM planets WHERE user_id = ?').bind(userId).all();
-    return jsonResponse({ ok: true, players: rows.results, myPlanets, galaxy: parseInt(gal), system: parseInt(sys) }, 200, request);
+    return jsonResponse({ ok: true, players: rows.results, myPlanets, galaxy: parseInt(gal), system: parseInt(sys), controller }, 200, request);
   }
+
+  // ── POST /api/missions/acs/invite ───────────────────────
+  if (path === '/api/missions/acs/invite' && method === 'POST') {
+      let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+      const { missionId, targetUserId } = body;
+      
+      const mission = await env.DB.prepare('SELECT * FROM fleet_missions WHERE id = ? AND user_id = ?').bind(missionId, userId).first();
+      if (!mission || mission.mission_type !== 'attack') return jsonError(404, 'Misszió nem található', request);
+      
+      const unionId = mission.union_id || crypto.randomUUID();
+      if (!mission.union_id) {
+          await env.DB.prepare('UPDATE fleet_missions SET union_id = ? WHERE id = ?').bind(unionId, missionId).run();
+      }
+      
+      // Notify target
+      await env.DB.prepare('INSERT INTO messages (user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?)')
+        .bind(targetUserId, username, 'ACS Meghívó', `Meghívtak egy közös támadásra! Célpont: ${mission.target_coords}. Union ID: ${unionId}`, 'system').run();
+        
+      return jsonResponse({ ok: true, unionId }, 200, request);
+  }
+
 
   if (path === '/api/missions' && method === 'GET') {
     const rows = await env.DB.prepare('SELECT * FROM fleet_missions WHERE user_id = ? AND status != ? ORDER BY arrive_at ASC').bind(userId, 'done').all();
