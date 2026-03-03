@@ -1,33 +1,48 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import hu from '@/i18n/hu.js';
+import { ref, watch } from 'vue';
 import en from '@/i18n/en.js';
+import hu from '@/i18n/hu.js';
 
-const locales = { hu, en };
+const langs = { en, hu };
 
 export const useLangStore = defineStore('lang', () => {
-  const lang = ref(localStorage.getItem('aika_lang') || 'hu');
+  const lang  = ref(localStorage.getItem('aika_lang') || 'hu');
+  const theme = ref(localStorage.getItem('aika_theme') || 'dark');
 
-  function setLang(l) {
-    lang.value = l;
-    localStorage.setItem('aika_lang', l);
-  }
-
-  /** Translate key (dot notation). Supports {param} interpolation. */
-  function t(key, params) {
-    const locale = locales[lang.value] || locales.hu;
-    let str = key.split('.').reduce((o, k) => o?.[k], locale);
-    if (str === undefined || str === null) return key;
-    if (params && typeof str === 'string') {
-      str = str.replace(/\{(\w+)\}/g, (_, k) => params[k] ?? _);
+  function setLang(newLang) {
+    if (langs[newLang]) {
+      lang.value = newLang;
+      localStorage.setItem('aika_lang', newLang);
+      document.documentElement.lang = newLang;
     }
-    return str;
   }
 
-  /** Number formatter matching current locale */
+  function toggleTheme() {
+    theme.value = theme.value === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('aika_theme', theme.value);
+    document.documentElement.setAttribute('data-theme', theme.value);
+  }
+
+  function t(key, replacements = {}) {
+    const keys = key.split('.');
+    let text = langs[lang.value];
+    for (const k of keys) {
+      if (text[k] === undefined) return key;
+      text = text[k];
+    }
+    for (const [r, v] of Object.entries(replacements)) {
+      text = text.replace(`{${r}}`, v);
+    }
+    return text;
+  }
+
   function n(num) {
-    return Number(num).toLocaleString(lang.value === 'hu' ? 'hu' : 'en-US');
+    return num.toLocaleString(lang.value);
   }
 
-  return { lang, setLang, t, n };
+  // Set initial attributes
+  document.documentElement.lang = lang.value;
+  document.documentElement.setAttribute('data-theme', theme.value);
+  
+  return { lang, theme, t, n, setLang, toggleTheme };
 });

@@ -1,54 +1,23 @@
 <template>
-  <div class="lang-switch" :title="lang === 'hu' ? 'Switch to English' : 'Váltás magyarra'">
-    <button
-      class="ls-btn"
-      :class="{ active: lang === 'hu' }"
-      @click="setLang('hu')"
-    >HU</button>
-    <span class="ls-sep">|</span>
-    <button
-      class="ls-btn"
-      :class="{ active: lang === 'en' }"
-      @click="setLang('en')"
-    >EN</button>
+  <div class="control-switch">
+    <button @click="langStore.toggleTheme" class="btn-theme" :title="L.t('theme.toggle') || 'Téma váltás'">
+      {{ langStore.theme === 'dark' ? '☀️' : '🌙' }}
+    </button>
+    <button @click="langStore.setLang('hu')" :class="{ active: langStore.lang === 'hu' }">HU</button>
+    <button @click="langStore.setLang('en')" :class="{ active: langStore.lang === 'en' }">EN</button>
   </div>
 </template>
 
 <script setup>
 import { useLangStore } from '@/stores/lang.js';
-import { storeToRefs } from 'pinia';
-
 const langStore = useLangStore();
-const { lang } = storeToRefs(langStore);
-const { setLang } = langStore;
+const L = langStore;
 </script>
 
 <style scoped>
-.lang-switch {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 10px;
-}
-.ls-btn {
-  background: none;
-  border: 1px solid transparent;
-  color: var(--text-dim, #7090b0);
-  padding: 2px 6px;
-  border-radius: 3px;
-  cursor: pointer;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  transition: all 0.2s;
-}
-.ls-btn:hover { color: var(--text, #c8d8f0); }
-.ls-btn.active {
-  color: var(--accent, #00c8ff);
-  border-color: rgba(0,200,255,0.3);
-  background: rgba(0,200,255,0.08);
-}
-.ls-sep { color: var(--border, rgba(0,200,255,0.2)); font-size: 10px; }
+.control-switch { display: flex; align-items: center; gap: 4px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; padding: 2px; }
+.control-switch button { background: none; border: 1px solid transparent; color: var(--text-dim); font-size: 10px; padding: 4px 6px; border-radius: 3px; cursor: pointer; transition: all 0.2s; }
+.control-switch button:hover { background: var(--bg-card); color: var(--text); }
+.control-switch button.active { background: var(--accent); color: var(--bg-deep); font-weight: 700; }
+.btn-theme { font-size: 12px !important; }
 </style>

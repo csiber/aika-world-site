@@ -1,6 +1,6 @@
 {
   "name": "aika-world-v2",
-  "version": "2.5.1",
+  "version": "2.5.2",
   "private": true,
   "description": "AIKA world — Full-stack Cloudflare Workers + Vue 3 + D1",
   "scripts": {
