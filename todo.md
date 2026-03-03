@@ -9,7 +9,7 @@ Ez a dokumentum összefoglalja a folyamatban lévő és tervezett fejlesztéseke
 - [x] API Biztonsági Felülvizsgálat
 - [x] Topbar Layout Fix
 - [x] Admin Menu Fix
-- [x] **Auth & Game State Fix (v2.7.2):** 500-as hibák javítása a hiányzó mezők és végpontok pótlásával.
-- [x] **Security:** Jelszó módosítási lehetőség a profilban.
+- [x] **Stability Fixes (v2.7.3):** Adatbázis kötési hibák (500 Internal Server Error) javítása.
+- [x] **Account Security:** Jelszó módosítási lehetőség a profilban.
 - [x] Localization (HU/EN)
 ...

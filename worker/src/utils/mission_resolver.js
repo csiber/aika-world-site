@@ -1,22 +1,27 @@
 /**
  * AIKA WORLD — Mission Resolver Engine
- * v2.7.0: Decoupled for 10/10 stability
+ * v2.7.3: Extreme stability & Error tracking
  */
 
 import { runBattle, runExpedition } from './combat_logic.js';
 
 async function getPlanetState(env, planetId) {
-  const row = await env.DB.prepare('SELECT * FROM planets WHERE id = ?').bind(planetId).first();
-  if (!row) return null;
-  return {
-    id: row.id, userId: row.user_id,
-    resources: JSON.parse(row.resources),
-    rates: JSON.parse(row.rates),
-    buildings: JSON.parse(row.buildings),
-    fleet: JSON.parse(row.fleet),
-    defense: JSON.parse(row.defense || '[]'),
-    coords: row.coords, updatedAt: row.updated_at,
-  };
+  try {
+    const row = await env.DB.prepare('SELECT * FROM planets WHERE id = ?').bind(planetId).first();
+    if (!row) return null;
+    return {
+      id: row.id, userId: row.user_id,
+      resources: JSON.parse(row.resources || '{"metal":0,"crystal":0,"deus":0}'),
+      rates: JSON.parse(row.rates || '{"metal":0,"crystal":0,"deus":0}'),
+      buildings: JSON.parse(row.buildings || '[]'),
+      fleet: JSON.parse(row.fleet || '[]'),
+      defense: JSON.parse(row.defense || '[]'),
+      coords: row.coords, updatedAt: row.updated_at,
+    };
+  } catch (e) {
+    console.error(`getPlanetState error for ${planetId}:`, e);
+    return null;
+  }
 }
 
 async function savePlanetState(env, planetId, state) {
@@ -37,101 +42,125 @@ async function getGlobalState(env, userId) {
 
 export async function resolveMissionsForUser(env, userId) {
   const now = Math.floor(Date.now() / 1000);
-  const gs = await getGlobalState(env, userId);
-  if (!gs) return 0;
+  
+  try {
+    const gs = await getGlobalState(env, userId);
+    if (!gs) return 0;
 
-  // 1. Fleets arriving at target
-  const arrived = await env.DB.prepare(`SELECT * FROM fleet_missions WHERE user_id = ? AND status = 'travelling' AND arrive_at <= ?`).bind(userId, now).all();
+    const userRow = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(userId).first();
+    const username = userRow?.username || 'Ismeretlen';
 
-  for (const mission of arrived.results) {
-    let result = JSON.parse(mission.result || '{}');
-    let currentShips = JSON.parse(mission.ships || '[]');
-    let nextStatus = 'returning';
-    const travelTime = mission.arrive_at - mission.created_at; 
-    const returnAt = now + travelTime;
+    // 1. Fleets arriving at target
+    const arrived = await env.DB.prepare(`SELECT * FROM fleet_missions WHERE user_id = ? AND status = 'travelling' AND arrive_at <= ?`).bind(userId, now).all();
 
-    if (mission.mission_type === 'colonize' && result.success) {
-      const planetCount = (await env.DB.prepare('SELECT COUNT(*) as cnt FROM planets WHERE user_id = ?').bind(userId).first()).cnt;
-      if (planetCount < 9) {
-        const newId = crypto.randomUUID();
-        const defB = JSON.parse((await env.DB.prepare('SELECT data FROM default_buildings').first()).data);
-        const defF = JSON.parse((await env.DB.prepare('SELECT data FROM default_fleet').first()).data);
-        const defD = JSON.parse((await env.DB.prepare('SELECT data FROM default_defense').first()).data);
-        await env.DB.prepare(`INSERT INTO planets (id, user_id, name, emoji, coords, buildings, fleet, defense, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, unixepoch())`)
-          .bind(newId, userId, result.planetName, result.emoji, mission.target_coords, JSON.stringify(defB), JSON.stringify(defF), JSON.stringify(defD)).run();
-        const username = (await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(userId).first()).username;
-        await env.DB.prepare(`INSERT OR IGNORE INTO galaxy_map (user_id, username, planet_name, planet_emoji, coords, score, is_main) VALUES (?, ?, ?, ?, ?, ?, 0)`)
-          .bind(userId, username, result.planetName, result.emoji, mission.target_coords, gs.score).run();
-        nextStatus = 'done';
+    for (const mission of arrived.results) {
+      let result = JSON.parse(mission.result || '{}');
+      let currentShips = JSON.parse(mission.ships || '[]');
+      let nextStatus = 'returning';
+      const travelTime = Math.max(60, mission.arrive_at - mission.created_at); 
+      const returnAt = now + travelTime;
+
+      if (mission.mission_type === 'colonize' && result.success) {
+        const pCountRow = await env.DB.prepare('SELECT COUNT(*) as cnt FROM planets WHERE user_id = ?').bind(userId).first();
+        if (pCountRow && pCountRow.cnt < 9) {
+          const newId = crypto.randomUUID();
+          const defB = await env.DB.prepare('SELECT data FROM default_buildings').first();
+          const defF = await env.DB.prepare('SELECT data FROM default_fleet').first();
+          const defD = await env.DB.prepare('SELECT data FROM default_defense').first();
+          
+          await env.DB.prepare(`INSERT INTO planets (id, user_id, name, emoji, coords, buildings, fleet, defense, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, unixepoch())`)
+            .bind(newId, userId, result.planetName, result.emoji, mission.target_coords, defB?.data || '[]', defF?.data || '[]', defD?.data || '[]').run();
+          
+          await env.DB.prepare(`INSERT OR IGNORE INTO galaxy_map (user_id, username, planet_name, planet_emoji, coords, score, is_main) VALUES (?, ?, ?, ?, ?, ?, 0)`)
+            .bind(userId, username, result.planetName, result.emoji, mission.target_coords, gs.score).run();
+          nextStatus = 'done';
+        }
       }
-    }
 
-    if (mission.mission_type === 'attack') {
-      const attackerGS = await getGlobalState(env, userId);
-      const attackerState = { username: gs.username, fleet: currentShips, research: JSON.parse(attackerGS.research) };
-      const targetPlanet = await getPlanetState(env, (await env.DB.prepare('SELECT id FROM planets WHERE user_id = ? AND coords = ?').bind(mission.target_user_id, mission.target_coords).first())?.id);
-      
-      if (targetPlanet) {
-        const targetGS = await getGlobalState(env, mission.target_user_id);
-        const targetUser = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(mission.target_user_id).first();
-        const defenderState = { username: targetUser.username, fleet: targetPlanet.fleet, defense: targetPlanet.defense, research: JSON.parse(targetGS.research), buildings: targetPlanet.buildings, resources: targetPlanet.resources };
+      if (mission.mission_type === 'attack') {
+        const targetPlanet = await getPlanetState(env, (await env.DB.prepare('SELECT id FROM planets WHERE user_id = ? AND coords = ?').bind(mission.target_user_id, mission.target_coords).first())?.id);
         
-        const battle = runBattle(attackerState, defenderState);
-        result = { ...result, ...battle };
-        currentShips = battle.attackerRemainingFleet;
-        targetPlanet.fleet = battle.defenderRemainingFleet;
-        targetPlanet.defense = battle.defenderRemainingDefense;
-        targetPlanet.resources = battle.defenderResources;
-        await savePlanetState(env, targetPlanet.id, targetPlanet);
-        result.loot = battle.loot;
+        if (targetPlanet) {
+          const targetGS = await getGlobalState(env, mission.target_user_id);
+          const targetUserRow = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(mission.target_user_id).first();
+          
+          const attackerState = { username: username, fleet: currentShips, research: JSON.parse(gs.research || '[]') };
+          const defenderState = { 
+            username: targetUserRow?.username || 'Ellenség', 
+            fleet: targetPlanet.fleet, 
+            defense: targetPlanet.defense, 
+            research: JSON.parse(targetGS?.research || '[]'), 
+            buildings: targetPlanet.buildings, 
+            resources: targetPlanet.resources 
+          };
+          
+          const battle = runBattle(attackerState, defenderState);
+          result = { ...result, ...battle };
+          currentShips = battle.attackerRemainingFleet;
+          targetPlanet.fleet = battle.defenderRemainingFleet;
+          targetPlanet.defense = battle.defenderRemainingDefense;
+          targetPlanet.resources = battle.defenderResources;
+          await savePlanetState(env, targetPlanet.id, targetPlanet);
+          result.loot = battle.loot;
 
-        if (battle.debris) {
-            await env.DB.prepare(`UPDATE galaxy_map SET debris_metal = debris_metal + ?, debris_crystal = debris_crystal + ? WHERE coords = ?`)
-                .bind(battle.debris.metal, battle.debris.crystal, mission.target_coords).run();
+          if (battle.debris) {
+              await env.DB.prepare(`UPDATE galaxy_map SET debris_metal = debris_metal + ?, debris_crystal = debris_crystal + ? WHERE coords = ?`)
+                  .bind(battle.debris.metal, battle.debris.crystal, mission.target_coords).run();
+          }
         }
       }
+
+      if (mission.mission_type === 'harvest') {
+          const galaxyEntry = await env.DB.prepare('SELECT debris_metal, debris_crystal FROM galaxy_map WHERE coords = ?').bind(mission.target_coords).first();
+          if (galaxyEntry) {
+              const totalCargo = currentShips.reduce((s, u) => s + ((u.cargo || 0) * u.count), 0);
+              const harvestedMetal   = Math.min(galaxyEntry.debris_metal, totalCargo / 2);
+              const harvestedCrystal = Math.min(galaxyEntry.debris_crystal, totalCargo / 2);
+              result.loot = { metal: harvestedMetal, crystal: harvestedCrystal };
+              await env.DB.prepare('UPDATE galaxy_map SET debris_metal = debris_metal - ?, debris_crystal = debris_crystal - ? WHERE coords = ?')
+                  .bind(harvestedMetal, harvestedCrystal, mission.target_coords).run();
+          }
+      }
+
+      if (mission.mission_type === 'expedition') {
+          const outcome = runExpedition(currentShips);
+          result = { ...result, ...outcome };
+          currentShips = outcome.remainingShips;
+      }
+
+      await env.DB.prepare(`UPDATE fleet_missions SET status=?, result=?, ships=?, return_at=? WHERE id=?`).bind(nextStatus, JSON.stringify(result), JSON.stringify(currentShips), returnAt, mission.id).run();
+      
+      const msgId = crypto.randomUUID();
+      await env.DB.prepare('INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)')
+        .bind(msgId, userId, missionIcon(mission.mission_type) + ' Küldetés', missionSubject(mission.mission_type, mission.target_name), formatMissionResult(mission, result), 'combat').run();
     }
 
-    if (mission.mission_type === 'harvest') {
-        const galaxyEntry = await env.DB.prepare('SELECT debris_metal, debris_crystal FROM galaxy_map WHERE coords = ?').bind(mission.target_coords).first();
-        if (galaxyEntry) {
-            const totalCargo = currentShips.reduce((s, u) => s + (u.cargo * u.count), 0);
-            const harvestedMetal   = Math.min(galaxyEntry.debris_metal, totalCargo / 2);
-            const harvestedCrystal = Math.min(galaxyEntry.debris_crystal, totalCargo / 2);
-            result.loot = { metal: harvestedMetal, crystal: harvestedCrystal };
-            await env.DB.prepare('UPDATE galaxy_map SET debris_metal = debris_metal - ?, debris_crystal = debris_crystal - ? WHERE coords = ?')
-                .bind(harvestedMetal, harvestedCrystal, mission.target_coords).run();
+    // 2. Fleets returning home
+    const returned = await env.DB.prepare(`SELECT * FROM fleet_missions WHERE user_id = ? AND status = 'returning' AND return_at <= ?`).bind(userId, now).all();
+    for (const mission of returned.results) {
+      const originPlanet = await getPlanetState(env, mission.origin_planet_id);
+      if (originPlanet) {
+        const backShips = JSON.parse(mission.ships || '[]');
+        const res = JSON.parse(mission.result || '{}');
+        for (const s of backShips) { 
+            const t = originPlanet.fleet.find(f => f.id === s.id); 
+            if (t) t.count += s.count; 
+            else originPlanet.fleet.push(s);
         }
+        if (res.loot) { 
+            originPlanet.resources.metal += (res.loot.metal || 0); 
+            originPlanet.resources.crystal += (res.loot.crystal || 0); 
+            originPlanet.resources.deus += (res.loot.deus || 0); 
+        }
+        await savePlanetState(env, originPlanet.id, originPlanet);
+      }
+      await env.DB.prepare(`UPDATE fleet_missions SET status='done' WHERE id=?`).bind(mission.id).run();
     }
-
-    if (mission.mission_type === 'expedition') {
-        const outcome = runExpedition(currentShips);
-        result = { ...result, ...outcome };
-        currentShips = outcome.remainingShips;
-    }
-
-    await env.DB.prepare(`UPDATE fleet_missions SET status=?, result=?, ships=?, return_at=? WHERE id=?`).bind(nextStatus, JSON.stringify(result), JSON.stringify(currentShips), returnAt, mission.id).run();
-    
-    // Create message
-    const msgId = crypto.randomUUID();
-    await env.DB.prepare('INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)')
-      .bind(msgId, userId, missionIcon(mission.mission_type) + ' Küldetés', missionSubject(mission.mission_type, mission.target_name), formatMissionResult(mission, result), 'combat').run();
+    return arrived.results.length + returned.results.length;
+  } catch (error) {
+    console.error(`Fatal error in resolveMissionsForUser for ${userId}:`, error);
+    return 0;
   }
-
-  // 2. Fleets returning home
-  const returned = await env.DB.prepare(`SELECT * FROM fleet_missions WHERE user_id = ? AND status = 'returning' AND return_at <= ?`).bind(userId, now).all();
-  for (const mission of returned.results) {
-    const originPlanet = await getPlanetState(env, mission.origin_planet_id);
-    if (originPlanet) {
-      const backShips = JSON.parse(mission.ships || '[]');
-      const res = JSON.parse(mission.result || '{}');
-      for (const s of backShips) { const t = originPlanet.fleet.find(f => f.id === s.id); if (t) t.count += s.count; }
-      if (res.loot) { originPlanet.resources.metal += res.loot.metal || 0; originPlanet.resources.crystal += res.loot.crystal || 0; originPlanet.resources.deus += res.loot.deus || 0; }
-      await savePlanetState(env, originPlanet.id, originPlanet);
-    }
-    await env.DB.prepare(`UPDATE fleet_missions SET status='done' WHERE id=?`).bind(mission.id).run();
-  }
-  return arrived.results.length + returned.results.length;
 }
 
 function missionIcon(type) { return { spy: '🔍', attack: '⚔️', colonize: '🌍', return: '↩️', harvest: '🚛', expedition: '🌌' }[type] || '📡'; }
@@ -142,44 +171,17 @@ function missionSubject(type, name) {
 
 function formatMissionResult(mission, result) {
   if (mission.mission_type === 'spy') {
-    if (!result.resources) return `🔍 KÉM JELENTÉS
-
-Cél: ${mission.target_name}
-
-Nincs adat.`;
-    return `🔍 KÉM JELENTÉS
-
-Cél: ${mission.target_name}
-
-Fém: ${Math.floor(result.resources.metal)}
-Kristály: ${Math.floor(result.resources.crystal)}
-Védelem: ${result.defense?.length || 0} típusú egység észlelt.`;
+    if (!result.resources) return `🔍 KÉM JELENTÉS\n\nCél: ${mission.target_name}\n\nNincs adat.`;
+    return `🔍 KÉM JELENTÉS\n\nCél: ${mission.target_name}\n\nFém: ${Math.floor(result.resources.metal || 0)}\nKristály: ${Math.floor(result.resources.crystal || 0)}\nVédelem: ${result.defense?.length || 0} típusú egység észlelt.`;
   }
   if (mission.mission_type === 'attack') {
-    return `⚔️ HARCI JELENTÉS — ${result.attackerWins ? 'GYŐZELEM' : 'VERESÉG'}
-
-Zsákmány:
-Fém: ${Math.floor(result.loot.metal)}
-Kristály: ${Math.floor(result.loot.crystal)}
-
-[DETAILED_REPORT:${mission.id}]`;
+    return `⚔️ HARCI JELENTÉS — ${result.attackerWins ? 'GYŐZELEM' : 'VERESÉG'}\n\nZsákmány:\nFém: ${Math.floor(result.loot?.metal || 0)}\nKristály: ${Math.floor(result.loot?.crystal || 0)}\n\n[DETAILED_REPORT:${mission.id}]`;
   }
   if (mission.mission_type === 'harvest') {
-      return `🚛 ÚJRAHASZNOSÍTÁS JELENTÉS
-
-Koordináta: ${mission.target_coords}
-Gyűjtött fém: ${Math.floor(result.loot.metal)}
-Gyűjtött kristály: ${Math.floor(result.loot.crystal)}`;
+      return `🚛 ÚJRAHASZNOSÍTÁS JELENTÉS\n\nKoordináta: ${mission.target_coords}\nGyűjtött fém: ${Math.floor(result.loot?.metal || 0)}\nGyűjtött kristály: ${Math.floor(result.loot?.crystal || 0)}`;
   }
   if (mission.mission_type === 'expedition') {
-      return `🌌 EXPEDÍCIÓ JELENTÉS
-
-${result.message}
-
-Talált nyersanyagok:
-Fém: ${Math.floor(result.loot?.metal || 0)}
-Kristály: ${Math.floor(result.loot?.crystal || 0)}
-Déusium: ${Math.floor(result.loot?.deus || 0)}`;
+      return `🌌 EXPEDÍCIÓ JELENTÉS\n\n${result.message || 'Az expedíció véget ért.'}\n\nTalált nyersanyagok:\nFém: ${Math.floor(result.loot?.metal || 0)}\nKristály: ${Math.floor(result.loot?.crystal || 0)}\nDéusium: ${Math.floor(result.loot?.deus || 0)}`;
   }
   return 'Küldetés befejezve.';
 }
