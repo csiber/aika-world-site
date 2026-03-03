@@ -18,10 +18,10 @@ Ez a dokumentum összefoglalja a folyamatban lévő és tervezett fejlesztéseke
 - [x] Animációk & Effektek
 
 ## 🤝 Phase 3: Közösségi Funkciók & Tartalom (Folyamatban)
-- [x] **Szövetségi Fejlesztések:** 
-    - [x] **Szövetségi szintek & EXP:** Közös fejlődési rendszer.
-    - [x] **Szövetségi Bank & Adomány:** Nyersanyagok konvertálása tapasztalati ponttá.
-    - [x] **Passive Bonuses:** Szint alapú bónusz minden tagnak (+1% termelés szintenként).
-- [ ] **Okosabb Botok (AIKA v2):** Aktívabb bot viselkedés (kémkedés, támadás).
-- [ ] **Események & Küldetések:** Napi kihívások.
+- [x] **Szövetségi Fejlesztések:** Szintek, Bank és kollektív bónuszok.
+- [x] **Okosabb Botok (AIKA v2):**
+    - [x] **Aktív AI:** A botok most már nem csak statikus célpontok.
+    - [x] **Bot Küldetések:** A botok óránkénti eséllyel kémkedhetnek vagy támadhatnak valódi játékosokat.
+    - [x] **Flotta Kezelés:** A botoknak saját flottájuk van, amit bevetnek a küldetések során.
+- [ ] **Események & Küldetések:** Napi kihívások és globális eventek.
 ...
