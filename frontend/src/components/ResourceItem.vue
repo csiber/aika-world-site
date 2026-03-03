@@ -3,7 +3,7 @@
     <span class="res-icon">{{ icon }}</span>
     <div class="res-info">
       <span class="res-name">{{ label }}</span>
-      <span class="res-val" :style="{ color }">{{ formatted }}</span>
+      <span class="res-val" :class="{ 'tick-up': isTicking }" :style="{ color }">{{ formatted }}</span>
       <div class="res-bottom">
         <span class="res-rate">+{{ rate.toFixed(0) }}/h</span>
         <span v-if="maxVal" class="res-cap" :class="{ 'cap-warn': fillPct >= 90 }">{{ fillPct }}%</span>
@@ -16,7 +16,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
   icon:   String,
@@ -34,6 +34,17 @@ const tooltip   = computed(() => props.maxVal
   ? `${Math.floor(props.value).toLocaleString('hu')} / ${props.maxVal.toLocaleString('hu')} (${fillPct.value}%)`
   : props.label
 );
+
+const isTicking = ref(false);
+let tickTimeout = null;
+
+watch(() => Math.floor(props.value), (newVal, oldVal) => {
+  if (newVal > oldVal) {
+    isTicking.value = true;
+    if (tickTimeout) clearTimeout(tickTimeout);
+    tickTimeout = setTimeout(() => { isTicking.value = false; }, 300);
+  }
+});
 </script>
 
 <style scoped>
@@ -57,7 +68,9 @@ const tooltip   = computed(() => props.maxVal
 .res-icon { font-size: 14px; }
 .res-info { display: flex; flex-direction: column; flex: 1; }
 .res-name  { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
-.res-val   { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 600; }
+.res-val   { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 600; transition: all 0.2s; display: inline-block; }
+.res-val.tick-up { transform: scale(1.1); color: #fff !important; text-shadow: 0 0 10px var(--accent); }
+
 .res-bottom { display: flex; justify-content: space-between; align-items: center; }
 .res-rate  { font-size: 9px; color: var(--accent3); }
 .res-cap   { font-size: 9px; color: var(--text-dim); font-family: 'Orbitron', sans-serif; }

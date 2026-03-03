@@ -150,12 +150,29 @@ body::before {
   border-radius: 3px;
   cursor: pointer;
   font-family: 'Orbitron', sans-serif;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: 0.5s;
+}
+.btn-primary:hover:not(:disabled)::after {
+  left: 100%;
 }
 .btn-primary:hover:not(:disabled) {
   background: rgba(0,200,255,0.3);
-  box-shadow: 0 0 8px rgba(0,200,255,0.3);
+  box-shadow: 0 0 12px rgba(0,200,255,0.4);
+  transform: translateY(-1px);
+}
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
 }
 .btn-primary:disabled {
   opacity: 0.3;
@@ -165,25 +182,21 @@ body::before {
   background: none;
 }
 
-.section-title {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 9px;
-  color: var(--text-dim);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  padding: 6px 0 4px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 8px;
+/* ── Global Animations ── */
+@keyframes glow-pulse {
+  0% { box-shadow: 0 0 5px rgba(0,200,255,0.2); }
+  50% { box-shadow: 0 0 20px rgba(0,200,255,0.4); }
+  100% { box-shadow: 0 0 5px rgba(0,200,255,0.2); }
 }
 
-.badge {
-  display: inline-block;
-  padding: 1px 6px;
-  border-radius: 10px;
-  font-size: 9px;
-  font-family: 'Orbitron', sans-serif;
+@keyframes text-glow {
+  0% { text-shadow: 0 0 5px rgba(0,200,255,0.2); }
+  50% { text-shadow: 0 0 15px rgba(0,200,255,0.6); }
+  100% { text-shadow: 0 0 5px rgba(0,200,255,0.2); }
 }
-.badge-blue  { background: rgba(0,200,255,0.15);  color: var(--accent);  border: 1px solid rgba(0,200,255,0.3); }
-.badge-red   { background: rgba(255,58,122,0.15); color: var(--accent2); border: 1px solid rgba(255,58,122,0.3); }
-.badge-green { background: rgba(58,255,122,0.15); color: var(--accent3); border: 1px solid rgba(58,255,122,0.3); }
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
 </style>
