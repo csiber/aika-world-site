@@ -1,6 +1,23 @@
 export default {
   auth: {
-    login: {
+    intro: {
+    title: 'Mi az az AIKA WORLD?',
+    what: 'Az AIKA WORLD egy komplex, valós idejű galaktikus stratégiai játék, amelyben saját csillagközi birodalmadat építheted fel.',
+    goal: 'A célod a terjeszkedés: bányássz erőforrásokat, fejlessz csúcstechnológiákat, építs legyőzhetetlen flottát és hódíts meg új világokat.',
+    features: 'Főbb jellemzők: 9 galaxis, hold-rendszer, szövetségek, valós idejű flotta mozgás és taktikai harcok.',
+    start: 'Készen állsz a hódításra, parancsnok?',
+    btn: 'Mi ez a játék?',
+  },
+  tour: {
+    welcome: 'Üdvözöllek, Parancsnok! Engedd meg, hogy körbevezesselek az irányítóközpontban.',
+    resources: 'Itt láthatod a jelenlegi erőforrásaidat: Fém, Kristály és Déusium. Ezekre lesz szükséged mindenhez.',
+    planets: 'Ez a bolygóválasztó. Itt tudsz váltani a különböző gyarmataid és holdjaid között.',
+    nav: 'A menüsor segítségével érheted el az építési, kutatási és flotta irányítási funkciókat.',
+    next: 'Következő',
+    finish: 'Értem',
+    skip: 'Kihagyás',
+  },
+  login: {
       title: 'Bejelentkezés',
       email: 'Email', password: 'Jelszó',
       submit: '🚀 Belépés', submitting: 'Bejelentkezés...',

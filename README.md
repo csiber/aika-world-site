@@ -1,22 +1,23 @@
-# AIKA World v2.7.5 — Full-Stack Cloudflare Workers + Vue 3 + D1 (STABLE)
+# AIKA World v2.7.6 — Full-Stack Cloudflare Workers + Vue 3 + D1 (STABLE)
 
 **AIKA World** is a modern, real-time galactic strategy game built on the Cloudflare ecosystem (Workers, D1, Assets) using Vue 3.
 
-## Key Improvements (v2.7.5)
-- **🌑 Moon System**: Massive battles can now create Moons from debris fields. Moons function as specialized bases with unique buildings like the Sensor Phalanx and Jump Gate.
-- **🛠️ Backend Architecture**: Unified `planets` and `moons` state handling, allowing seamless switching and management of all celestial bodies.
-- **🌍 Colonization Stability**: Robust checks prevent coordinate collisions, and new colonies appear instantly.
-- **⚔️ Advanced Combat**: Battle engine now calculates Moon formation probability based on total debris size.
+## Key Improvements (v2.7.6)
+- **🖥️ Terminal Intro**: A high-tech, animated terminal interface on the login page introduces new players to the game's lore and objectives.
+- **🚀 Interactive Tour**: A guided step-by-step tutorial helps new Commanders navigate the resources, planet management, and navigation systems.
+- **✨ Cyberpunk Aesthetics**: Enhanced visuals with scanlines and glitch effects for an immersive sci-fi atmosphere.
+- **🔍 SEO Ready**: Fully optimized metadata and OpenGraph tags for better discoverability on Google and social media.
+- **🌑 Moon System (v2.7.5)**: Strategic celestial bodies born from the debris of massive space battles.
 
 ...
 ## Changelog
 
-### v2.7.5 (Moon Update)
-- **Feature**: Implemented Moon creation mechanic (max 20% chance from battle debris).
-- **Backend**: Updated game state engine to fetch and manage Moons alongside Planets.
-- **Database**: Added `moons` table and `default_moon_buildings` template.
-- **Frontend**: Updated Galaxy View to display Moons and Mission control to show Moon-related info.
+### v2.7.6 (Visuals & Tutorial)
+- **Feature**: Added Terminal Intro modal to LoginView.
+- **Feature**: Implemented `TutorialStore` and `TourOverlay` component for in-game onboarding.
+- **Visual**: Added animated scanline and glitch effects to the landing page.
+- **SEO**: Updated `index.html` with professional meta tags.
 
-### v2.7.4
-- **Fix**: Colonization reliability and instant empire sync.
+### v2.7.5
+- **Feature**: Moon creation system and backend support.
 ...

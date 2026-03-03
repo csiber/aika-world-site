@@ -89,6 +89,7 @@
     </main>
 
     <BotPanel />
+    <TourOverlay />
   </div>
 
   <div v-else-if="gameStore.loading" class="loading-screen">
@@ -113,6 +114,7 @@ import { useGameStore }     from '@/stores/game.js';
 import { useMessagesStore } from '@/stores/messages.js';
 import { useAllianceStore } from '@/stores/alliance.js';
 import { useBotStore }      from '@/stores/bot.js';
+import { useTourStore }     from '@/stores/tour.js';
 import ResourceItem  from '@/components/ResourceItem.vue';
 import OverviewView  from '@/components/views/OverviewView.vue';
 import BuildingsView from '@/components/views/BuildingsView.vue';
@@ -130,6 +132,7 @@ import AdminView     from '@/components/views/AdminView.vue';
 import BotPanel       from '@/components/BotPanel.vue';
 import ControlSwitch  from '@/components/LangSwitch.vue';
 import ChangelogModal from '@/components/ChangelogModal.vue';
+import TourOverlay    from '@/components/TourOverlay.vue';
 import { useLangStore }  from '@/stores/lang.js';
 import { APP_VERSION }   from '@/data/changelog.js';
 
@@ -138,6 +141,7 @@ const auth          = useAuthStore();
 const gameStore     = useGameStore();
 const msgStore      = useMessagesStore();
 const allianceStore = useAllianceStore();
+const tour          = useTourStore();
 const L             = useLangStore();
 
 const activeTab      = ref('overview');
@@ -184,6 +188,11 @@ onMounted(async () => {
   await gameStore.syncResources(); 
   tickTimer = setInterval(() => gameStore.tickResources(), 1000);
   syncTimer = setInterval(() => gameStore.syncResources(), 30000);
+
+  // Auto-start tour for new users
+  if (!localStorage.getItem('aika_tour_finished')) {
+    setTimeout(() => tour.start(), 1500);
+  }
 });
 
 onUnmounted(() => {

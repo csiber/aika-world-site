@@ -1,6 +1,23 @@
 export default {
   auth: {
-    login: {
+    intro: {
+    title: 'What is AIKA WORLD?',
+    what: 'AIKA WORLD is a complex, real-time galactic strategy game where you can build your own interstellar empire.',
+    goal: 'Your goal is expansion: mine resources, research cutting-edge technologies, build an invincible fleet, and conquer new worlds.',
+    features: 'Key features: 9 galaxies, moon system, alliances, real-time fleet movement, and tactical combat.',
+    start: 'Are you ready for conquest, Commander?',
+    btn: 'What is this game?',
+  },
+  tour: {
+    welcome: 'Welcome, Commander! Let me show you around the command center.',
+    resources: 'Here you can see your current resources: Metal, Crystal, and Deusium. You will need these for everything.',
+    planets: 'This is the planet selector. Here you can switch between your various colonies and moons.',
+    nav: 'Use the navigation bar to access building, research, and fleet command functions.',
+    next: 'Next',
+    finish: 'I see',
+    skip: 'Skip',
+  },
+  login: {
       title: 'Sign In',
       email: 'Email', password: 'Password',
       submit: '🚀 Sign In', submitting: 'Signing in...',
