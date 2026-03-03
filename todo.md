@@ -15,13 +15,13 @@ Ez a dokumentum összefoglalja a folyamatban lévő és tervezett fejlesztéseke
 - [x] Részletes Harci Jelentések
 - [x] Galaxis Térkép Bővítése
 - [x] Flotta Irányítóközpont
-- [x] Animációk & Effektek
+- [x] Animációk & Effektek:
+    - [x] **3D Planet Effect:** Forgó, textúrázott bolygók az áttekintőben.
+    - [x] **UI Audio:** Szintetizált hanghatások építéshez, küldetésekhez és hibákhoz.
+    - [x] **Ikonizáció:** Minden menüelem egységes ikont kapott.
 
 ## 🤝 Phase 3: Közösségi Funkciók & Tartalom (Folyamatban)
-- [x] **Szövetségi Fejlesztések:** Szintek, Bank és kollektív bónuszok.
-- [x] **Okosabb Botok (AIKA v2):**
-    - [x] **Aktív AI:** A botok most már nem csak statikus célpontok.
-    - [x] **Bot Küldetések:** A botok óránkénti eséllyel kémkedhetnek vagy támadhatnak valódi játékosokat.
-    - [x] **Flotta Kezelés:** A botoknak saját flottájuk van, amit bevetnek a küldetések során.
+- [x] Szövetségi Fejlesztések (Szintek, Bank).
+- [x] Okosabb Botok (AIKA v2 - Aktív küldetések).
 - [ ] **Események & Küldetések:** Napi kihívások és globális eventek.
 ...

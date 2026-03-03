@@ -1,20 +1,21 @@
-# AIKA World v2.3.1 — Full-Stack Cloudflare Workers + Vue 3 + D1
+# AIKA World v2.3.2 — Full-Stack Cloudflare Workers + Vue 3 + D1
 
 **AIKA World** is a modern, real-time galactic strategy game built on the Cloudflare ecosystem (Workers, D1, Assets) using Vue 3.
 
-## Features (v2.3.1)
-- **🤖 NPC Bots v2 (Active Intelligence)**: Bots are no longer just targets. They now actively monitor the galaxy and can launch spy or attack missions against human players every hour.
-- **🤝 Alliance Progression**: Level up your alliance through donations to unlock passive production bonuses for all members.
-- **🚀 Fleet Command Center**: Real-time mission tracking and recall functionality.
-- **🌌 Massive Universe**: Explore 9 Galaxies and 499 Systems.
+## Features (v2.3.2)
+- **🪐 3D Planet Visualization**: Immersive rotating planet spheres in the Overview dashboard.
+- **🔊 Integrated Audio**: Dynamic synthesized sound effects for building, mission launches, and system notifications.
+- **🤖 Active NPC Intelligence**: Bots now actively scout and attack players, creating a living universe.
+- **🤝 Alliance Synergy**: Collective leveling and production bonuses for alliance members.
 ...
 ## Changelog
 
-### v2.3.1
-- **AIKA v2**: Implemented active bot AI. Bots now build fleets and launch automated missions against human players via Cloudflare Cron Triggers.
-- **Bot Logic**: Added `runBotAI` utility to handle target selection, mission type randomization, and ship allocation for NPC players.
-- **Missions**: Bot missions are now fully integrated into the global resolution system.
+### v2.3.2
+- **Visuals**: Implemented CSS-based 3D rotating planet effect with texture and glow.
+- **Audio**: Created `BotAudio` utility using Web Audio API for zero-asset sound effects.
+- **Icons**: Standardized icons across all navigation tabs (Rankings, Profile, Guide).
+- **Store**: Integrated audio triggers into game state actions.
 
-### v2.3.0
-- **Alliance Overhaul**: Implemented level, exp, and vault systems.
+### v2.3.1
+- **AIKA v2**: Bots now launch missions against players.
 ...

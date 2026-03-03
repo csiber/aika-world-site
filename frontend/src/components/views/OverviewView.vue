@@ -41,7 +41,10 @@
       <!-- Planet visual -->
       <div class="planet-visual panel">
         <div class="scanner-container">
-          <div class="big-planet">{{ activePlanet.emoji || '🌍' }}</div>
+          <div class="planet-sphere">
+            <div class="sphere-texture">{{ activePlanet.emoji || '🌍' }}</div>
+            <div class="sphere-glow"></div>
+          </div>
           <div class="planet-scanner"></div>
         </div>
         <div class="planet-stats">
@@ -265,24 +268,49 @@ onMounted(() => {
   background: radial-gradient(600px 400px at 70% 50%, rgba(0,100,200,0.06) 0%, transparent 70%);
   pointer-events: none;
 }
-.scanner-container { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
-.big-planet {
-  font-size: 80px;
-  filter: drop-shadow(0 0 30px rgba(0,150,255,0.4));
-  animation: float 6s ease-in-out infinite;
+.scanner-container { position: relative; width: 100px; height: 100px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+
+.planet-sphere {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 20px rgba(0,200,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  background: #050c1c;
 }
+.sphere-texture {
+  font-size: 60px;
+  animation: rotate-3d 12s linear infinite;
+  display: flex; align-items: center; justify-content: center;
+  width: 200%; height: 100%;
+}
+.sphere-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+@keyframes rotate-3d {
+  0% { transform: translateX(-25%) rotate(0deg); }
+  50% { transform: translateX(25%) rotate(5deg); }
+  100% { transform: translateX(-25%) rotate(0deg); }
+}
+
 .planet-scanner {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 2px;
   background: linear-gradient(90deg, transparent, var(--accent), transparent);
   box-shadow: 0 0 10px var(--accent);
-  opacity: 0.6;
+  opacity: 0.4;
   animation: scanline 4s linear infinite;
   pointer-events: none;
+  z-index: 10;
 }
-@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-@keyframes scanline { 0% { top: 0%; opacity: 0; } 10% { opacity: 0.8; } 90% { opacity: 0.8; } 100% { top: 100%; opacity: 0; } }
+@keyframes scanline { 0% { top: 0%; opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { top: 100%; opacity: 0; } }
 .planet-stats h2 { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; color: var(--text-bright); margin-bottom: 4px; }
 .planet-coords-big { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--accent); margin-bottom: 12px; letter-spacing: 2px; }
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }

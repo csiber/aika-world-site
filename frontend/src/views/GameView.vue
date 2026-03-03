@@ -159,9 +159,9 @@ const tabs = computed(() => {
     { id: 'missions',  label: L.t('nav.missions')  || '🚀 Küldetések' },
     { id: 'alliance',  label: L.t('nav.alliance')  },
     { id: 'messages',  label: L.t('nav.messages')  },
-    { id: 'rankings',  label: L.t('nav.rankings')  },
-    { id: 'profile',   label: L.t('nav.profile')   },
-    { id: 'guide',     label: L.t('nav.guide')     },
+    { id: 'rankings',  label: '📊 ' + L.t('nav.rankings')  },
+    { id: 'profile',   label: '👤 ' + L.t('nav.profile')   },
+    { id: 'guide',     label: '📕 ' + L.t('nav.guide')     },
   ];
   if (auth.isAdmin) {
     t.push({ id: 'admin', label: '⚙️ Admin' });

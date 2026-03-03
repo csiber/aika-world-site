@@ -124,6 +124,7 @@ import { useGameStore } from '@/stores/game.js';
 import { useAuthStore } from '@/stores/auth.js';
 import { useLangStore } from '@/stores/lang.js';
 import { api } from '@/api/client.js';
+import { audio } from '@/utils/botAudio.js';
 
 const game = useGameStore();
 const auth = useAuthStore();
@@ -145,10 +146,12 @@ const hasSelectedShips = computed(() => Object.values(selectedShips.value).some(
 const hasColonyShip = computed(() => game.fleet.some(f => f.id === 'colony' && f.count > 0));
 
 function changeGal(delta) {
+  audio.click();
   currentGal.value = Math.max(1, Math.min(9, currentGal.value + delta));
   loadGalaxy();
 }
 function changeSys(delta) {
+  audio.click();
   currentSys.value = Math.max(1, Math.min(499, currentSys.value + delta));
   loadGalaxy();
 }
@@ -182,6 +185,7 @@ function getCell(slot) {
 }
 
 function selectCell(cell, type) {
+  audio.click();
   selected.value = cell;
   missionType.value = type;
   showFleetSetup.value = true;
@@ -203,10 +207,11 @@ async function doSpy() {
   try {
     const ships = Object.entries(selectedShips.value).filter(([_, c]) => c > 0).map(([id, count]) => ({ id, count }));
     await api.spy(selected.value.targetUserId, selected.value.coords, selected.value.name, ships);
+    audio.mission();
     game.notify('Kémflotta elindult', 'blue');
     showFleetSetup.value = false;
     await game.loadState();
-  } catch (e) { game.notify(`❌ ${e.message}`, 'red'); }
+  } catch (e) { audio.error(); game.notify(`❌ ${e.message}`, 'red'); }
   actionBusy.value = null;
 }
 
@@ -215,10 +220,11 @@ async function doAttack() {
   try {
     const ships = Object.entries(selectedShips.value).filter(([_, c]) => c > 0).map(([id, count]) => ({ id, count }));
     await api.attack(selected.value.targetUserId, selected.value.coords, selected.value.name, ships);
+    audio.mission();
     game.notify('Támadó flotta elindult', 'red');
     showFleetSetup.value = false;
     await game.loadState();
-  } catch (e) { game.notify(`❌ ${e.message}`, 'red'); }
+  } catch (e) { audio.error(); game.notify(`❌ ${e.message}`, 'red'); }
   actionBusy.value = null;
 }
 
@@ -226,14 +232,14 @@ async function doQuickColonize(cell) {
   actionBusy.value = 'colony';
   try {
     await api.colonize(cell.coords, 'Új gyarmat');
+    audio.mission();
     game.notify(`Gyarmatosító hajó elindult: ${cell.coords}`, 'blue');
     await game.loadState();
-  } catch (e) { game.notify(`❌ ${e.message}`, 'red'); }
+  } catch (e) { audio.error(); game.notify(`❌ ${e.message}`, 'red'); }
   actionBusy.value = null;
 }
 
 onMounted(() => {
-  // Try to parse current planet coords to start there
   const m = game.activePlanet?.coords?.match(/\[(\d+):(\d+):(\d+)\]/);
   if (m) { currentGal.value = parseInt(m[1]); currentSys.value = parseInt(m[2]); }
   loadGalaxy();

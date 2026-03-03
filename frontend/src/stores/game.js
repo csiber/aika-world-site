@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { api } from '@/api/client.js';
 import { useLangStore } from '@/stores/lang.js';
+import { audio } from '@/utils/botAudio.js';
 
 export const useGameStore = defineStore('game', () => {
   const state   = ref(null);
@@ -42,6 +43,7 @@ export const useGameStore = defineStore('game', () => {
 
   // ── Actions ───────────────────────────────────────────────
   async function loadState() {
+    audio.init();
     loading.value = true;
     error.value = null;
     try {
@@ -57,9 +59,11 @@ export const useGameStore = defineStore('game', () => {
     loading.value = true;
     try {
       await api.switchPlanet(planetId);
+      audio.click();
       await loadState();
       return true;
     } catch (e) {
+      audio.error();
       notify(`❌ ${e.message}`, 'red');
       return false;
     } finally {
@@ -71,36 +75,40 @@ export const useGameStore = defineStore('game', () => {
     try {
       const data = await api.upgradeBuilding(buildingId);
       state.value = data.state;
+      audio.build();
       notify('Építkezés elindítva', 'blue');
       return true;
-    } catch (e) { notify(`❌ ${e.message}`, 'red'); return false; }
+    } catch (e) { audio.error(); notify(`❌ ${e.message}`, 'red'); return false; }
   }
 
   async function startResearch(researchId) {
     try {
       const data = await api.startResearch(researchId);
       state.value = data.state;
+      audio.build();
       notify('Kutatás elindítva', 'blue');
       return true;
-    } catch (e) { notify(`❌ ${e.message}`, 'red'); return false; }
+    } catch (e) { audio.error(); notify(`❌ ${e.message}`, 'red'); return false; }
   }
 
   async function buildFleet(shipId, amount) {
     try {
       const data = await api.buildFleet(shipId, amount);
       state.value = data.state;
+      audio.build();
       notify('Hajóépítés elindítva', 'blue');
       return true;
-    } catch (e) { notify(`❌ ${e.message}`, 'red'); return false; }
+    } catch (e) { audio.error(); notify(`❌ ${e.message}`, 'red'); return false; }
   }
 
   async function buildDefense(defenseId, amount) {
     try {
       const data = await api.buildDefense(defenseId, amount);
       state.value = data.state;
+      audio.build();
       notify('Védelem építése elindítva', 'blue');
       return true;
-    } catch (e) { notify(`❌ ${e.message}`, 'red'); return false; }
+    } catch (e) { audio.error(); notify(`❌ ${e.message}`, 'red'); return false; }
   }
 
   async function syncResources() {
@@ -116,8 +124,9 @@ export const useGameStore = defineStore('game', () => {
     try {
       const data = await api.renamePlanet(planetId, name, emoji);
       if (state.value) state.value.planets = data.planets;
+      audio.success();
       return true;
-    } catch (e) { notify(`❌ ${e.message}`, 'red'); return false; }
+    } catch (e) { audio.error(); notify(`❌ ${e.message}`, 'red'); return false; }
   }
 
   function tickResources() {
@@ -138,6 +147,7 @@ export const useGameStore = defineStore('game', () => {
   function notify(text, type = 'blue') {
     const id = ++notifId;
     notifications.value.push({ id, text, type });
+    if (type === 'green') audio.success();
     setTimeout(() => { notifications.value = notifications.value.filter(n => n.id !== id); }, 3500);
   }
 

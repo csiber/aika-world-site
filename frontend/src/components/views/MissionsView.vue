@@ -62,6 +62,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useGameStore } from '@/stores/game.js';
 import { useLangStore } from '@/stores/lang.js';
 import { api } from '@/api/client.js';
+import { audio } from '@/utils/botAudio.js';
 
 const game = useGameStore();
 const L    = useLangStore();
@@ -91,6 +92,7 @@ async function loadMissions() {
 
 async function recall(id) {
   if (!confirm('Biztosan visszafordítod a flottát?')) return;
+  audio.click();
   busy.value = id;
   try {
     await api.recallMission(id);

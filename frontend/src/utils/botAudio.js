@@ -1,75 +1,55 @@
 /**
- * Bot audio — szintetizált hangok Web Audio API-val (fájl nélkül)
- * Az AudioContext-et user interaction után kell inicializálni.
+ * AIKA WORLD — Audio Utility (Synthesized Web Audio)
  */
 
-let ctx    = null;
-let vol    = 0.35;
+class BotAudio {
+  constructor() {
+    this.ctx = null;
+    this.enabled = true;
+  }
 
-export function initAudio() {
-  if (ctx) return;
-  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  init() {
+    if (this.ctx) return;
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  playTone(freq, type, duration, vol = 0.1) {
+    if (!this.enabled || !this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+    
+    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + duration);
+  }
+
+  // UI Sounds
+  click()   { this.playTone(800, 'sine', 0.1, 0.05); }
+  success() { 
+    this.playTone(600, 'sine', 0.2, 0.05); 
+    setTimeout(() => this.playTone(900, 'sine', 0.3, 0.05), 100);
+  }
+  error()   { 
+    this.playTone(200, 'sawtooth', 0.3, 0.05); 
+  }
+  build()   { 
+    this.playTone(400, 'square', 0.1, 0.03);
+    setTimeout(() => this.playTone(500, 'square', 0.1, 0.03), 100);
+  }
+  mission() {
+    this.playTone(1000, 'sine', 0.5, 0.02);
+    setTimeout(() => this.playTone(1200, 'sine', 0.5, 0.02), 200);
+  }
 }
 
-export function setVolume(v) {
-  vol = Math.max(0, Math.min(1, v));
-}
-
-function tone(freq, dur, type = 'sine', delay = 0, v = null) {
-  if (!ctx || vol <= 0) return;
-  const gainVal = v ?? vol;
-  const t = ctx.currentTime + delay;
-
-  const osc  = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
-  osc.type           = type;
-  osc.frequency.value = freq;
-  gain.gain.setValueAtTime(gainVal, t);
-  gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
-  osc.start(t);
-  osc.stop(t + dur + 0.01);
-}
-
-export const sounds = {
-  // Bot aktiválva — felfelé arpeggio
-  start() {
-    tone(440, 0.12, 'sine', 0);
-    tone(550, 0.12, 'sine', 0.13);
-    tone(660, 0.18, 'sine', 0.26);
-  },
-  // Bot leállítva — lefelé glide
-  stop() {
-    tone(440, 0.15, 'sine', 0);
-    tone(330, 0.22, 'sine', 0.18);
-  },
-  // Épület fejlesztés
-  build() {
-    tone(880, 0.10, 'sine', 0);
-    tone(1100, 0.14, 'sine', 0.11);
-  },
-  // Kutatás indítás — háromhangos
-  research() {
-    tone(660, 0.09, 'triangle', 0);
-    tone(880, 0.09, 'triangle', 0.11);
-    tone(1100, 0.16, 'triangle', 0.22);
-  },
-  // Flotta gyártás — fűrészfog zúgás
-  fleet() {
-    tone(220, 0.08, 'sawtooth', 0);
-    tone(330, 0.08, 'sawtooth', 0.09);
-    tone(440, 0.18, 'sawtooth', 0.18);
-  },
-  // Energia figyelmeztető
-  energy() {
-    tone(523, 0.18, 'triangle', 0);
-  },
-  // Limit / kimerült — vészjelzés
-  warn() {
-    tone(440, 0.12, 'sawtooth', 0);
-    tone(440, 0.12, 'sawtooth', 0.22);
-    tone(330, 0.28, 'sawtooth', 0.44);
-  },
-};
+export const audio = new BotAudio();
