@@ -65,8 +65,8 @@ import { APP_VERSION } from '@/data/changelog.js';
 import LangSwitch     from '@/components/LangSwitch.vue';
 import ChangelogModal from '@/components/ChangelogModal.vue';
 
-// ALWAYS PASS TEST KEY
-const SITE_KEY = '1x0000000000000000000000000000000AA';
+// RESTORING ORIGINAL SITEKEY
+const SITE_KEY = '0x4AAAAAACjkTbgtjRtTiQo_';
 
 const router      = useRouter();
 const auth        = useAuthStore();

@@ -122,7 +122,7 @@ onMounted(() => {
   script.onload = () => {
     if (window.turnstile) {
       window.turnstile.render('#turnstile-container', {
-        sitekey: '1x0000000000000000000000000000000AA', // ALWAYS PASS TEST KEY
+        sitekey: '0x4AAAAAACjkTSOlxZq6QAcbdOBQfdtmOAE',
         callback: (token) => { captchaToken.value = token; },
         'expired-callback': () => { captchaToken.value = null; },
         theme: 'dark'
