@@ -65,7 +65,8 @@ import { APP_VERSION } from '@/data/changelog.js';
 import LangSwitch     from '@/components/LangSwitch.vue';
 import ChangelogModal from '@/components/ChangelogModal.vue';
 
-const SITE_KEY = '0x4AAAAAACjkTbgtjRtTiQo_';
+// ALWAYS PASS TEST KEY
+const SITE_KEY = '1x0000000000000000000000000000000AA';
 
 const router      = useRouter();
 const auth        = useAuthStore();
@@ -124,9 +125,9 @@ async function onRegister() {
 
 <style scoped>
 .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; }
-.auth-card { width: 400px; background: var(--bg-panel); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 28px 32px 36px; box-shadow: 0 0 60px rgba(0,200,255,0.08), 0 0 120px rgba(0,0,0,0.6); }
+.auth-card { width: 400px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px 36px; box-shadow: 0 0 60px rgba(0,200,255,0.08), 0 0 120px rgba(0,0,0,0.6); }
 .auth-top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.ver-btn { font-family: 'Orbitron', sans-serif; font-size: 9px; color: var(--text-dim); background: none; border: 1px solid rgba(255,255,255,0.1); border-radius: 3px; padding: 2px 7px; cursor: pointer; transition: all 0.2s; letter-spacing: 1px; }
+.ver-btn { font-family: 'Orbitron', sans-serif; font-size: 9px; color: var(--text-dim); background: none; border: 1px solid var(--border); border-radius: 3px; padding: 2px 7px; cursor: pointer; transition: all 0.2s; letter-spacing: 1px; }
 .ver-btn:hover { color: var(--accent); border-color: var(--accent); }
 .auth-logo { text-align: center; margin-bottom: 24px; }
 .logo-icon { font-size: 44px; filter: drop-shadow(0 0 20px rgba(0,200,255,0.5)); margin-bottom: 6px; }
@@ -136,7 +137,7 @@ async function onRegister() {
 .auth-form { display: flex; flex-direction: column; gap: 14px; }
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field label { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; font-family: 'Orbitron', sans-serif; }
-.field input { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); color: var(--text-bright); padding: 9px 14px; font-size: 13px; border-radius: 4px; font-family: 'Exo 2', sans-serif; outline: none; transition: border-color 0.2s; }
+.field input { background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--text-bright); padding: 9px 14px; font-size: 13px; border-radius: 4px; font-family: 'Exo 2', sans-serif; outline: none; transition: border-color 0.2s; }
 .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,200,255,0.1); }
 .field input::placeholder { color: var(--text-dim); }
 .field-hint { font-size: 10px; color: var(--text-dim); }
