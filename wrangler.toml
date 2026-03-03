@@ -9,7 +9,7 @@ directory = "./frontend/dist"
 
 [vars]
 ENVIRONMENT = "production"
-TURNSTILE_SECRET = "0x4AAAAAACjkTSOlxZq6QAcbdOBQfdtmOAE"
+TURNSTILE_SECRET = "1x0000000000000000000000000000000AA"
 
 # D1 Database
 [[d1_databases]]
