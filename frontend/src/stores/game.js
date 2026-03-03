@@ -11,8 +11,6 @@ export const useGameStore = defineStore('game', () => {
   const loading = ref(false);
   const error   = ref(null);
   const notifications = ref([]);
-  
-  // State Sync refinement (v2.4.0)
   const serverTimeOffset = ref(0);
 
   // ── Computed ──────────────────────────────────────────────
@@ -46,7 +44,15 @@ export const useGameStore = defineStore('game', () => {
 
   // ── Internal Helpers ──────────────────────────────────────
   function updateFromResponse(data) {
-    if (data.state) state.value = data.state;
+    if (data.state) {
+        // v2.7.4: If the number of planets changed, we might need a full reload or notification
+        const oldPlanetCount = state.value?.planets?.length || 0;
+        const newPlanetCount = data.state.planets?.length || 0;
+        if (newPlanetCount > oldPlanetCount && oldPlanetCount > 0) {
+            notify('Új bolygó vált elérhetővé a birodalmadban!', 'green');
+        }
+        state.value = data.state;
+    }
     if (data.queue) queue.value = data.queue;
     if (data.storage) storage.value = data.storage;
     if (data.serverTime) {
@@ -73,8 +79,13 @@ export const useGameStore = defineStore('game', () => {
       audio.click();
       await loadState();
       return true;
-    } catch (e) { audio.error(); notify(`❌ ${e.message}`, 'red'); return false; }
-    finally { loading.value = false; }
+    } catch (e) {
+      audio.error();
+      notify(`❌ ${e.message}`, 'red');
+      return false;
+    } finally {
+      loading.value = false;
+    }
   }
 
   async function upgradeBuilding(buildingId) {

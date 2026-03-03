@@ -179,12 +179,19 @@ export async function handleMissions(request, env, url, user) {
   if (path === '/api/missions/colonize' && method === 'POST') {
     let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { targetCoords } = body;
+    
+    // v2.7.4: PRE-CHECK coordinate availability
+    const occupied = await env.DB.prepare('SELECT 1 FROM galaxy_map WHERE coords = ?').bind(targetCoords).first();
+    if (occupied) return jsonError(400, 'Ez a koordináta már foglalt!', request);
+
     const planet = await getPlanetState(env, activePlanetId);
     const colShip = planet.fleet.find(f => f.id === 'colony');
     if (!colShip || colShip.count < 1) return jsonError(400, 'Nincs gyarmatosító hajód');
+    
     colShip.count--; await savePlanetState(env, planet.id, planet);
     const pName = `${user.username} új gyarmata`;
     const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(planet.coords, targetCoords, JSON.parse(gs.research), 600);
+    
     await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, result, arrive_at, created_at) VALUES (?, ?, ?, ?, 'colonize', ?, ?, 'travelling', ?, ?, ?, unixepoch())`)
       .bind(crypto.randomUUID(), userId, planet.id, targetCoords, pName, JSON.stringify([{id:'colony', count:1}]), JSON.stringify({success:true, planetName:pName, emoji:'🪐'}), arriveAt).run();
     await incrementQuest(env, userId, 'mission', 'colonize');
