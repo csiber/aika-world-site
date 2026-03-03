@@ -12,16 +12,16 @@ Ez a dokumentum összefoglalja a folyamatban lévő és tervezett fejlesztéseke
 - [x] Védelmi Rendszerek
 
 ## 🎨 Phase 2: Felhasználói Élmény & Vizualitás (Befejezve)
-- [x] **Részletes Harci Jelentések:** Körökre bontott statisztikák és veszteségek.
-- [x] **Galaxis Térkép Bővítése:** Több Galaxis és Naprendszer támogatása.
-- [x] **Flotta Irányítóközpont:** Központi nézet és Visszahívás funkció.
-- [x] **Animációk & Effektek:** 
-    - [x] Nyersanyagtermelés vizuális "tick" visszajelzése.
-    - [x] Interaktív, csillogó gombok.
-    - [x] Bolygó szkennelés (laser) effekt az Áttekintőben.
+- [x] Részletes Harci Jelentések
+- [x] Galaxis Térkép Bővítése
+- [x] Flotta Irányítóközpont
+- [x] Animációk & Effektek
 
-## 🤝 Phase 3: Közösségi Funkciók & Tartalom (Következő)
-- [ ] **Szövetségi Fejlesztések:** Szövetségi szintlépés és bónuszok.
-- [ ] **Okosabb Botok (AIKA v2):** Aktívabb bot viselkedés.
+## 🤝 Phase 3: Közösségi Funkciók & Tartalom (Folyamatban)
+- [x] **Szövetségi Fejlesztések:** 
+    - [x] **Szövetségi szintek & EXP:** Közös fejlődési rendszer.
+    - [x] **Szövetségi Bank & Adomány:** Nyersanyagok konvertálása tapasztalati ponttá.
+    - [x] **Passive Bonuses:** Szint alapú bónusz minden tagnak (+1% termelés szintenként).
+- [ ] **Okosabb Botok (AIKA v2):** Aktívabb bot viselkedés (kémkedés, támadás).
 - [ ] **Események & Küldetések:** Napi kihívások.
 ...

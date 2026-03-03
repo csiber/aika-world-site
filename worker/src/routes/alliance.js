@@ -289,5 +289,49 @@ export async function handleAlliance(request, env, url, user) {
     return jsonResponse({ ok: true }, 200, request);
   }
 
+  // ── POST /api/alliance/donate ───────────────────────────
+  if (path === '/api/alliance/donate' && method === 'POST') {
+    let body;
+    try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    const { metal = 0, crystal = 0, deus = 0 } = body;
+    const amount = Math.max(0, metal) + Math.max(0, crystal) + Math.max(0, deus);
+    if (amount <= 0) return jsonError(400, 'Érvénytelen mennyiség', request);
+
+    const membership = await env.DB.prepare('SELECT alliance_id FROM alliance_members WHERE user_id = ?').bind(userId).first();
+    if (!membership) return jsonError(403, 'Nem vagy szövetség tagja', request);
+
+    const gs = await env.DB.prepare('SELECT active_planet_id FROM game_state WHERE user_id = ?').bind(userId).first();
+    const planetRow = await env.DB.prepare('SELECT * FROM planets WHERE id = ?').bind(gs.active_planet_id).first();
+    if (!planetRow) return jsonError(404, 'Bolygó nem található', request);
+
+    const res = JSON.parse(planetRow.resources);
+    if (res.metal < metal || res.crystal < crystal || res.deus < deus) {
+      return jsonError(400, 'Nincs elég nyersanyagod ezen a bolygón', request);
+    }
+
+    // Subtract from planet
+    res.metal -= metal; res.crystal -= crystal; res.deus -= deus;
+    await env.DB.prepare('UPDATE planets SET resources = ? WHERE id = ?').bind(JSON.stringify(res), planetRow.id).run();
+
+    // Add to alliance
+    const alliance = await env.DB.prepare('SELECT * FROM alliances WHERE id = ?').bind(membership.alliance_id).first();
+    const vault = JSON.parse(alliance.vault || '{"metal":0,"crystal":0,"deus":0}');
+    vault.metal += metal; vault.crystal += crystal; vault.deus += deus;
+
+    let newExp = alliance.exp + Math.floor((metal + crystal * 2 + deus * 10) / 100);
+    let newLevel = alliance.level;
+    
+    // Level up logic (e.g., Level 2 at 1000 EXP, Level 3 at 3000, etc.)
+    while (newExp >= newLevel * 1000) {
+      newExp -= newLevel * 1000;
+      newLevel++;
+    }
+
+    await env.DB.prepare('UPDATE alliances SET level = ?, exp = ?, vault = ? WHERE id = ?')
+      .bind(newLevel, newExp, JSON.stringify(vault), alliance.id).run();
+
+    return jsonResponse({ ok: true, level: newLevel, exp: newExp, vault }, 200, request);
+  }
+
   return jsonError(404, 'Alliance endpoint not found', request);
 }

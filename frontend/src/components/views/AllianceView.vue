@@ -11,7 +11,6 @@
       <div class="panel">
         <div class="panel-header"><span class="panel-icon">🤝</span><h3>{{ L.t('alliance.title') }}</h3></div>
         <div class="panel-body">
-          <!-- Create -->
           <div class="section-title">{{ L.t('alliance.create') }}</div>
           <div class="create-form">
             <input v-model="newName" class="input" :placeholder="L.t('alliance.namePh')" maxlength="40" />
@@ -22,7 +21,6 @@
           </div>
           <div v-if="createError" class="error-msg">❌ {{ createError }}</div>
 
-          <!-- Join by invite -->
           <div class="section-title" style="margin-top:16px;">{{ L.t('alliance.joinByInvite') }}</div>
           <div class="join-form">
             <input v-model="joinId" class="input" :placeholder="L.t('alliance.idPh')" />
@@ -30,7 +28,6 @@
           </div>
           <div v-if="joinError" class="error-msg">❌ {{ joinError }}</div>
 
-          <!-- List -->
           <div class="section-title" style="margin-top:20px;">{{ L.t('alliance.active') }}</div>
           <div v-if="loadingList" class="empty-msg">{{ L.t('alliance.loading') }}</div>
           <table v-else class="alliance-table">
@@ -63,6 +60,17 @@
           </div>
           <div class="panel-body">
             <p class="alliance-desc">{{ store.alliance.description || L.t('alliance.noDesc') }}</p>
+            
+            <!-- Progression -->
+            <div class="progression-box">
+              <div class="prog-header">
+                <span class="level-label">SZINT {{ store.alliance.level }}</span>
+                <span class="exp-label">{{ store.alliance.exp }} / {{ store.alliance.level * 1000 }} EXP</span>
+              </div>
+              <div class="prog-bar"><div class="prog-fill" :style="{ width: (store.alliance.exp / (store.alliance.level * 1000) * 100) + '%' }"></div></div>
+              <div class="bonus-hint">Bónusz: +{{ store.alliance.level - 1 }}% minden termelésre</div>
+            </div>
+
             <div class="alliance-meta">
               <span>👑 {{ L.t('alliance.leader') }}:</span>
               <span>{{ leaderName }}</span>
@@ -72,39 +80,53 @@
               <span>{{ store.members.length }} / 50</span>
             </div>
             <div class="alliance-meta">
-              <span>🏆 {{ L.t('alliance.totalScore') }}:</span>
-              <span>{{ totalScore.toLocaleString('hu') }}</span>
-            </div>
-            <div class="alliance-meta">
               <span>🎖️ {{ L.t('alliance.yourRank') }}:</span>
               <span class="role-badge" :class="store.myRole">{{ roleLabel(store.myRole) }}</span>
             </div>
 
-            <!-- Invite (officer+) -->
-            <template v-if="store.isOfficer">
-              <div class="section-title" style="margin-top:14px;">{{ L.t('alliance.invite') }}</div>
-              <div class="invite-form">
-                <input v-model="inviteUsername" class="input" :placeholder="L.t('alliance.usernamePh')" />
-                <button class="btn-primary" @click="doInvite" :disabled="busy">📨 {{ L.t('alliance.inviteBtn') }}</button>
+            <!-- Donation -->
+            <div class="section-title" style="margin-top:14px;">🏦 Szövetségi Bank & Adomány</div>
+            <div class="donate-form">
+              <div class="donate-row">
+                <span>⚙️ Fém</span>
+                <input type="number" v-model.number="donate.metal" min="0" class="input input-donate" />
               </div>
-              <div v-if="inviteMsg" class="success-msg">{{ inviteMsg }}</div>
-            </template>
+              <div class="donate-row">
+                <span>💎 Kristály</span>
+                <input type="number" v-model.number="donate.crystal" min="0" class="input input-donate" />
+              </div>
+              <div class="donate-row">
+                <span>🔮 Déus</span>
+                <input type="number" v-model.number="donate.deus" min="0" class="input input-donate" />
+              </div>
+              <button class="btn-primary" @click="doDonate" :disabled="busy || !hasDonation" style="width:100%;margin-top:8px;">
+                {{ busy === 'donate' ? '...' : '💸 Adományozás' }}
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- Member list -->
         <div class="panel">
           <div class="panel-header"><span class="panel-icon">👥</span><h3>{{ L.t('alliance.members') }}</h3></div>
-          <div class="panel-body">
+          <div class="panel-body scroll-members">
             <div v-for="m in sortedMembers" :key="m.user_id" class="member-row">
               <span class="role-badge" :class="m.role">{{ roleIcon(m.role) }}</span>
               <span class="member-name">{{ m.username }}</span>
               <span class="member-score">{{ Number(m.score).toLocaleString('hu') }} pt</span>
               <div v-if="store.isOfficer && m.user_id !== auth.userId" class="member-actions">
-                <button class="btn-sm" v-if="store.isLeader && m.role === 'member'" @click="promote(m.user_id, 'officer')">↑ {{ L.t('alliance.promoteOfficer') }}</button>
-                <button class="btn-sm" v-if="store.isLeader && m.role === 'officer'" @click="promote(m.user_id, 'member')">↓ {{ L.t('alliance.demoteMember') }}</button>
-                <button class="btn-sm danger" @click="kick(m.user_id)">{{ L.t('alliance.kick') }}</button>
+                <button class="btn-sm" v-if="store.isLeader && m.role === 'member'" @click="promote(m.user_id, 'officer')">↑</button>
+                <button class="btn-sm" v-if="store.isLeader && m.role === 'officer'" @click="promote(m.user_id, 'member')">↓</button>
+                <button class="btn-sm danger" @click="kick(m.user_id)">✕</button>
               </div>
+            </div>
+          </div>
+          <!-- Invite -->
+          <div class="panel-body" v-if="store.isOfficer" style="border-top:1px solid var(--border)">
+            <div class="section-title">{{ L.t('alliance.invite') }}</div>
+            <div class="invite-form">
+              <input v-model="inviteUsername" class="input" :placeholder="L.t('alliance.usernamePh')" />
+              <button class="btn-primary" @click="doInvite" :disabled="busy">📨</button>
             </div>
           </div>
         </div>
@@ -123,8 +145,7 @@
             <div v-if="!store.chatMsgs.length" class="empty-msg">{{ L.t('alliance.noChat') }}</div>
           </div>
           <div class="chat-input-row">
-            <input v-model="chatMsg" class="input" :placeholder="L.t('alliance.msgPh')" maxlength="300"
-              @keydown.enter="sendChat" />
+            <input v-model="chatMsg" class="input" :placeholder="L.t('alliance.msgPh')" maxlength="300" @keydown.enter="sendChat" />
             <button class="btn-primary" @click="sendChat" :disabled="!chatMsg.trim()">{{ L.t('alliance.send') }}</button>
           </div>
         </div>
@@ -135,17 +156,20 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, reactive } from 'vue';
 import { useAllianceStore } from '@/stores/alliance.js';
 import { useAuthStore } from '@/stores/auth.js';
+import { useGameStore } from '@/stores/game.js';
 import { useLangStore } from '@/stores/lang.js';
 import { api } from '@/api/client.js';
 
 const store = useAllianceStore();
+const game  = useGameStore();
 const auth  = useAuthStore();
 const L     = useLangStore();
 
 const busy = ref(null);
+const donate = reactive({ metal: 0, crystal: 0, deus: 0 });
 const newName = ref(''); const newTag = ref(''); const newDesc = ref('');
 const joinId  = ref('');
 const inviteUsername = ref('');
@@ -156,7 +180,7 @@ const alliances = ref([]); const loadingList = ref(false);
 const chatLog = ref(null);
 
 const leaderName  = computed(() => store.members.find(m => m.role === 'leader')?.username || '');
-const totalScore  = computed(() => store.members.reduce((s, m) => s + (m.score || 0), 0));
+const hasDonation = computed(() => donate.metal > 0 || donate.crystal > 0 || donate.deus > 0);
 const sortedMembers = computed(() => [...store.members].sort((a,b) => {
   const order = { leader: 0, officer: 1, member: 2 };
   return (order[a.role] - order[b.role]) || b.score - a.score;
@@ -172,75 +196,30 @@ function timeAgo(ts) {
   return `${Math.floor(d/86400)}${L.t('time.day')}`;
 }
 
-async function loadList() {
-  loadingList.value = true;
-  try { alliances.value = (await api.getAlliances()).alliances || []; } catch {}
-  loadingList.value = false;
-}
-
-async function doCreate() {
-  createError.value = '';
-  if (!newName.value || !newTag.value) { createError.value = L.t('alliance.nameTagRequired'); return; }
-  busy.value = 'create';
+async function doDonate() {
+  busy.value = 'donate';
   try {
-    await store.create(newName.value, newTag.value, newDesc.value);
-  } catch (e) { createError.value = e.message; }
+    const res = await api.post('/alliance/donate', { ...donate });
+    game.notify('Sikeres adományozás!', 'green');
+    donate.metal = 0; donate.crystal = 0; donate.deus = 0;
+    await store.load(); // Refresh alliance level/exp
+    await game.loadState(); // Refresh local resources
+  } catch (e) {
+    game.notify(`Hiba: ${e.message}`, 'red');
+  }
   busy.value = null;
 }
 
-async function doJoin() {
-  joinError.value = '';
-  if (!joinId.value) { joinError.value = L.t('alliance.idRequired'); return; }
-  busy.value = 'join';
-  try { await store.join(joinId.value); }
-  catch (e) { joinError.value = e.message; }
-  busy.value = null;
-}
-
-async function joinById(id) {
-  busy.value = 'join';
-  try { await store.join(id); }
-  catch (e) { joinError.value = e.message; }
-  busy.value = null;
-}
-
-async function doLeave() {
-  if (!confirm(L.t('alliance.leaveConfirm'))) return;
-  busy.value = 'leave';
-  try { await store.leave(); } catch {}
-  busy.value = null;
-}
-
-async function doInvite() {
-  if (!inviteUsername.value) return;
-  busy.value = 'invite';
-  inviteMsg.value = '';
-  try {
-    await api.inviteToAlliance(inviteUsername.value);
-    inviteMsg.value = `✅ ${L.t('alliance.inviteSent', { user: inviteUsername.value })}`;
-    inviteUsername.value = '';
-  } catch (e) { inviteMsg.value = `❌ ${e.message}`; }
-  busy.value = null;
-}
-
-async function kick(uid) {
-  if (!confirm(L.t('alliance.kickConfirm'))) return;
-  try { await store.kick(uid); } catch {}
-}
-
-async function promote(uid, role) {
-  try { await store.promote(uid, role); } catch {}
-}
-
-async function sendChat() {
-  if (!chatMsg.value.trim()) return;
-  try {
-    await store.sendChat(chatMsg.value);
-    chatMsg.value = '';
-    await nextTick();
-    if (chatLog.value) chatLog.value.scrollTop = chatLog.value.scrollHeight;
-  } catch {}
-}
+// ... Rest of the existing functions (doCreate, doJoin, joinById, doLeave, doInvite, kick, promote, sendChat)
+async function loadList() { loadingList.value = true; try { alliances.value = (await api.getAlliances()).alliances || []; } catch {} loadingList.value = false; }
+async function doCreate() { createError.value = ''; if (!newName.value || !newTag.value) { createError.value = L.t('alliance.nameTagRequired'); return; } busy.value = 'create'; try { await store.create(newName.value, newTag.value, newDesc.value); } catch (e) { createError.value = e.message; } busy.value = null; }
+async function doJoin() { joinError.value = ''; if (!joinId.value) { joinError.value = L.t('alliance.idRequired'); return; } busy.value = 'join'; try { await store.join(joinId.value); } catch (e) { joinError.value = e.message; } busy.value = null; }
+async function joinById(id) { busy.value = 'join'; try { await store.join(id); } catch (e) { joinError.value = e.message; } busy.value = null; }
+async function doLeave() { if (!confirm(L.t('alliance.leaveConfirm'))) return; busy.value = 'leave'; try { await store.leave(); } catch {} busy.value = null; }
+async function doInvite() { if (!inviteUsername.value) return; busy.value = 'invite'; inviteMsg.value = ''; try { await api.inviteToAlliance(inviteUsername.value); game.notify(L.t('alliance.inviteSent', { user: inviteUsername.value }), 'green'); inviteUsername.value = ''; } catch (e) { game.notify(`❌ ${e.message}`, 'red'); } busy.value = null; }
+async function kick(uid) { if (!confirm(L.t('alliance.kickConfirm'))) return; try { await store.kick(uid); } catch {} }
+async function promote(uid, role) { try { await store.promote(uid, role); } catch {} }
+async function sendChat() { if (!chatMsg.value.trim()) return; try { await store.sendChat(chatMsg.value); chatMsg.value = ''; await nextTick(); if (chatLog.value) chatLog.value.scrollTop = chatLog.value.scrollHeight; } catch {} }
 
 onMounted(async () => {
   await store.load();
@@ -259,40 +238,19 @@ onMounted(async () => {
 .alliance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 800px) { .alliance-grid { grid-template-columns: 1fr; } }
 
-.input { background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; font-size: 12px; border-radius: 3px; font-family: 'Exo 2', sans-serif; outline: none; transition: border-color 0.2s; flex: 1; }
-.input:focus { border-color: var(--accent); }
-.input-sm { flex: 0 0 auto; }
-.create-form, .join-form, .invite-form { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-.section-title { font-size: 9px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
-.error-msg { color: var(--accent2); font-size: 11px; margin-top: 4px; }
-.success-msg { color: var(--accent3); font-size: 11px; margin-top: 4px; }
+.progression-box { background: rgba(0,200,255,0.05); border: 1px solid var(--border); border-radius: 4px; padding: 12px; margin-bottom: 12px; }
+.prog-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.level-label { font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 900; color: var(--accent); }
+.exp-label { font-size: 9px; color: var(--text-dim); }
+.prog-bar { height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
+.prog-fill { height: 100%; background: var(--accent); transition: width 0.5s; box-shadow: 0 0 10px var(--accent); }
+.bonus-hint { font-size: 10px; color: var(--accent3); margin-top: 6px; }
 
-.alliance-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
-.alliance-table th { text-align: left; color: var(--text-dim); font-weight: 400; padding: 4px 8px; border-bottom: 1px solid var(--border); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
-.alliance-table td { padding: 6px 8px; border-bottom: 1px solid rgba(26,42,74,0.4); }
-.alliance-table tr:hover td { background: rgba(255,255,255,0.02); }
-.alliance-tag { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--accent4); }
-.a-name { color: var(--text-bright); font-weight: 500; }
-.a-leader { color: var(--text-dim); }
-.a-num, .a-score { font-family: 'Orbitron', sans-serif; font-size: 10px; }
-.btn-sm { padding: 3px 8px; background: rgba(0,200,255,0.1); border: 1px solid var(--border); color: var(--accent); border-radius: 3px; cursor: pointer; font-size: 10px; transition: all 0.15s; }
-.btn-sm:hover { border-color: var(--accent); }
-.btn-sm.danger { border-color: rgba(255,58,122,0.3); color: var(--accent2); }
-.btn-sm.danger:hover { background: rgba(255,58,122,0.1); border-color: var(--accent2); }
-.btn-danger { padding: 3px 10px; background: rgba(255,58,122,0.1); border: 1px solid rgba(255,58,122,0.3); color: var(--accent2); border-radius: 3px; cursor: pointer; font-size: 11px; }
+.donate-form { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; }
+.donate-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; font-size: 11px; }
+.input-donate { width: 100px; text-align: center; padding: 3px; }
 
-.alliance-desc { font-size: 11px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.5; }
-.alliance-meta { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(26,42,74,0.3); font-size: 11px; }
-.role-badge { font-size: 10px; padding: 1px 6px; border-radius: 3px; }
-.role-badge.leader  { background: rgba(255,215,0,0.15); color: var(--accent4); border: 1px solid rgba(255,215,0,0.3); }
-.role-badge.officer { background: rgba(0,200,255,0.1); color: var(--accent); border: 1px solid rgba(0,200,255,0.2); }
-.role-badge.member  { background: rgba(255,255,255,0.04); color: var(--text-dim); border: 1px solid var(--border); }
-
-.member-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(26,42,74,0.3); font-size: 11px; }
-.member-name  { flex: 1; color: var(--text-bright); }
-.member-score { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--accent4); }
-.member-actions { display: flex; gap: 4px; }
-
+.scroll-members { max-height: 250px; overflow-y: auto; }
 .chat-log { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 4px; padding: 10px; height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
 .chat-msg { display: flex; gap: 8px; align-items: baseline; font-size: 11px; }
 .chat-msg.mine .chat-user { color: var(--accent3); }
@@ -300,5 +258,16 @@ onMounted(async () => {
 .chat-text  { flex: 1; color: var(--text); }
 .chat-time  { font-size: 9px; color: var(--text-dim); font-family: 'Orbitron', sans-serif; }
 .chat-input-row { display: flex; gap: 8px; }
-.empty-msg { color: var(--text-dim); font-size: 11px; }
+
+.alliance-tag { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--accent4); }
+.a-name { color: var(--text-bright); font-weight: 500; }
+.btn-sm { padding: 3px 8px; background: rgba(0,200,255,0.1); border: 1px solid var(--border); color: var(--accent); border-radius: 3px; cursor: pointer; font-size: 10px; }
+.btn-danger { padding: 3px 10px; background: rgba(255,58,122,0.1); border: 1px solid rgba(255,58,122,0.3); color: var(--accent2); border-radius: 3px; cursor: pointer; font-size: 11px; }
+.role-badge { font-size: 10px; padding: 1px 6px; border-radius: 3px; }
+.role-badge.leader  { background: rgba(255,215,0,0.15); color: var(--accent4); border: 1px solid rgba(255,215,0,0.3); }
+.role-badge.officer { background: rgba(0,200,255,0.1); color: var(--accent); border: 1px solid rgba(0,200,255,0.2); }
+.role-badge.member  { background: rgba(255,255,255,0.04); color: var(--text-dim); border: 1px solid var(--border); }
+.member-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(26,42,74,0.3); font-size: 11px; }
+.member-name  { flex: 1; color: var(--text-bright); }
+.input { background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; font-size: 12px; border-radius: 3px; outline: none; }
 </style>

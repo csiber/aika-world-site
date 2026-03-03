@@ -52,7 +52,7 @@ function calcStorage(buildings, research) {
   };
 }
 
-function recalcRates(buildings, research) {
+function recalcRates(buildings, research, allianceLevel = 1) {
   const metalMine   = buildings.find(b => b.id === 'metal_mine')?.level   || 1;
   const crystalMine = buildings.find(b => b.id === 'crystal_mine')?.level || 1;
   const solar       = buildings.find(b => b.id === 'solar')?.level        || 1;
@@ -68,12 +68,15 @@ function recalcRates(buildings, research) {
   const totalDemand = metalDemand + crystalDemand + deusDemand;
 
   const energyEff = totalDemand > 0 ? Math.min(1, energyProd / totalDemand) : 1;
+  
+  // Alliance level bonus: +1% production per level
+  const allianceBonus = 1 + (allianceLevel - 1) * 0.01;
 
   return {
-    metal:   Math.floor(30 * Math.pow(1.1, metalMine   - 1) * energyEff),
-    crystal: Math.floor(20 * Math.pow(1.1, crystalMine - 1) * energyEff),
+    metal:   Math.floor(30 * Math.pow(1.1, metalMine   - 1) * energyEff * allianceBonus),
+    crystal: Math.floor(20 * Math.pow(1.1, crystalMine - 1) * energyEff * allianceBonus),
     energy:  energyProd,
-    deus:    Math.floor(2  * Math.pow(1.15, deusium - 1) * energyEff),
+    deus:    Math.floor(2  * Math.pow(1.15, deusium - 1) * energyEff * allianceBonus),
     energyProd,
     energyDemand: totalDemand,
     energyEff: Math.round(energyEff * 100),
@@ -112,7 +115,6 @@ async function mergeTemplates(env, state) {
   const defFleet     = JSON.parse((await env.DB.prepare('SELECT data FROM default_fleet').first()).data);
   const defDefense   = JSON.parse((await env.DB.prepare('SELECT data FROM default_defense').first() || {data:'[]'}).data);
 
-  // Merge req field from templates into active state
   state.research.forEach(r => {
     const t = defResearch.find(x => x.id === r.id);
     if (t) r.req = t.req;
@@ -127,7 +129,6 @@ async function mergeTemplates(env, state) {
       const t = defFleet.find(x => x.id === f.id);
       if (t) f.req = t.req;
     });
-    // Initialize or merge defense
     if (!p.defense) p.defense = JSON.parse(JSON.stringify(defDefense));
     p.defense.forEach(d => {
       const t = defDefense.find(x => x.id === d.id);
@@ -152,6 +153,14 @@ async function getFullState(env, userId) {
   const gsRow = await env.DB.prepare('SELECT * FROM game_state WHERE user_id = ?').bind(userId).first();
   if (!gsRow) return null;
 
+  // Get alliance level for production bonus
+  const membership = await env.DB.prepare('SELECT alliance_id FROM alliance_members WHERE user_id = ?').bind(userId).first();
+  let allianceLevel = 1;
+  if (membership) {
+    const alliance = await env.DB.prepare('SELECT level FROM alliances WHERE id = ?').bind(membership.alliance_id).first();
+    if (alliance) allianceLevel = alliance.level;
+  }
+
   const { results: pRows } = await env.DB.prepare('SELECT * FROM planets WHERE user_id = ?').bind(userId).all();
   const planets = pRows.map(p => ({
     id: p.id,
@@ -173,6 +182,7 @@ async function getFullState(env, userId) {
   let state = {
     research: JSON.parse(gsRow.research),
     score: gsRow.score,
+    allianceLevel,
     planets,
     activePlanet
   };
@@ -218,7 +228,7 @@ async function processQueue(env, userId, fullState) {
       const b = planet.buildings.find(x => x.id === item.item_id);
       if (b) {
         b.level = item.target_level;
-        planet.rates = recalcRates(planet.buildings, fullState.research);
+        planet.rates = recalcRates(planet.buildings, fullState.research, fullState.allianceLevel);
         fullState.score += 50;
       }
     } else if (item.item_type === 'research') {
@@ -227,7 +237,7 @@ async function processQueue(env, userId, fullState) {
         r.level = item.target_level;
         if (item.item_id === 'energy_tech') {
           for (const p of fullState.planets) {
-            p.rates = recalcRates(p.buildings, fullState.research);
+            p.rates = recalcRates(p.buildings, fullState.research, fullState.allianceLevel);
           }
         }
         fullState.score += 100;
@@ -278,7 +288,6 @@ export async function handleGame(request, env, url, user) {
   fullState = accrueAllResources(fullState);
   fullState = await processQueue(env, userId, fullState);
 
-  // ── GET /api/game/state ───────────────────────────────────
   if (path === '/api/game/state' && method === 'GET') {
     await saveFullState(env, userId, fullState);
     const storage = calcStorage(fullState.activePlanet.buildings, fullState.research);
@@ -290,44 +299,28 @@ export async function handleGame(request, env, url, user) {
         id: p.id, name: p.name, emoji: p.emoji, coords: p.coords, isMain: p.isMain
     }));
 
-    return jsonResponse({ ok: true, state: { research: fullState.research, score: fullState.score, activePlanet: fullState.activePlanet, planets: planetsSummary }, queue: queue.results, storage }, 200, request);
+    return jsonResponse({ ok: true, state: { research: fullState.research, score: fullState.score, allianceLevel: fullState.allianceLevel, activePlanet: fullState.activePlanet, planets: planetsSummary }, queue: queue.results, storage }, 200, request);
   }
 
-  // ── POST /api/game/defense/build ─────────────────────────
   if (path === '/api/game/defense/build' && method === 'POST') {
-    let body;
-    try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { defenseId, amount = 1 } = body;
-
     const def = fullState.activePlanet.defense.find(x => x.id === defenseId);
     if (!def) return jsonError(404, 'Defense type not found', request);
-
     const preCheck = checkPrerequisites(def, fullState.activePlanet.buildings, fullState.research);
     if (!preCheck.ok) return jsonError(400, `Előfeltételek hiányoznak: ${preCheck.missing.join(', ')}`, request);
-
     const totalCost = { metal: def.cost.metal * amount, crystal: def.cost.crystal * amount };
-    if (fullState.activePlanet.resources.metal < totalCost.metal || fullState.activePlanet.resources.crystal < totalCost.crystal) {
-      return jsonError(400, 'Nincs elég nyersanyag', request);
-    }
-
-    fullState.activePlanet.resources.metal   -= totalCost.metal;
-    fullState.activePlanet.resources.crystal -= totalCost.crystal;
-    const seconds  = fleetBuildTime(amount, totalCost, fullState.activePlanet.buildings.find(b => b.id === 'shipyard')?.level || 1);
+    if (fullState.activePlanet.resources.metal < totalCost.metal || fullState.activePlanet.resources.crystal < totalCost.crystal) return jsonError(400, 'Nincs elég nyersanyag', request);
+    fullState.activePlanet.resources.metal -= totalCost.metal; fullState.activePlanet.resources.crystal -= totalCost.crystal;
+    const seconds = fleetBuildTime(amount, totalCost, fullState.activePlanet.buildings.find(b => b.id === 'shipyard')?.level || 1);
     const finishAt = Math.floor(Date.now() / 1000) + seconds;
-
-    await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at)
-        VALUES (?, ?, ?, ?, 'defense', ?, ?, ?)`)
-        .bind(crypto.randomUUID(), userId, fullState.activePlanet.id, defenseId, `${def.icon} ${def.name} ×${amount}`, amount, finishAt).run();
-
+    await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at) VALUES (?, ?, ?, ?, 'defense', ?, ?, ?)`).bind(crypto.randomUUID(), userId, fullState.activePlanet.id, defenseId, `${def.icon} ${def.name} ×${amount}`, amount, finishAt).run();
     await saveFullState(env, userId, fullState);
     return jsonResponse({ ok: true, finishAt, cost: totalCost, state: fullState }, 200, request);
   }
 
-  // (The rest of the routes: switch, upgrade, research, fleet/build, sync, rename)
-  // ── POST /api/game/planet/switch ─────────────────────────
   if (path === '/api/game/planet/switch' && method === 'POST') {
-    let body;
-    try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { planetId } = body;
     if (!planetId) return jsonError(400, 'planetId szükséges', request);
     await env.DB.prepare('UPDATE game_state SET active_planet_id = ? WHERE user_id = ?').bind(planetId, userId).run();
@@ -335,8 +328,7 @@ export async function handleGame(request, env, url, user) {
   }
 
   if (path === '/api/game/upgrade' && method === 'POST') {
-    let body;
-    try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { buildingId } = body;
     const b = fullState.activePlanet.buildings.find(x => x.id === buildingId);
     if (!b) return jsonError(404, 'Building not found', request);
@@ -356,8 +348,7 @@ export async function handleGame(request, env, url, user) {
   }
 
   if (path === '/api/game/research' && method === 'POST') {
-    let body;
-    try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { researchId } = body;
     const r = fullState.research.find(x => x.id === researchId);
     if (!r) return jsonError(404, 'Research not found', request);
@@ -377,8 +368,7 @@ export async function handleGame(request, env, url, user) {
   }
 
   if (path === '/api/game/fleet/build' && method === 'POST') {
-    let body;
-    try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { shipId, amount = 1 } = body;
     const ship = fullState.activePlanet.fleet.find(x => x.id === shipId);
     if (!ship) return jsonError(404, 'Ship type not found', request);
