@@ -98,39 +98,52 @@ export async function simulateBots(env) {
     await env.DB.prepare('UPDATE rankings SET score = score + ? WHERE user_id = ?').bind(growth, bot.id).run();
     await env.DB.prepare('UPDATE galaxy_map SET score = score + ? WHERE user_id = ?').bind(growth, bot.id).run();
 
-    // 2. Active AI logic (5% chance for mission, 10% for market)
+    // 2. Active AI logic (5% mission, 40% market)
     const roll = Math.random();
     if (roll < 0.05) {
       await runBotAI(env, bot, def);
-    } else if (roll < 0.15) {
+    } else if (roll < 0.45) {
+      // Bots can now do multiple market actions in one tick
       await runBotMarketAI(env, bot);
+      if (Math.random() < 0.3) await runBotMarketAI(env, bot);
     }
   }
+
+  // 3. Market Cleanup (Remove bot offers older than 6 hours)
+  const sixHoursAgo = Math.floor(Date.now() / 1000) - (6 * 3600);
+  await env.DB.prepare(`
+    DELETE FROM market_offers 
+    WHERE status = 'open' 
+    AND created_at < ? 
+    AND user_id IN (SELECT id FROM users WHERE is_bot = 1)
+  `).bind(sixHoursAgo).run();
+
   return { updated: bots.length };
 }
 
 async function runBotMarketAI(env, bot) {
-    const botPlanet = await env.DB.prepare('SELECT id, resources FROM planets WHERE user_id = ? AND is_main = 1').bind(bot.id).first();
+    const botPlanet = await env.DB.prepare('SELECT id FROM planets WHERE user_id = ? AND is_main = 1').bind(bot.id).first();
     if (!botPlanet) return;
 
-    const action = Math.random() < 0.5 ? 'create' : 'accept';
+    // Check existing open offers by this bot (limit to 5)
+    const count = await env.DB.prepare('SELECT COUNT(*) as c FROM market_offers WHERE user_id = ? AND status = "open"').bind(bot.id).first();
+    const action = (count?.c || 0) < 5 ? (Math.random() < 0.7 ? 'create' : 'accept') : 'accept';
 
     if (action === 'create') {
-        // Create an offer: Give something we have, seek something else
         const resTypes = ['metal', 'crystal', 'deus'];
         const offerRes = resTypes[Math.floor(Math.random() * resTypes.length)];
         const seekRes  = resTypes.find(r => r !== offerRes);
         
-        const offerAmt = 5000 + Math.floor(Math.random() * 20000);
-        const ratio = 0.8 + Math.random() * 0.4; // 0.8 to 1.2 ratio
+        const offerAmt = 10000 + Math.floor(Math.random() * 50000);
+        const ratio = 0.7 + Math.random() * 0.6; // Wider range for more variation
         const seekAmt = Math.floor(offerAmt * ratio);
 
         await env.DB.prepare(`
-            INSERT INTO market_offers (user_id, planet_id, offer_res, offer_amt, seek_res, seek_amt, status)
-            VALUES (?, ?, ?, ?, ?, ?, 'open')
+            INSERT INTO market_offers (user_id, planet_id, offer_res, offer_amt, seek_res, seek_amt, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, 'open', unixepoch())
         `).bind(bot.id, botPlanet.id, offerRes, offerAmt, seekRes, seekAmt).run();
     } else {
-        // Accept a human offer if it's reasonable
+        // Accept a human offer
         const offer = await env.DB.prepare(`
             SELECT o.* FROM market_offers o
             JOIN users u ON u.id = o.user_id
@@ -140,9 +153,9 @@ async function runBotMarketAI(env, bot) {
 
         if (offer) {
             const ratio = offer.seek_amt / offer.offer_amt;
-            if (ratio <= 2.0) { // Bots accept anything up to 2.0 ratio
+            // Elite bots are pickier, beginner bots accept anything
+            if (ratio <= 2.5) { 
                 await env.DB.prepare("UPDATE market_offers SET status = 'done' WHERE id = ?").bind(offer.id).run();
-                // We don't bother updating bot resources for simplicity
             }
         }
     }

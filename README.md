@@ -22,6 +22,10 @@
 
 ## Changelog
 
+### v3.0.2 (Bustling Marketplace)
+- **Bot Market Overhaul**: A botok mostantól sokkal gyakrabban (40% esély) üzletelnek, több ajánlatot tesznek fel és a régieket automatikusan törlik.
+- **UI Contrast**: További javítások a piac és a modális ablakok szövegszínein a jobb olvashatóságért.
+
 ### v3.0.1 (Alive Marketplace)
 - **Bot Activity**: A bot játékosok mostantól aktívan használják a piacot (ajánlatokat tesznek fel és fogadnak el).
 - **UI Fix**: Piac felület sötét módos szövegmegjelenítési hibáinak javítása.
