@@ -43,11 +43,6 @@ function fleetBuildTime(amount, shipCostTotal, shipyardLevel = 1) {
 }
 
 function calcStorage(buildings, research) {
-  // Moon storage base is smaller? Or use same logic?
-  // Moon Base provides storage? No, let's assume base storage for now.
-  // Standard buildings (Storage) might not exist on Moon unless we add them to default_moon_buildings.
-  // For now, let's assume unlimited or base storage on Moons if no storage buildings.
-  
   const storageMetal   = buildings.find(b => b.id === 'storage_metal')?.level   || 1;
   const storageCrystal = buildings.find(b => b.id === 'storage_crystal')?.level || 1;
   const hyperLevel     = research.find(r => r.id === 'hyper')?.level            || 0;
@@ -61,8 +56,10 @@ function calcStorage(buildings, research) {
   };
 }
 
-function recalcRates(buildings, research, allianceLevel = 1) {
-  // Moons generally don't produce resources
+function recalcRates(buildings, research, allianceLevel = 1, coords = '[1:1:1]') {
+  const galMatch = coords.match(/\[(\d+):/);
+  const galaxy = galMatch ? parseInt(galMatch[1]) : 1;
+
   const metalMine   = buildings.find(b => b.id === 'metal_mine')?.level   || 0;
   const crystalMine = buildings.find(b => b.id === 'crystal_mine')?.level || 0;
   const solar       = buildings.find(b => b.id === 'solar')?.level        || 0;
@@ -75,7 +72,17 @@ function recalcRates(buildings, research, allianceLevel = 1) {
   const energyTech  = research?.find(r => r.id === 'energy_tech')?.level  || 0;
   const energyBonus = 1 + energyTech * 0.08;
 
-  const energyProd  = Math.floor(20 * Math.pow(1.12, Math.max(0, solar - 1)) * energyBonus * (solar > 0 ? 1 : 0));
+  let gMetal = 1, gCrystal = 1, gDeus = 1, gEnergy = 1;
+  if (galaxy === 2) gMetal = 1.10;
+  if (galaxy === 3) gCrystal = 1.10;
+  if (galaxy === 4) gDeus = 1.15;
+  if (galaxy === 5) gEnergy = 1.15;
+  if (galaxy === 6) { gMetal = 1.15; gCrystal = 0.95; }
+  if (galaxy === 7) { gCrystal = 1.15; gMetal = 0.95; }
+  if (galaxy === 8) { gDeus = 1.25; gEnergy = 0.90; }
+  if (galaxy === 9) { gMetal = 1.10; gCrystal = 1.10; gDeus = 1.10; }
+
+  const energyProd  = Math.floor(20 * Math.pow(1.12, Math.max(0, solar - 1)) * energyBonus * gEnergy * (solar > 0 ? 1 : 0));
   const metalDemand = Math.floor(metalMine   * 8);
   const crystalDemand = Math.floor(crystalMine * 6);
   const deusDemand  = Math.floor(deusium * 3);
@@ -85,10 +92,10 @@ function recalcRates(buildings, research, allianceLevel = 1) {
   const allianceBonus = 1 + (allianceLevel - 1) * 0.01;
 
   return {
-    metal:   Math.floor(30 * Math.pow(1.1, Math.max(0, metalMine   - 1)) * energyEff * allianceBonus * (metalMine > 0 ? 1 : 0)),
-    crystal: Math.floor(20 * Math.pow(1.1, Math.max(0, crystalMine - 1)) * energyEff * allianceBonus * (crystalMine > 0 ? 1 : 0)),
+    metal:   Math.floor(30 * Math.pow(1.1, Math.max(0, metalMine   - 1)) * energyEff * allianceBonus * gMetal * (metalMine > 0 ? 1 : 0)),
+    crystal: Math.floor(20 * Math.pow(1.1, Math.max(0, crystalMine - 1)) * energyEff * allianceBonus * gCrystal * (crystalMine > 0 ? 1 : 0)),
     energy:  energyProd,
-    deus:    Math.floor(2  * Math.pow(1.15, Math.max(0, deusium - 1)) * energyEff * allianceBonus * (deusium > 0 ? 1 : 0)),
+    deus:    Math.floor(2  * Math.pow(1.15, Math.max(0, deusium - 1)) * energyEff * allianceBonus * gDeus * (deusium > 0 ? 1 : 0)),
     energyProd,
     energyDemand: totalDemand,
     energyEff: Math.round(energyEff * 100),
@@ -124,17 +131,13 @@ async function mergeTemplates(env, state) {
 
   state.research.forEach(r => { const t = defResearch.find(x => x.id === r.id); if (t) r.req = t.req; });
   state.planets.forEach(p => {
-    // If it's a moon, use moon buildings template
     const template = p.isMoon ? defMoonBuildings : defBuildings;
     p.buildings.forEach(b => { const t = template.find(x => x.id === b.id); if (t) { b.req = t.req; b.baseCost = t.baseCost; } });
-    
-    // Also merge missing buildings from template if they don't exist in p.buildings
     template.forEach(t => {
         if (!p.buildings.find(b => b.id === t.id)) {
-            p.buildings.push({ ...t, level: 0 }); // Add new building type with level 0
+            p.buildings.push({ ...t, level: 0 });
         }
     });
-
     p.fleet.forEach(f => { const t = defFleet.find(x => x.id === f.id); if (t) f.req = t.req; });
     if (!p.defense) p.defense = JSON.parse(JSON.stringify(defDefense));
     p.defense.forEach(d => { const t = defDefense.find(x => x.id === d.id); if (t) d.req = t.req; });
@@ -161,14 +164,21 @@ async function getFullState(env, userId) {
     if (alliance) allianceLevel = alliance.level;
   }
   
-  // Fetch Planets
   const { results: pRows } = await env.DB.prepare('SELECT * FROM planets WHERE user_id = ?').bind(userId).all();
-  const planets = pRows.map(p => ({
-    id: p.id, name: p.name, emoji: p.emoji, coords: p.coords, updatedAt: p.updated_at,
-    resources: JSON.parse(p.resources), rates: JSON.parse(p.rates), buildings: JSON.parse(p.buildings), fleet: JSON.parse(p.fleet), defense: JSON.parse(p.defense || '[]'), isMain: p.is_main === 1, isMoon: false
-  }));
+  const planets = pRows.map(p => {
+    const b = JSON.parse(p.buildings);
+    const r = JSON.parse(gsRow.research);
+    return {
+        id: p.id, name: p.name, emoji: p.emoji, coords: p.coords, updatedAt: p.updated_at,
+        resources: JSON.parse(p.resources), 
+        rates: recalcRates(b, r, allianceLevel, p.coords), 
+        buildings: b, 
+        fleet: JSON.parse(p.fleet), 
+        defense: JSON.parse(p.defense || '[]'), 
+        isMain: p.is_main === 1, isMoon: false
+    };
+  });
 
-  // Fetch Moons
   const { results: mRows } = await env.DB.prepare(`
     SELECT m.*, p.coords as parent_coords 
     FROM moons m 
@@ -176,20 +186,23 @@ async function getFullState(env, userId) {
     WHERE m.user_id = ?
   `).bind(userId).all();
 
-  const moons = mRows.map(m => ({
-    id: m.id, name: m.name, emoji: '🌑', coords: m.parent_coords, updatedAt: m.created_at, // Use created_at or updated_at? Moons don't have updated_at in schema, let's assume they might not accrue res regularly. But let's use created_at for now.
-    resources: JSON.parse(m.resources || '{"metal":0,"crystal":0,"deus":0}'), 
-    rates: JSON.parse(m.rates || '{"metal":0,"crystal":0,"deus":0}'), 
-    buildings: JSON.parse(m.buildings), 
-    fleet: JSON.parse(m.fleet), 
-    defense: JSON.parse(m.defense || '[]'), 
-    isMain: false, isMoon: true
-  }));
+  const moons = mRows.map(m => {
+    const b = JSON.parse(m.buildings);
+    const r = JSON.parse(gsRow.research);
+    return {
+        id: m.id, name: m.name, emoji: '🌑', coords: m.parent_coords, updatedAt: m.created_at,
+        resources: JSON.parse(m.resources || '{"metal":0,"crystal":0,"deus":0}'), 
+        rates: recalcRates(b, r, allianceLevel, m.parent_coords), 
+        buildings: b, 
+        fleet: JSON.parse(m.fleet), 
+        defense: JSON.parse(m.defense || '[]'), 
+        isMain: false, isMoon: true
+    };
+  });
 
   const allBodies = [...planets, ...moons];
-
   let activePlanetId = gsRow.active_planet_id;
-  let activePlanet = allBodies.find(p => p.id === activePlanetId) || planets[0]; // Fallback to main planet if moon not found or error
+  let activePlanet = allBodies.find(p => p.id === activePlanetId) || planets[0]; 
 
   let state = { username: userRow.username, research: JSON.parse(gsRow.research), score: gsRow.score, allianceLevel, planets: allBodies, activePlanet };
   return await mergeTemplates(env, state);
@@ -222,10 +235,10 @@ async function processQueue(env, userId, fullState) {
     const planet = fullState.planets.find(p => p.id === item.planet_id) || fullState.activePlanet;
     if (item.item_type === 'building') {
       const b = planet.buildings.find(x => x.id === item.item_id);
-      if (b) { b.level = item.target_level; planet.rates = recalcRates(planet.buildings, fullState.research, fullState.allianceLevel); fullState.score += 50; }
+      if (b) { b.level = item.target_level; planet.rates = recalcRates(planet.buildings, fullState.research, fullState.allianceLevel, planet.coords); fullState.score += 50; }
     } else if (item.item_type === 'research') {
       const r = fullState.research.find(x => x.id === item.item_id);
-      if (r) { r.level = item.target_level; if (item.item_id === 'energy_tech') { for (const p of fullState.planets) { p.rates = recalcRates(p.buildings, fullState.research, fullState.allianceLevel); } } fullState.score += 100; }
+      if (r) { r.level = item.target_level; if (item.item_id === 'energy_tech') { for (const p of fullState.planets) { p.rates = recalcRates(p.buildings, fullState.research, fullState.allianceLevel, p.coords); } } fullState.score += 100; }
     } else if (item.item_type === 'fleet') {
       const f = planet.fleet.find(x => x.id === item.item_id);
       if (f) { f.count += item.target_level; fullState.score += 20 * item.target_level; }
@@ -241,10 +254,7 @@ async function processQueue(env, userId, fullState) {
 function accrueAllResources(fullState) {
   const now = Math.floor(Date.now() / 1000);
   for (const p of fullState.planets) {
-    // Skip accrual for Moons if they don't produce (or assume they don't have updatedAt to track intervals properly yet)
-    // Actually, we can track intervals for moons too if we add updated_at to table, but for now let's just skip passive accrual on moons as they usually have 0 production
     if (p.isMoon) continue; 
-
     const elapsed = Math.min(now - p.updatedAt, 3600 * 8);
     if (elapsed > 0) {
       const storage = calcStorage(p.buildings, fullState.research);
@@ -258,8 +268,6 @@ function accrueAllResources(fullState) {
   }
   return fullState;
 }
-
-// ── Quest Helpers ─────────────────────────────────────────────────────────────
 
 async function ensureDailyQuests(env, userId) {
   const now = Math.floor(Date.now() / 1000);
@@ -289,19 +297,12 @@ export async function incrementQuest(env, userId, type, targetId = null, amount 
   }
 }
 
-// ── Route handler ─────────────────────────────────────────────────────────────
-
 export async function handleGame(request, env, url, user) {
   const userId = user.sub;
   const path   = url.pathname;
   const method = request.method;
 
-  // 10/10 FIX: Resolve missions for THIS user instantly on any game request
-  try {
-    await resolveMissionsForUser(env, userId);
-  } catch (e) {
-    console.error('Instant mission resolution error:', e);
-  }
+  try { await resolveMissionsForUser(env, userId); } catch (e) { console.error('Instant mission resolution error:', e); }
 
   await ensureDailyQuests(env, userId);
   let fullState = await getFullState(env, userId);
@@ -361,11 +362,8 @@ export async function handleGame(request, env, url, user) {
     let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
     const { planetId } = body;
     if (!planetId) return jsonError(400, 'planetId required', request);
-    
-    // Check if planet/moon belongs to user
     const exists = fullState.planets.find(p => p.id === planetId);
     if (!exists) return jsonError(403, 'Access denied', request);
-
     await env.DB.prepare('UPDATE game_state SET active_planet_id = ? WHERE user_id = ?').bind(planetId, userId).run();
     return jsonResponse(responseData({ ok: true, activePlanetId: planetId }), 200, request);
   }

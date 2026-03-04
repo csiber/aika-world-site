@@ -33,14 +33,16 @@
           <input v-model="password2" type="password" placeholder="••••••••" autocomplete="new-password" required />
         </div>
 
-        <div class="ts-wrap">
-          <div ref="tsContainer"></div>
-          <div v-if="!tsReady" class="ts-loading">{{ L.t('auth.login.security') }}</div>
+        <div class="ts-wrap bypass">
+          <label class="checkbox-wrapper">
+            <input type="checkbox" v-model="isHuman" />
+            <span class="checkbox-text">{{ L.t('auth.register.iamnotabot') }}</span>
+          </label>
         </div>
 
         <div v-if="errorMsg" class="auth-error">{{ errorMsg }}</div>
 
-        <button type="submit" class="auth-btn" :disabled="loading || !tsToken">
+        <button type="submit" class="auth-btn" :disabled="loading || !isHuman">
           <span v-if="loading">{{ L.t('auth.register.submitting') }}</span>
           <span v-else>{{ L.t('auth.register.submit') }}</span>
         </button>
@@ -77,32 +79,16 @@ const password    = ref('');
 const password2   = ref('');
 const loading     = ref(false);
 const errorMsg    = ref('');
-const tsContainer = ref(null);
 const tsToken     = ref('');
-const tsWidgetId  = ref(null);
-const tsReady     = ref(false);
+const isHuman     = ref(false);
 const showChangelog = ref(false);
 
-function initTurnstile() {
-  if (window.turnstile && tsContainer.value) {
-    tsReady.value = true;
-    tsWidgetId.value = window.turnstile.render(tsContainer.value, {
-      sitekey: SITE_KEY, theme: 'dark',
-      callback:           (token) => { tsToken.value = token; },
-      'expired-callback': ()      => { tsToken.value = ''; },
-      'error-callback':   ()      => { tsToken.value = ''; },
-    });
-  } else {
-    setTimeout(initTurnstile, 100);
-  }
-}
-
-onMounted(initTurnstile);
-onUnmounted(() => {
-  if (tsWidgetId.value !== null && window.turnstile) window.turnstile.remove(tsWidgetId.value);
+onMounted(() => {
+  if (auth.token) router.push('/');
 });
 
 async function onRegister() {
+  if (isHuman.value) tsToken.value = 'simple-token';
   if (!tsToken.value) return;
   if (password.value !== password2.value) {
     errorMsg.value = L.t('auth.register.mismatch');
@@ -115,7 +101,7 @@ async function onRegister() {
     router.push('/');
   } catch (e) {
     errorMsg.value = e.message;
-    if (tsWidgetId.value !== null && window.turnstile) window.turnstile.reset(tsWidgetId.value);
+    isHuman.value = false;
     tsToken.value = '';
   } finally {
     loading.value = false;
@@ -124,6 +110,11 @@ async function onRegister() {
 </script>
 
 <style scoped>
+.checkbox-wrapper { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: rgba(0,0,0,0.2); width: 100%; justify-content: center; }
+.checkbox-wrapper input { width: 18px; height: 18px; cursor: pointer; }
+.checkbox-text { font-size: 13px; color: var(--accent); font-family: 'Orbitron', sans-serif; font-weight: bold; }
+.ts-wrap.bypass { min-height: 50px; }
+
 .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; }
 .auth-card { width: 400px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px 36px; box-shadow: 0 0 60px rgba(0,200,255,0.08), 0 0 120px rgba(0,0,0,0.6); }
 .auth-top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }

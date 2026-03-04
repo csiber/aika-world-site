@@ -134,6 +134,20 @@ export async function resolveMissionsForUser(env, userId) {
                   await env.DB.prepare(`UPDATE galaxy_map SET debris_metal = debris_metal + ?, debris_crystal = debris_crystal + ? WHERE coords = ?`)
                       .bind(battle.debris.metal, battle.debris.crystal, mission.target_coords).run();
               }
+
+              if (battle.moonCreated) {
+                  const planetId = targetPlanet.id;
+                  const moonExists = await env.DB.prepare('SELECT id FROM moons WHERE planet_id = ?').bind(planetId).first();
+                  if (!moonExists) {
+                      const moonId = crypto.randomUUID();
+                      const defMoonB = await env.DB.prepare('SELECT data FROM default_moon_buildings').first();
+                      await env.DB.prepare(`
+                          INSERT INTO moons (id, planet_id, user_id, name, size, buildings, fleet, defense, resources)
+                          VALUES (?, ?, ?, 'Hold', ?, ?, '[]', '[]', '{"metal":0,"crystal":0,"deus":0}')
+                      `).bind(moonId, planetId, mission.target_user_id, 2000 + Math.floor(Math.random() * 6000), defMoonB?.data || '[]').run();
+                      result.moonCreated = true;
+                  }
+              }
           }
       }
 

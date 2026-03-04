@@ -19,6 +19,11 @@
           {{ loading ? '...' : 'Mutat' }}
         </button>
       </div>
+      <!-- Galaxy Bonus Banner -->
+      <div class="galaxy-bonus-banner" :class="'gal-' + currentGal">
+        <span class="bonus-icon">💠</span>
+        <span class="bonus-text">{{ galaxyBonus }}</span>
+      </div>
     </div>
 
     <!-- System View -->
@@ -160,6 +165,21 @@ const loading    = ref(false);
 const players    = ref([]);
 const selected   = ref(null);
 const actionBusy = ref(null);
+
+const galaxyBonus = computed(() => {
+    const bonuses = {
+        1: 'Standard Galaxis: Nincsenek speciális bónuszok.',
+        2: 'Vasháló Galaxis: +10% Fém termelés.',
+        3: 'Kristályköd Galaxis: +10% Kristály termelés.',
+        4: 'Sötét Energia Galaxis: +15% Déusium kitermelés.',
+        5: 'Szoláris Galaxis: +15% Energia termelés.',
+        6: 'Ipari Galaxis: +15% Fém, de -5% Kristály termelés.',
+        7: 'Ragyogó Galaxis: +15% Kristály, de -5% Fém termelés.',
+        8: 'Hiper-Vákuum: +25% Déusium, de -10% Energia hatékonyság.',
+        9: 'Mélyűr (Deep Space): +10% Fém, +10% Kristály és +10% Déusium termelés.'
+    };
+    return bonuses[currentGal.value] || 'Ismeretlen szektor.';
+});
 
 const showFleetSetup = ref(false);
 const missionType    = ref(null);
@@ -330,6 +350,32 @@ onMounted(() => {
 .nav-input { width: 60px; background: #000; border: 1px solid var(--border); color: var(--accent); text-align: center; font-family: 'Orbitron', sans-serif; font-size: 14px; padding: 4px; border-radius: 4px; }
 .nav-btn-sm { background: none; border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; padding: 4px 8px; border-radius: 4px; }
 .nav-btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+.galaxy-bonus-banner {
+  margin: 0 10px 10px;
+  padding: 8px 15px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  transition: all 0.3s ease;
+}
+.bonus-icon { font-size: 14px; }
+.bonus-text { color: var(--accent); font-family: 'Exo 2', sans-serif; letter-spacing: 0.5px; }
+
+/* Galaxy specific themes */
+.gal-1 { border-color: var(--border); }
+.gal-2 { border-color: var(--metal); box-shadow: inset 0 0 10px rgba(170,187,204,0.1); }
+.gal-3 { border-color: var(--crystal); box-shadow: inset 0 0 10px rgba(0,255,255,0.1); }
+.gal-4 { border-color: var(--accent); box-shadow: inset 0 0 10px rgba(0,200,255,0.1); }
+.gal-5 { border-color: var(--energy); box-shadow: inset 0 0 10px rgba(255,255,0,0.1); }
+.gal-6 { border-color: #ff8800; }
+.gal-7 { border-color: #ff00ff; }
+.gal-8 { border-color: #00ff88; }
+.gal-9 { border-color: var(--accent2); background: linear-gradient(90deg, rgba(255,58,122,0.05), transparent); }
 
 .system-panel { width: 100%; }
 .no-padding { padding: 0 !important; }

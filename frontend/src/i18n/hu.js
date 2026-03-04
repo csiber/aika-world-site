@@ -23,6 +23,7 @@ export default {
       submit: '🚀 Belépés', submitting: 'Bejelentkezés...',
       noAccount: 'Még nincs fiókod?', registerLink: 'Regisztrálj itt',
       security: '🔒 Biztonság betöltése...',
+      iamnotabot: 'Nem vagyok robot',
     },
     register: {
       title: 'Regisztráció',
@@ -33,6 +34,7 @@ export default {
       submit: '🚀 Fiók létrehozása', submitting: 'Regisztráció...',
       hasAccount: 'Már van fiókod?', loginLink: 'Jelentkezz be',
       mismatch: 'A két jelszó nem egyezik',
+      iamnotabot: 'Nem vagyok robot',
     },
   },
   nav: {

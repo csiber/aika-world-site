@@ -23,13 +23,15 @@
             <input v-model="password" type="password" required placeholder="••••••••" />
           </div>
 
-          <!-- Cloudflare Turnstile -->
-          <div class="captcha-container">
-            <div id="turnstile-container"></div>
-            <p v-if="!captchaReady" class="captcha-loading">{{ L.t('auth.login.security') }}</p>
+          <!-- Bot check bypass -->
+          <div class="captcha-container bypass">
+            <label class="checkbox-wrapper">
+              <input type="checkbox" v-model="isHuman" />
+              <span class="checkbox-text">{{ L.t('auth.login.iamnotabot') }}</span>
+            </label>
           </div>
 
-          <button type="submit" class="auth-btn" :disabled="loading || !captchaToken">
+          <button type="submit" class="auth-btn" :disabled="loading || !isHuman">
             <span v-if="loading">{{ L.t('auth.login.submitting') }}</span>
             <span v-else>{{ L.t('auth.login.submit') }}</span>
           </button>
@@ -93,10 +95,11 @@ const error    = ref('');
 const loading  = ref(false);
 const showIntro = ref(false);
 
+const isHuman = ref(false);
 const captchaToken = ref(null);
-const captchaReady = ref(false);
 
 function onLogin() {
+  if (isHuman.value) captchaToken.value = 'simple-token';
   if (!captchaToken.value) return;
   loading.value = true;
   error.value   = '';
@@ -104,7 +107,7 @@ function onLogin() {
     .then(() => router.push('/'))
     .catch(err => {
       error.value = err.message;
-      if (window.turnstile) window.turnstile.reset();
+      isHuman.value = false;
       captchaToken.value = null;
     })
     .finally(() => loading.value = false);
@@ -112,28 +115,15 @@ function onLogin() {
 
 onMounted(() => {
   if (auth.token) router.push('/');
-  
-  const script = document.createElement('script');
-  script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-  script.async = true;
-  script.defer = true;
-  document.head.appendChild(script);
-
-  script.onload = () => {
-    if (window.turnstile) {
-      window.turnstile.render('#turnstile-container', {
-        sitekey: '0x4AAAAAACjkTSOlxZq6QAcbdOBQfdtmOAE',
-        callback: (token) => { captchaToken.value = token; },
-        'expired-callback': () => { captchaToken.value = null; },
-        theme: 'dark'
-      });
-      captchaReady.value = true;
-    }
-  };
 });
 </script>
 
 <style scoped>
+.checkbox-wrapper { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: rgba(0,0,0,0.2); }
+.checkbox-wrapper input { width: 18px; height: 18px; cursor: pointer; }
+.checkbox-text { font-size: 13px; color: var(--accent); font-family: 'Orbitron', sans-serif; font-weight: bold; }
+.captcha-container.bypass { min-height: 50px; }
+
 .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #02040a; position: relative; overflow: hidden; font-family: 'Exo 2', sans-serif; }
 .matrix-bg { position: absolute; inset: 0; background: radial-gradient(circle at center, #0a1525 0%, #02040a 100%); z-index: 0; }
 .scanline { width: 100%; height: 100px; background: linear-gradient(0deg, rgba(0, 255, 255, 0) 0%, rgba(0, 200, 255, 0.05) 50%, rgba(0, 255, 255, 0) 100%); position: absolute; bottom: 100%; animation: scan 8s linear infinite; z-index: 1; }

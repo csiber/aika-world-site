@@ -61,10 +61,13 @@
         v-for="planet in planets"
         :key="planet.id"
         class="planet-slot"
-        :class="{ active: gameStore.activePlanet.id === planet.id }"
+        :class="{ active: gameStore.activePlanet.id === planet.id, 'is-moon': planet.isMoon }"
         @click="gameStore.switchPlanet(planet.id)"
       >
-        <span class="planet-emoji">{{ planet.emoji || '🌍' }}</span>
+        <span class="planet-emoji">
+            {{ planet.emoji || (planet.isMoon ? '🌑' : '🌍') }}
+            <span v-if="planet.isMoon" class="moon-badge">MOON</span>
+        </span>
         <span class="planet-name">{{ planet.name }}</span>
         <span class="planet-coords">{{ planet.coords }}</span>
       </div>
@@ -254,7 +257,10 @@ onUnmounted(() => {
 .planet-slot { display: flex; flex-direction: column; align-items: center; padding: 4px 10px; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; min-width: 80px; transition: all 0.2s; background: var(--bg-panel); }
 .planet-slot:hover  { border-color: var(--border-glow); background: rgba(0,200,255,0.05); }
 .planet-slot.active { border-color: var(--accent); background: rgba(0,200,255,0.1); box-shadow: 0 0 10px rgba(0,200,255,0.15); }
-.planet-emoji  { font-size: 20px; }
+.planet-emoji  { font-size: 20px; position: relative; }
+.moon-badge { position: absolute; top: -5px; right: -10px; background: var(--accent); color: #000; font-size: 7px; padding: 1px 3px; border-radius: 3px; font-weight: 900; letter-spacing: 0.5px; }
+.planet-slot.is-moon { border-color: rgba(255,255,255,0.2); }
+.planet-slot.is-moon.active { border-color: var(--accent); }
 .planet-name   { font-size: 9px; color: var(--text-dim); margin-top: 2px; }
 .planet-coords { font-size: 8px; color: var(--text-dim); font-family: 'Orbitron', sans-serif; }
 .add-planet { border-style: dashed; opacity: 0.5; font-size: 20px; display: flex; align-items: center; justify-content: center; color: var(--text-dim); min-width: 50px; height: 52px; }
