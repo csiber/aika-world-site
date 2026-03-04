@@ -273,7 +273,7 @@ onMounted(loadOffers);
 .npc-info { font-size: 12px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.4; }
 .npc-form { display: flex; flex-direction: column; gap: 15px; }
 .trade-side { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
-.trade-side label { font-size: 10px; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 10px; }
+.trade-side label { font-size: 10px; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 10px; }
 
 .res-select { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px; }
 .res-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-dim); padding: 6px; border-radius: 4px; cursor: pointer; font-size: 10px; }
@@ -281,15 +281,15 @@ onMounted(loadOffers);
 .res-btn.disabled { opacity: 0.2; cursor: not-allowed; }
 
 .trade-arrow { text-align: center; font-size: 24px; color: var(--accent); }
-.npc-result { font-size: 18px; font-family: 'Orbitron', sans-serif; color: var(--accent); font-weight: 800; text-align: center; padding: 10px; }
+.npc-result { font-size: 18px; font-family: 'Orbitron', sans-serif; color: #fff; font-weight: 800; text-align: center; padding: 10px; }
 
 .input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 8px; border-radius: 4px; margin-bottom: 5px; }
 .btn-xs { font-size: 9px; padding: 2px 6px; background: rgba(255,255,255,0.1); border: 1px solid var(--border); color: #fff; cursor: pointer; }
 
 /* Modal */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
-.create-modal { width: 400px; }
+.create-modal { width: 400px; color: #fff; }
 .form-grid { display: grid; gap: 20px; }
-.field label { font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 6px; }
+.field label { font-size: 11px; color: var(--accent); display: block; margin-bottom: 6px; }
 .modal-footer { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
 </style>

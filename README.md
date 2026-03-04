@@ -22,6 +22,10 @@
 
 ## Changelog
 
+### v3.0.1 (Alive Marketplace)
+- **Bot Activity**: A bot játékosok mostantól aktívan használják a piacot (ajánlatokat tesznek fel és fogadnak el).
+- **UI Fix**: Piac felület sötét módos szövegmegjelenítési hibáinak javítása.
+
 ### v3.0.0 (The Strategic Update)
 - **Feature**: Implementált Debris Field (roncsmező) rendszer.
 - **Feature**: Új hajótípus: Recycler (Szemétgyűjtő).
