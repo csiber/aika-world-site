@@ -20,6 +20,11 @@
           </div>
         </div>
 
+        <div class="admin-actions-bar">
+          <button class="btn-primary" @click="seedBots" :disabled="loading">🤖 Botok Generálása</button>
+          <button class="btn-primary" @click="simulateBots" :disabled="loading">⚡ Bot Szimuláció</button>
+        </div>
+
         <div class="section-title">Felhasználók listája</div>
         <div class="user-list-scroll">
           <table class="admin-table">
@@ -34,9 +39,9 @@
             </thead>
             <tbody>
               <tr v-for="u in users" :key="u.id">
-                <td>{{ u.username }}</td>
-                <td>{{ u.email }}</td>
-                <td>{{ u.score?.toLocaleString('hu') }}</td>
+                <td class="username-cell">{{ u.username }}</td>
+                <td class="email-cell">{{ u.email }}</td>
+                <td class="score-cell">{{ u.score?.toLocaleString('hu') }}</td>
                 <td>{{ u.is_admin ? '✅' : '❌' }}</td>
                 <td>
                   <button class="btn-primary" @click="selectUser(u)">💰 Adomány</button>
@@ -121,6 +126,7 @@ async function sendGift() {
     if (res.ok) {
       alert('Sikeres adományozás!');
       selectedUser.value = null;
+      await loadAdminData();
     }
   } catch (e) {
     alert('Hiba történt.');
@@ -128,26 +134,66 @@ async function sendGift() {
   loading.value = false;
 }
 
+async function seedBots() {
+    if (!confirm('Generálod az NPC botokat?')) return;
+    loading.value = true;
+    try {
+        const res = await fetch('/api/admin/bots/seed', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('aika_token')}` }
+        });
+        const data = await res.json();
+        alert(`Sikeres: ${data.created} bot létrehozva.`);
+        await loadAdminData();
+    } catch (e) { alert(e.message); }
+    loading.value = false;
+}
+
+async function simulateBots() {
+    loading.value = true;
+    try {
+        const res = await fetch('/api/admin/bots/simulate', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('aika_token')}` }
+        });
+        const data = await res.json();
+        alert(`Szimuláció kész: ${data.updated} bot frissítve.`);
+        await loadAdminData();
+    } catch (e) { alert(e.message); }
+    loading.value = false;
+}
+
 onMounted(loadAdminData);
 </script>
 
 <style scoped>
-.admin-container { max-width: 1000px; margin: 0 auto; }
-.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
-.stat-card { background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 15px; border-radius: 6px; text-align: center; }
-.stat-card .label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 5px; }
-.stat-card .val { font-family: 'Orbitron', sans-serif; font-size: 20px; color: var(--accent); }
+.admin-container { max-width: 1000px; margin: 0 auto; color: var(--text); }
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+.stat-card { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; border-radius: 8px; text-align: center; box-shadow: var(--panel-shadow); }
+.stat-card .label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
+.stat-card .val { font-family: 'Orbitron', sans-serif; font-size: 24px; color: var(--accent); text-shadow: 0 0 10px rgba(0,200,255,0.3); }
 
-.user-list-scroll { max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px; }
-.admin-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.admin-table th { background: rgba(255,255,255,0.05); text-align: left; padding: 10px; color: var(--text-dim); }
-.admin-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.admin-actions-bar { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 6px; border: 1px dashed var(--border); }
 
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-.modal { width: 300px; }
-.input-group { margin-bottom: 10px; }
-.input-group label { display: block; font-size: 10px; margin-bottom: 4px; color: var(--text-dim); }
-.input-group input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 6px; border-radius: 3px; }
-.modal-btns { display: flex; gap: 10px; margin-top: 15px; }
+.section-title { font-family: 'Orbitron', sans-serif; font-size: 14px; color: var(--text-bright); margin-bottom: 15px; border-left: 3px solid var(--accent); padding-left: 10px; }
+
+.user-list-scroll { max-height: 500px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-panel); }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.admin-table th { background: rgba(255,255,255,0.05); text-align: left; padding: 12px; color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 10px; text-transform: uppercase; position: sticky; top: 0; z-index: 10; }
+.admin-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+.admin-table tr:hover td { background: rgba(0,200,255,0.05); }
+
+.username-cell { font-weight: bold; color: var(--text-bright); }
+.email-cell { color: var(--text-dim); font-size: 12px; }
+.score-cell { font-family: 'Orbitron', sans-serif; color: var(--accent4); }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
+.modal { width: 350px; background: var(--bg-card); border: 1px solid var(--accent); }
+.input-group { margin-bottom: 15px; }
+.input-group label { display: block; font-size: 11px; margin-bottom: 6px; color: var(--accent); text-transform: uppercase; }
+.input-group input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 4px; font-family: 'Exo 2', sans-serif; font-size: 14px; }
+.input-group input:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(0,200,255,0.2); }
+.modal-btns { display: flex; gap: 10px; margin-top: 20px; }
 .btn-primary.red { border-color: var(--accent2); color: var(--accent2); }
+.btn-primary.red:hover { background: rgba(255,58,122,0.2); box-shadow: 0 0 12px rgba(255,58,122,0.4); }
 </style>

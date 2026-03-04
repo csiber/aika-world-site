@@ -22,6 +22,10 @@
 
 ## Changelog
 
+### v3.0.3 (Global Polish & Admin UX)
+- **UI Readability**: Globális sötét/világos mód szövegszín javítások (nincs többé olvashatatlan fekete szöveg sötétben).
+- **Admin Panel Overhaul**: Nagyobb betűméretek, átláthatóbb statisztikák és új Bot menedzsment gombok (Seed/Simulate).
+
 ### v3.0.2 (Bustling Marketplace)
 - **Bot Market Overhaul**: A botok mostantól sokkal gyakrabban (40% esély) üzletelnek, több ajánlatot tesznek fel és a régieket automatikusan törlik.
 - **UI Contrast**: További javítások a piac és a modális ablakok szövegszínein a jobb olvashatóságért.

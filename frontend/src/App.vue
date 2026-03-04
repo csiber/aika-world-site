@@ -33,7 +33,7 @@ onMounted(() => {
 <style>
 /* ── Reset ── */
 * { box-sizing: border-box; margin: 0; padding: 0; border: 0; outline: 0; }
-html, body { min-height: 100vh; background: #030610; overflow-x: hidden; border: none !important; }
+html, body { min-height: 100vh; background: var(--bg-deep); overflow-x: hidden; border: none !important; color: var(--text); font-family: 'Exo 2', sans-serif; transition: background-color 0.3s, color 0.3s; }
 
 /* ── Theme Variables ── */
 :root {
