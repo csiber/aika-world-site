@@ -85,11 +85,11 @@
             </div>
             <div class="stat-item">
               <div class="stat-label">{{ L.t('overview.production') }}</div>
-              <div class="stat-value">{{ rates.metal?.toFixed(0) }}/h</div>
+              <div class="stat-value">{{ (rates.metal || 0).toFixed(0) }}/h</div>
             </div>
             <div class="stat-item">
               <div class="stat-label">{{ L.t('overview.score') }}</div>
-              <div class="stat-value">{{ score.toLocaleString('hu') }}</div>
+              <div class="stat-value">{{ (score || 0).toLocaleString('hu') }}</div>
             </div>
           </div>
         </div>
@@ -133,19 +133,19 @@
         <div class="stat-block">
           <div class="stat-row">
             <span>⚙️ Fém összesen</span>
-            <span class="sv metal">{{ Math.floor(resources.metal).toLocaleString('hu') }}</span>
+            <span class="sv metal">{{ Math.floor(resources.metal || 0).toLocaleString('hu') }}</span>
           </div>
           <div class="stat-row">
             <span>💎 Kristály</span>
-            <span class="sv crystal">{{ Math.floor(resources.crystal).toLocaleString('hu') }}</span>
+            <span class="sv crystal">{{ Math.floor(resources.crystal || 0).toLocaleString('hu') }}</span>
           </div>
           <div class="stat-row">
             <span>⚡ Energia</span>
-            <span class="sv energy">{{ Math.floor(resources.energy).toLocaleString('hu') }}</span>
+            <span class="sv energy">{{ Math.floor(resources.energy || 0).toLocaleString('hu') }}</span>
           </div>
           <div class="stat-row">
             <span>🔮 Déusium</span>
-            <span class="sv deus">{{ Math.floor(resources.deus).toLocaleString('hu') }}</span>
+            <span class="sv deus">{{ Math.floor(resources.deus || 0).toLocaleString('hu') }}</span>
           </div>
         </div>
         <div class="section-title" style="margin-top:12px;">{{ L.t('overview.fleetSummary') }}</div>
@@ -193,6 +193,10 @@ const totalShips    = computed(() => fleet.value.reduce((s, f) => s + f.count, 0
 const missions  = ref([]);
 const resolving = ref(false);
 const quests    = ref([]);
+
+const aikaInput = ref('');
+const aikaLoading = ref(false);
+const aikaChatLog = ref([{ role: 'assistant', text: '🤖 Helló! Én vagyok AIKA. Kérdezz tőlem bármit a játékkal kapcsolatban!' }]);
 
 async function loadMissions() { try { const data = await api.getMissions(); missions.value = data.missions || []; } catch {} }
 async function loadQuests() { try { const data = await api.get('/game/quests'); quests.value = data.quests || []; } catch {} }

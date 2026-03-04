@@ -8,7 +8,7 @@
         <div v-if="myRank" class="my-rank-bar">
           🎖️ {{ L.t('rankings.myRank') }}: <strong>#{{ myRank }}</strong>
           — {{ myUsername }} —
-          <span class="score-val">{{ myScore.toLocaleString('hu') }} {{ L.t('rankings.points') }}</span>
+          <span class="score-val">{{ (myScore || 0).toLocaleString('hu') }} {{ L.t('rankings.points') }}</span>
         </div>
 
         <table class="rank-table">

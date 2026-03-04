@@ -28,7 +28,7 @@
 
             <template v-if="r.level < r.max">
               <div class="research-cost">
-                ⚙️ {{ cost(r).metal.toLocaleString('hu') }} | 💎 {{ cost(r).crystal.toLocaleString('hu') }}
+                ⚙️ {{ (cost(r).metal || 0).toLocaleString('hu') }} | 💎 {{ (cost(r).crystal || 0).toLocaleString('hu') }}
               </div>
               <button
                 class="btn-primary"

@@ -23,7 +23,7 @@
         <ControlSwitch />
         <div class="user-info" @click="activeTab = 'profile'" style="cursor:pointer" :title="L.t('nav.profile')">
           <div class="user-name">{{ auth.username }}</div>
-          <div class="user-pts">{{ score.toLocaleString('hu') }} pt</div>
+          <div class="user-pts">{{ scoreFormatted }} pt</div>
         </div>
         <div v-if="allianceStore.inAlliance" class="alliance-badge" @click="activeTab = 'alliance'" title="Szövetség">
           [{{ allianceStore.alliance?.tag }}]
@@ -156,6 +156,7 @@ const resources = computed(() => gameStore.resources);
 const rates     = computed(() => gameStore.rates);
 const planets   = computed(() => gameStore.planets);
 const score     = computed(() => gameStore.score);
+const scoreFormatted = computed(() => (score.value || 0).toLocaleString('hu'));
 
 const tabs = computed(() => {
   const t = [

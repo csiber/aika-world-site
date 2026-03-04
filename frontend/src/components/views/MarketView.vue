@@ -89,7 +89,7 @@
                 </button>
               </div>
               <div class="npc-result">
-                {{ Math.floor(npcPreview).toLocaleString('hu') }} {{ resIcon(npcGet) }}
+                {{ (npcPreview || 0).toLocaleString('hu') }} {{ resIcon(npcGet) }}
               </div>
             </div>
 
@@ -292,4 +292,35 @@ onMounted(loadOffers);
 .form-grid { display: grid; gap: 20px; }
 .field label { font-size: 11px; color: var(--accent); display: block; margin-bottom: 6px; }
 .modal-footer { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+.exchange-panel {
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(1000px 400px at -10% 50%, rgba(0,200,255,0.05) 0%, transparent 80%),
+    radial-gradient(1000px 400px at 110% 50%, rgba(255,215,0,0.05) 0%, transparent 80%);
+}
+.exchange-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 30px 30px;
+  animation: bg-scroll 60s linear infinite;
+  opacity: 0.3;
+}
+@keyframes bg-scroll { 100% { background-position: 1000px 1000px; } }
+
+.panel-header .btn-sm {
+  background: var(--accent);
+  color: #000;
+  font-weight: bold;
+  border-radius: 4px;
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 15px rgba(0,200,255,0.4);
+  animation: pulse 2s infinite;
+}
+.panel-header .btn-sm:hover { transform: scale(1.05); }
+
+/* ... (the rest of the styles are the same) */
 </style>

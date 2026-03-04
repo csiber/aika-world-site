@@ -11,7 +11,7 @@
               <div class="profile-avatar">👨‍🚀</div>
               <div class="profile-main-info">
                 <div class="p-username">{{ profile.username }}</div>
-                <div class="p-rank">{{ L.t('profile.rank') }}: #{{ profile.rank || '?' }} ({{ profile.score.toLocaleString('hu') }} pt)</div>
+                <div class="p-rank">{{ L.t('profile.rank') }}: #{{ profile.rank || '?' }} ({{ (profile.score || 0).toLocaleString('hu') }} pt)</div>
               </div>
             </div>
 

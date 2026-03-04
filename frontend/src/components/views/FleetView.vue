@@ -76,8 +76,7 @@
                 </button>
               </div>
               <div class="ship-total-cost" v-if="amounts[ship.id] > 1">
-                {{ L.t('fleet.total') }}: ⚙️ {{ (ship.cost.metal * (amounts[ship.id] || 1)).toLocaleString('hu') }} | 💎 {{ (ship.cost.crystal * (amounts[ship.id] || 1)).toLocaleString('hu') }}
-              </div>
+                {{ L.t('fleet.total') }}: ⚙️ {{ ((ship.cost.metal || 0) * (amounts[ship.id] || 1)).toLocaleString('hu') }} | 💎 {{ ((ship.cost.crystal || 0) * (amounts[ship.id] || 1)).toLocaleString('hu') }}              </div>
             </template>
             <div v-else class="locked-label">Lezárva</div>
           </div>

@@ -4,7 +4,7 @@
     <div class="building-info">
       <div class="building-name">{{ building.name }}</div>
       <div class="building-level">Szint <span>{{ building.level }}</span> → {{ building.level + 1 }}</div>
-      <div class="building-cost">⚙️ {{ cost.metal.toLocaleString('hu') }} | 💎 {{ cost.crystal.toLocaleString('hu') }}</div>
+      <div class="building-cost">⚙️ {{ (cost.metal || 0).toLocaleString('hu') }} | 💎 {{ (cost.crystal || 0).toLocaleString('hu') }}</div>
     </div>
     <button
       class="btn-primary"

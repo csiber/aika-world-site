@@ -71,7 +71,7 @@
                 </button>
               </div>
               <div class="def-total-cost" v-if="amounts[d.id] > 1">
-                Összesen: ⚙️ {{ (d.cost.metal * (amounts[d.id] || 1)).toLocaleString('hu') }} | 💎 {{ (d.cost.crystal * (amounts[d.id] || 1)).toLocaleString('hu') }}
+                Összesen: ⚙️ {{ ((d.cost.metal || 0) * (amounts[d.id] || 1)).toLocaleString('hu') }} | 💎 {{ ((d.cost.crystal || 0) * (amounts[d.id] || 1)).toLocaleString('hu') }}
               </div>
             </template>
             <div v-else class="locked-label">Lezárva</div>

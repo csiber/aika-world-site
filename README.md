@@ -22,6 +22,10 @@
 
 ## Changelog
 
+### v3.0.5 (UI Stability & Market Polish)
+- **Stability Fix**: Globális javítás a `toLocaleString()` hibára, amely megakadályozta az adatok betöltését (Profil, Ranglista, stb.).
+- **Market Polish**: A piac felület kapott egy "piactér" hangulatot (animált háttér, gombok).
+
 ### v3.0.4 (Social Overhaul)
 - **Alliance Redesign**: Teljesen megújult szövetségi felület modernebb megjelenéssel, átláthatóbb statisztikákkal és javított kontraszttal.
 - **Market Fix**: Javítva a piac (Marketplace) megjelenítési hibája és az üres lista renderelése.
