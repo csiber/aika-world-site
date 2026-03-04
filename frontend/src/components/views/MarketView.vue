@@ -30,7 +30,7 @@
               <tbody>
                 <tr v-if="loading" class="loading-row"><td colspan="5">Betöltés...</td></tr>
                 <tr v-else-if="filteredOffers.length === 0" class="empty-row"><td colspan="5">{{ L.t('market.noOffers') }}</td></tr>
-                <tr v-for="o in filteredOffers" :key="m.id" :class="{ 'own-offer': o.user_id === auth.userId }">
+                <tr v-for="o in filteredOffers" :key="o.id" :class="{ 'own-offer': o.user_id === auth.userId }">
                   <td class="player-cell">
                     <span class="player-name">{{ o.username }}</span>
                     <span v-if="o.user_id === auth.userId" class="own-tag">Saját</span>

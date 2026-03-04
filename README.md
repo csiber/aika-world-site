@@ -22,6 +22,10 @@
 
 ## Changelog
 
+### v3.0.4 (Social Overhaul)
+- **Alliance Redesign**: Teljesen megújult szövetségi felület modernebb megjelenéssel, átláthatóbb statisztikákkal és javított kontraszttal.
+- **Market Fix**: Javítva a piac (Marketplace) megjelenítési hibája és az üres lista renderelése.
+
 ### v3.0.3 (Global Polish & Admin UX)
 - **UI Readability**: Globális sötét/világos mód szövegszín javítások (nincs többé olvashatatlan fekete szöveg sötétben).
 - **Admin Panel Overhaul**: Nagyobb betűméretek, átláthatóbb statisztikák és új Bot menedzsment gombok (Seed/Simulate).
