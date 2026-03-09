@@ -205,5 +205,35 @@ export async function handleAlliance(request, env, url, user) {
     return jsonResponse({ ok: true, wars: wars.results }, 200, request);
   }
 
+  // ── GET /api/alliance/dominance ──────────────────────────
+  if (path === '/api/alliance/dominance' && method === 'GET') {
+    // Aggregating scores per alliance per galaxy (sector)
+    const dominance = await env.DB.prepare(`
+      SELECT 
+        substr(p.coords, 2, instr(p.coords, ':') - 2) as sector,
+        a.id as alliance_id,
+        a.name as alliance_name,
+        a.tag as alliance_tag,
+        SUM(r.score) as total_sector_score
+      FROM planets p
+      JOIN users u ON p.user_id = u.id
+      JOIN rankings r ON u.id = r.user_id
+      JOIN alliance_members am ON u.id = am.user_id
+      JOIN alliances a ON am.alliance_id = a.id
+      GROUP BY sector, a.id
+      ORDER BY sector ASC, total_sector_score DESC
+    `).all();
+
+    // Group by sector and pick the winner
+    const sectors = {};
+    dominance.results.forEach(row => {
+      if (!sectors[row.sector]) {
+        sectors[row.sector] = row; // First is the winner due to ORDER BY
+      }
+    });
+
+    return jsonResponse({ ok: true, sectors }, 200, request);
+  }
+
   return jsonError(404, 'Alliance endpoint not found', request);
 }

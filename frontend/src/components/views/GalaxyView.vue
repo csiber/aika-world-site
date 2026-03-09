@@ -23,6 +23,9 @@
       <div class="galaxy-bonus-banner" :class="'gal-' + currentGal">
         <span class="bonus-icon">💠</span>
         <span class="bonus-text">{{ galaxyBonus }}</span>
+        <div v-if="currentDominator" class="dominance-tag">
+          👑 <b>{{ currentDominator.alliance_tag }}</b> uralma alatt (+10% bónusz)
+        </div>
       </div>
     </div>
 
@@ -163,8 +166,11 @@ const currentGal = ref(1);
 const currentSys = ref(1);
 const loading    = ref(false);
 const players    = ref([]);
+const dominance  = ref({});
 const selected   = ref(null);
 const actionBusy = ref(null);
+
+const currentDominator = computed(() => dominance.value[currentGal.value]);
 
 const galaxyBonus = computed(() => {
     const bonuses = {
@@ -218,8 +224,12 @@ function changeSys(delta) {
 async function loadGalaxy() {
   loading.value = true;
   try {
-    const data = await api.getGalaxy(currentGal.value, currentSys.value);
-    players.value = data.players || [];
+    const [galData, domData] = await Promise.all([
+      api.getGalaxy(currentGal.value, currentSys.value),
+      api.get('/alliance/dominance')
+    ]);
+    players.value = galData.players || [];
+    dominance.value = domData.sectors || {};
   } catch (e) {
     game.notify(`Hiba: ${e.message}`, 'red');
   }
@@ -365,6 +375,8 @@ onMounted(() => {
 }
 .bonus-icon { font-size: 14px; }
 .bonus-text { color: var(--accent); font-family: 'Exo 2', sans-serif; letter-spacing: 0.5px; }
+.dominance-tag { margin-left: auto; font-size: 10px; color: var(--accent); background: rgba(0,200,255,0.1); padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(0,200,255,0.3); animation: pulse-border 2s infinite; }
+@keyframes pulse-border { 0%, 100% { border-color: rgba(0,200,255,0.3); } 50% { border-color: var(--accent); } }
 
 /* Galaxy specific themes */
 .gal-1 { border-color: var(--border); }

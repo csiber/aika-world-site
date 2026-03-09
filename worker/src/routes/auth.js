@@ -106,6 +106,70 @@ export async function handleAuth(request, env, url) {
     }
   }
 
+  // ── POST /api/auth/hub-sync ─────────────────────────────
+  if (path === '/api/auth/hub-sync' && method === 'POST') {
+    let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    const { hub_token, email, nickname } = body;
+    if (!hub_token || !email) return jsonError(400, 'Hiányzó adatok', request);
+
+    try {
+      // 1. Verify with Hub
+      const hubRes = await fetch("https://aikahub.com/api/user/me", {
+        headers: { "Authorization": `Bearer ${hub_token}` }
+      });
+      if (!hubRes.ok) return jsonError(401, 'Érvénytelen Hub token', request);
+      const hubUser = await hubRes.ok ? await hubRes.json() : {};
+      const userEmail = email.toLowerCase().trim();
+
+      // 2. Find or Create local user
+      let user = await env.DB.prepare('SELECT * FROM users WHERE email = ?').bind(userEmail).first();
+      
+      if (!user) {
+        const userId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
+        const planetId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
+        const uname = nickname || hubUser.nickname || userEmail.split('@')[0];
+
+        let coords = "1:1:1";
+        try {
+          coords = await findAvailableCoords(env);
+        } catch (e) {
+          console.error("Coords error, using fallback", e);
+        }
+
+        const isAdmin = (hubUser.role === 'admin' || hubUser.role === 'superadmin') ? 1 : 0;
+
+        const defBuildings = await env.DB.prepare('SELECT data FROM default_buildings').first();
+        const defResearch  = await env.DB.prepare('SELECT data FROM default_research').first();
+
+        await env.DB.batch([
+          env.DB.prepare('INSERT INTO users (id, username, email, password, is_admin) VALUES (?, ?, ?, ?, ?)').bind(userId, uname, userEmail, 'HUB_MANAGED', isAdmin),
+          env.DB.prepare('INSERT INTO game_state (user_id, research, active_planet_id) VALUES (?, ?, ?)').bind(userId, defResearch?.data || "{}", planetId),
+          env.DB.prepare('INSERT INTO planets (id, user_id, name, emoji, coords, buildings, is_main) VALUES (?, ?, ?, ?, ?, ?, 1)').bind(planetId, userId, `${uname} Főbolygó`, '🌍', coords, defBuildings?.data || "{}"),
+          env.DB.prepare('INSERT INTO rankings (user_id, username) VALUES (?, ?)').bind(userId, uname),
+          env.DB.prepare('INSERT OR IGNORE INTO galaxy_map (user_id, username, planet_name, planet_emoji, coords, is_main) VALUES (?, ?, ?, ?, ?, 1)').bind(userId, uname, `${uname} Főbolygó`, '🌍', coords)
+        ]);
+
+        user = { id: userId, username: uname, is_admin: isAdmin };
+      }
+ else {
+        // Update admin status if changed on Hub
+        const isAdmin = (hubUser.role === 'admin' || hubUser.role === 'superadmin') ? 1 : 0;
+        if (isAdmin !== user.is_admin) {
+          await env.DB.prepare('UPDATE users SET is_admin = ? WHERE id = ?').bind(isAdmin, user.id).run();
+          user.is_admin = isAdmin;
+        }
+        const now = Math.floor(Date.now() / 1000);
+        await env.DB.prepare('UPDATE users SET last_login = ? WHERE id = ?').bind(now, user.id).run();
+      }
+
+      const token = await signJWT({ sub: user.id, username: user.username, isAdmin: user.is_admin }, env.JWT_SECRET);
+      return jsonResponse({ ok: true, token, username: user.username, userId: user.id, isAdmin: user.is_admin }, 200, request);
+    } catch (err) {
+      console.error('Hub sync error:', err);
+      return jsonError(500, 'Belső hiba a Hub szinkronizáció során.', request);
+    }
+  }
+
   // ── GET /api/auth/me ────────────────────────────────────
   if (path === '/api/auth/me' && method === 'GET') {
     const authResult = await verifyJWT(request, env);

@@ -2,7 +2,7 @@
   <div class="bot-panel" :class="{ minimized }">
     <!-- ── HEADER ── -->
     <div class="bot-header" @click="minimized = !minimized">
-      <span class="bot-title">🤖 {{ L.t('bot.title') }}</span>
+      <span class="bot-title">🤖 {{ L.t('bot.title') }} 2.0</span>
       <div class="bot-header-actions" @click.stop>
         <button class="bot-btn" :disabled="bot.status === 'exhausted'" @click="toggleBot" :title="bot.active ? L.t('bot.stopped') : L.t('bot.running')">
           {{ bot.active ? '■' : '▶' }}
@@ -30,6 +30,7 @@
         <div class="stat-row">
           <span class="stat-icon">⏱</span>
           <span>{{ L.t('bot.today') }} <b>{{ dailyTimeStr }}</b> / {{ bot.settings.dailyTimeLimitMin }} {{ L.t('time.min') }}</span>
+          <button class="reset-btn" @click="bot.resetStats" title="Statisztikák nullázása">♻️</button>
         </div>
         <div class="stat-row">
           <span class="stat-icon">🎯</span>
@@ -60,6 +61,10 @@
         <label class="setting-row">
           <input type="checkbox" v-model="bot.settings.autoFleet" />
           <span>{{ L.t('bot.autoFleet') }}</span>
+        </label>
+        <label class="setting-row">
+          <input type="checkbox" v-model="bot.settings.autoExpedition" />
+          <span>🚀 Auto-Expedíció</span>
         </label>
         <div class="setting-number-row">
           <span>{{ L.t('bot.dailyLimit') }}</span>
@@ -227,6 +232,8 @@ const sessionStr = computed(() => {
 .stat-row { display: flex; align-items: center; gap: 6px; color: var(--text-dim, #7090b0); }
 .stat-row b { color: var(--text, #c8d8f0); }
 .stat-icon { width: 14px; text-align: center; }
+.reset-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 0 5px; opacity: 0.6; transition: opacity 0.2s, transform 0.2s; }
+.reset-btn:hover { opacity: 1; transform: rotate(180deg); }
 .settings-toggle { background: none; border: 1px solid var(--border, rgba(0,200,255,0.15)); color: var(--text-dim, #7090b0); padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; width: 100%; text-align: left; font-family: 'Exo 2', sans-serif; transition: all 0.2s; }
 .settings-toggle:hover { background: rgba(255,255,255,0.03); color: var(--text, #c8d8f0); }
 .bot-settings { display: flex; flex-direction: column; gap: 5px; padding: 4px 0; }

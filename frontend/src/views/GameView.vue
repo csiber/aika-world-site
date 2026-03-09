@@ -1,5 +1,6 @@
 <template>
-  <div class="game-shell" v-if="!gameStore.loading && gameStore.state">
+  <!-- Main Shell - Only render when state is ready -->
+  <div class="game-shell" v-if="gameStore.state && !gameStore.loading">
 
     <!-- ── TOPBAR ── -->
     <header class="topbar">
@@ -13,10 +14,10 @@
       </div>
 
       <div class="resource-bar">
-        <ResourceItem icon="⚙️" :label="L.t('res.metal')"   :value="resources.metal"   :rate="rates.metal"   color="var(--metal)"   :maxVal="gameStore.storage.metal" />
-        <ResourceItem icon="💎" :label="L.t('res.crystal')" :value="resources.crystal" :rate="rates.crystal" color="var(--crystal)" :maxVal="gameStore.storage.crystal" />
+        <ResourceItem icon="⚙️" :label="L.t('res.metal')"   :value="resources.metal"   :rate="rates.metal"   color="var(--metal)"   :maxVal="gameStore.storage?.metal" />
+        <ResourceItem icon="💎" :label="L.t('res.crystal')" :value="resources.crystal" :rate="rates.crystal" color="var(--crystal)" :maxVal="gameStore.storage?.crystal" />
         <ResourceItem icon="⚡" :label="L.t('res.energy')"  :value="resources.energy"  :rate="rates.energy"  color="var(--energy)" />
-        <ResourceItem icon="🔮" :label="L.t('res.deus')"    :value="resources.deus"    :rate="rates.deus"    color="var(--accent)"  :maxVal="gameStore.storage.deus" />
+        <ResourceItem icon="🔮" :label="L.t('res.deus')"    :value="resources.deus"    :rate="rates.deus"    color="var(--accent)"  :maxVal="gameStore.storage?.deus" />
       </div>
 
       <div class="user-area">
@@ -61,7 +62,7 @@
         v-for="planet in planets"
         :key="planet.id"
         class="planet-slot"
-        :class="{ active: gameStore.activePlanet.id === planet.id, 'is-moon': planet.isMoon }"
+        :class="{ active: gameStore.state?.activePlanet?.id === planet.id, 'is-moon': planet.isMoon }"
         @click="gameStore.switchPlanet(planet.id)"
       >
         <span class="planet-emoji">
@@ -96,11 +97,13 @@
     <TourOverlay />
   </div>
 
-  <div v-else-if="gameStore.loading" class="loading-screen">
+  <!-- Loading State -->
+  <div v-else-if="gameStore.loading || !gameStore.state" class="loading-screen">
     <div class="loading-icon">🌌</div>
-    <div class="loading-text">{{ L.t('game.loading') }}</div>
+    <div class="loading-text">{{ L.t('game.loading') || 'Betöltés...' }}</div>
   </div>
 
+  <!-- Error State -->
   <div v-else class="loading-screen">
     <div class="loading-icon">⚠️</div>
     <div class="loading-text">{{ gameStore.error || L.t('game.error') }}</div>
@@ -152,11 +155,11 @@ const L             = useLangStore();
 const activeTab      = ref('overview');
 const showChangelog  = ref(false);
 
-const resources = computed(() => gameStore.resources);
-const rates     = computed(() => gameStore.rates);
-const planets   = computed(() => gameStore.planets);
-const score     = computed(() => gameStore.score);
-const scoreFormatted = computed(() => (score.value || 0).toLocaleString('hu'));
+// Safe computed accessors
+const resources = computed(() => gameStore.state?.activePlanet?.resources || { metal: 0, crystal: 0, energy: 0, deus: 0 });
+const rates     = computed(() => gameStore.state?.activePlanet?.rates || { metal: 0, crystal: 0, energy: 0, deus: 0 });
+const planets   = computed(() => gameStore.state?.planets || []);
+const scoreFormatted = computed(() => (gameStore.state?.score || 0).toLocaleString('hu'));
 
 const tabs = computed(() => {
   const t = [
@@ -188,7 +191,7 @@ function onLogout() {
 let tickTimer, syncTimer;
 
 onMounted(async () => {
-  await auth.checkMe(); // Ensure session and admin status are fresh
+  await auth.checkMe(); 
   await gameStore.loadState();
   await msgStore.loadMessages();
   await allianceStore.load();
@@ -196,9 +199,12 @@ onMounted(async () => {
   tickTimer = setInterval(() => gameStore.tickResources(), 1000);
   syncTimer = setInterval(() => gameStore.syncResources(), 30000);
 
-  // Auto-start tour for new users
   if (!localStorage.getItem('aika_tour_finished')) {
-    setTimeout(() => tour.start(), 1500);
+    setTimeout(() => {
+      if (tour && typeof tour.start === 'function') {
+        tour.start();
+      }
+    }, 1500);
   }
 });
 
@@ -220,7 +226,7 @@ onUnmounted(() => {
   background: linear-gradient(180deg, var(--bg-deep) 0%, #040813 100%);
   border-bottom: 1px solid var(--border);
   display: grid;
-  grid-template-columns: auto 1fr auto; /* Logo | Resources | User */
+  grid-template-columns: auto 1fr auto; 
   align-items: center;
   height: 48px;
   box-shadow: 0 2px 20px rgba(0,0,0,0.6);
@@ -268,31 +274,6 @@ onUnmounted(() => {
 .add-planet:hover { opacity: 0.8; }
 
 .main-content { flex: 1; padding: 10px; position: relative; z-index: 1; }
-
-/* ── Mobile & Tablet Optimization ── */
-@media (max-width: 768px) {
-  .topbar {
-    padding: 0 4px;
-    grid-template-columns: auto 1fr auto;
-    height: auto;
-    min-height: 48px;
-    flex-wrap: wrap;
-    row-gap: 4px;
-  }
-  .logo-area { min-width: auto; padding: 0 8px; border-right: none; height: 40px; }
-  .logo-title, .logo-sub { display: none; }
-  .resource-bar { padding: 0 4px; mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%); grid-column: 1 / -1; height: 40px; }
-  .user-area { padding: 0 4px; border-left: none; height: 40px; margin-left: auto; }
-  .user-name { display: none; }
-  
-  .nav { position: fixed; bottom: 0; top: auto; left: 0; width: 100%; height: 60px; background: #050c1c; border-top: 1px solid var(--border); border-bottom: none; padding: 0; z-index: 1000; justify-content: flex-start; box-shadow: 0 -4px 20px rgba(0,0,0,0.5); }
-  .nav-btn { flex-direction: column; justify-content: center; height: 100%; padding: 0 16px; min-width: 70px; font-size: 10px; gap: 4px; border: none; border-top: 2px solid transparent; border-radius: 0; }
-  .nav-btn.active { border-color: var(--accent); background: linear-gradient(180deg, rgba(0,200,255,0.05) 0%, transparent 100%); box-shadow: none; }
-  
-  .planet-bar { top: 48px; z-index: 90; padding: 4px 8px; }
-  .planet-slot { min-width: 70px; padding: 2px 6px; }
-  .main-content { padding-bottom: 80px; }
-}
 
 .loading-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; position: relative; z-index: 1; }
 .loading-icon { font-size: 64px; animation: pulse 2s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(0,200,255,0.5)); }

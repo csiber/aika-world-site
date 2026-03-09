@@ -15,11 +15,13 @@ import { handleMarket }   from './routes/market.js';
 import { corsHeaders, jsonError } from './utils/response.js';
 import { verifyJWT } from './utils/jwt.js';
 import { simulateBots } from './utils/bots.js';
+import { processWorldEvents } from './utils/events.js';
 
 export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(simulateBots(env));
     ctx.waitUntil(resolveAllMissions(env));
+    ctx.waitUntil(processWorldEvents(env));
   },
 
   async fetch(request, env, ctx) {
@@ -59,9 +61,30 @@ export default {
         return jsonError(404, 'Not found', request);
       }
 
-      const assetResponse = await env.ASSETS.fetch(request);
-      if (assetResponse.status !== 404) return assetResponse;
-      return await env.ASSETS.fetch(new Request(new URL('/', request.url)));
+      // Static Assets Serving
+      let assetResponse;
+      try {
+        assetResponse = await env.ASSETS.fetch(request);
+      } catch (assetErr) {
+        console.error('ASSETS fetch error:', assetErr);
+        // If ASSETS binding fails, try one more time or return error
+        return new Response('Asset Storage Error', { status: 500 });
+      }
+      
+      // If asset found, return it
+      if (assetResponse && assetResponse.status !== 404) return assetResponse;
+
+      // If 404 but it's a static file request (css, js, png, etc.), return the 404
+      const isStaticAsset = url.pathname.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|webmanifest|json)$/) || url.pathname.includes('/assets/');
+      if (isStaticAsset) return assetResponse;
+
+      // Fallback to index.html for SPA routing (only for non-API, non-asset requests)
+      try {
+        return await env.ASSETS.fetch(new Request(new URL('/', request.url)));
+      } catch (fallbackErr) {
+        console.error('SPA fallback error:', fallbackErr);
+        return new Response('Frontend Unavailable', { status: 500 });
+      }
     } catch (err) {
       console.error('Worker error:', err);
       return jsonError(500, 'Internal server error', request);

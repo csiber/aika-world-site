@@ -95,6 +95,26 @@
         </div>
       </div>
 
+      <!-- World Events -->
+      <div v-if="game.state?.worldEvents?.length" class="panel events-panel mt-4">
+        <div class="panel-header">
+          <span class="panel-icon">📡</span>
+          <h3>Galaktikus Események</h3>
+        </div>
+        <div class="panel-body">
+          <div v-for="event in (game.state?.worldEvents || [])" :key="event.id" class="world-event-item">
+            <div class="event-icon">{{ event.meta?.icon }}</div>
+            <div class="event-content">
+              <div class="event-title">{{ event.meta?.name?.[L.lang] }}</div>
+              <div class="event-text">{{ event.meta?.desc?.[L.lang] }}</div>
+              <div class="event-countdown">
+                ⏳ Hátralévő idő: <b>{{ formatTimeLeft(event.expires_at) }}</b>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Build Queue -->
       <div class="panel">
         <div class="panel-header"><span class="panel-icon">⚒️</span><h3>{{ L.t('overview.queue') }}</h3></div>
@@ -157,7 +177,7 @@
         </div>
         <div class="section-title" style="margin-top:12px;">{{ L.t('overview.defenseSummary') || '🛡️ Védelem' }}</div>
         <div class="stat-block">
-          <div v-for="d in game.defense" :key="d.id" class="stat-row">
+          <div v-for="d in (game.defense || [])" :key="d.id" class="stat-row">
             <span>{{ d.icon }} {{ d.name }}</span>
             <span class="sv">{{ d.count }}</span>
           </div>
@@ -258,12 +278,13 @@ async function sendToAika() {
   aikaLoading.value = false;
 }
 
+let timer;
 onMounted(() => {
   loadMissions();
   loadQuests();
-  const timer = setInterval(() => { loadMissions(); loadQuests(); }, 10000);
-  onUnmounted(() => clearInterval(timer));
+  timer = setInterval(() => { loadMissions(); loadQuests(); }, 10000);
 });
+onUnmounted(() => clearInterval(timer));
 </script>
 
 <style scoped>
@@ -319,6 +340,15 @@ onMounted(() => {
 
 .stat-block { display: flex; flex-direction: column; gap: 4px; }
 .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid rgba(26,42,74,0.3); font-size: 11px; color: var(--text); }
+
+/* World Events */
+.world-event-item { display: flex; align-items: center; gap: 15px; padding: 12px; background: rgba(0,200,255,0.03); border: 1px solid rgba(0,200,255,0.1); border-radius: 6px; margin-bottom: 8px; }
+.event-icon { font-size: 24px; }
+.event-title { font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 2px; }
+.event-text { font-size: 11px; color: var(--text-bright); line-height: 1.4; }
+.event-countdown { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+.mt-4 { margin-top: 16px; }
+
 .sv { font-family: 'Orbitron', sans-serif; font-size: 10px; }
 .sv.metal { color: var(--metal); }
 .sv.crystal { color: var(--crystal); }

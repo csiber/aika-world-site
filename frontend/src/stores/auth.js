@@ -50,6 +50,25 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const HUB_API_URL = 'https://aikahub.com';
+
+  async function hubSync(hubToken, email, nickname) {
+    try {
+      const res = await fetch('/api/auth/hub-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hub_token: hubToken, email, nickname }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Hub sync failed');
+      setAuth(data);
+      return data;
+    } catch (e) {
+      console.error('Hub sync error:', e);
+      throw e;
+    }
+  }
+
   async function register(uname, email, password, tsToken) {
     const data = await api.register(uname, email, password, tsToken);
     setAuth(data);
@@ -57,9 +76,31 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function login(email, password, tsToken) {
-    const data = await api.login(email, password, tsToken);
-    setAuth(data);
-    return data;
+    try {
+      // 1. Try AikaHub Login first
+      try {
+        const hubRes = await fetch(`${HUB_API_URL}/api/os/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, platform: 'aikaworld' }),
+        });
+        
+        if (hubRes.ok) {
+          const hubData = await hubRes.json();
+          return await hubSync(hubData.access_token, email, hubData.user?.nickname);
+        }
+      } catch (hubErr) {
+        // Silent fallback
+      }
+
+      // 2. Fallback to local login
+      const data = await api.login(email, password, tsToken);
+      setAuth(data);
+      return data;
+    } catch (e) {
+      console.error('Login error:', e);
+      throw e;
+    }
   }
 
   return { token, username, userId, isAdmin, isLoggedIn, register, login, logout, checkMe };

@@ -45,25 +45,25 @@
         <div class="panel-header"><span class="panel-icon">🔒</span><h3>Biztonság</h3></div>
         <div class="panel-body">
           <div class="section-title">Jelszó módosítása</div>
-          <div class="password-form">
+          <form class="password-form" @submit.prevent="doChangePassword">
             <div class="field">
               <label>Jelenlegi jelszó</label>
-              <input v-model="pwCurrent" type="password" class="input" placeholder="••••••••" />
+              <input v-model="pwCurrent" type="password" class="input" placeholder="••••••••" autocomplete="current-password" required />
             </div>
             <div class="field">
               <label>Új jelszó</label>
-              <input v-model="pwNew" type="password" class="input" placeholder="••••••••" />
+              <input v-model="pwNew" type="password" class="input" placeholder="••••••••" autocomplete="new-password" required />
             </div>
             <div class="field">
               <label>Új jelszó újra</label>
-              <input v-model="pwNew2" type="password" class="input" placeholder="••••••••" />
+              <input v-model="pwNew2" type="password" class="input" placeholder="••••••••" autocomplete="new-password" required />
             </div>
-            <button class="btn-primary" @click="doChangePassword" :disabled="pwBusy" style="width:100%;margin-top:10px;">
+            <button type="submit" class="btn-primary" :disabled="pwBusy" style="width:100%;margin-top:10px;">
               {{ pwBusy ? 'Mentés...' : 'Jelszó frissítése' }}
             </button>
             <div v-if="pwError" class="error-msg" style="margin-top:10px;">❌ {{ pwError }}</div>
             <div v-if="pwSuccess" class="success-msg" style="margin-top:10px;">✅ {{ pwSuccess }}</div>
-          </div>
+          </form>
         </div>
       </div>
     </div>

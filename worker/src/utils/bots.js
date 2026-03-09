@@ -92,24 +92,43 @@ export async function simulateBots(env) {
     const def = defMap[bot.username];
     if (!def) continue;
 
-    // 1. Passive growth
+    // 1. Passive Score growth
     const growth = Math.floor(def.growthMin + Math.random() * (def.growthMax - def.growthMin));
     await env.DB.prepare('UPDATE game_state SET score = score + ? WHERE user_id = ?').bind(growth, bot.id).run();
     await env.DB.prepare('UPDATE rankings SET score = score + ? WHERE user_id = ?').bind(growth, bot.id).run();
     await env.DB.prepare('UPDATE galaxy_map SET score = score + ? WHERE user_id = ?').bind(growth, bot.id).run();
 
-    // 2. Active AI logic (5% mission, 40% market)
-    const roll = Math.random();
-    if (roll < 0.05) {
-      await runBotAI(env, bot, def);
-    } else if (roll < 0.45) {
-      // Bots can now do multiple market actions in one tick
-      await runBotMarketAI(env, bot);
-      if (Math.random() < 0.3) await runBotMarketAI(env, bot);
+    // 2. Resource Simulation (Bots need resources to trade/build)
+    const stats = TIER_STATS[def.tier];
+    const resGain = stats.buildings * 5000; // Simplified hourly production
+    await env.DB.prepare(`
+      UPDATE planets SET 
+        metal = metal + ?, 
+        crystal = crystal + ?, 
+        deus = deus + ?
+      WHERE user_id = ?
+    `).bind(resGain, resGain / 2, resGain / 10, bot.id).run();
+
+    // 3. Active AI logic
+    // Tier-based frequency: Elite bots act more often
+    const actionMulti = def.tier === 'elite' ? 3 : (def.tier === 'advanced' ? 2 : 1);
+    
+    for (let i = 0; i < actionMulti; i++) {
+      const roll = Math.random();
+      if (roll < 0.10) { // 10% mission (increased from 5%)
+        await runBotAI(env, bot, def);
+      } else if (roll < 0.50) { // 40% market
+        await runBotMarketAI(env, bot, def);
+      }
+      
+      // 4. Social AI: Elite bots might message humans
+      if (def.tier === 'elite' && Math.random() < 0.05) {
+        await runBotSocialAI(env, bot);
+      }
     }
   }
 
-  // 3. Market Cleanup (Remove bot offers older than 6 hours)
+  // 5. Market Cleanup
   const sixHoursAgo = Math.floor(Date.now() / 1000) - (6 * 3600);
   await env.DB.prepare(`
     DELETE FROM market_offers 
@@ -119,6 +138,35 @@ export async function simulateBots(env) {
   `).bind(sixHoursAgo).run();
 
   return { updated: bots.length };
+}
+
+async function runBotSocialAI(env, bot) {
+  // Find a target human who is active
+  const target = await env.DB.prepare(`
+    SELECT u.id, u.username FROM users u
+    JOIN rankings r ON r.user_id = u.id
+    WHERE u.is_bot = 0
+    ORDER BY RANDOM() LIMIT 1
+  `).first();
+
+  if (!target) return;
+
+  const messages = [
+    "Az űr hideg, de a fegyvereim forróak. Készülj fel.",
+    "Látom a flottádat. Szánalmas próbálkozás.",
+    "A Nexus nem bocsát meg a gyengéknek.",
+    "Kereskedni jöttél, vagy meghalni?",
+    "A csillagok közt nincs helye a te fajtádnak.",
+    "Érdekes koordinátákon tanyázol. Meglátogatlak hamarosan."
+  ];
+
+  const msg = messages[Math.floor(Math.random() * messages.length)];
+  const id = crypto.randomUUID();
+
+  await env.DB.prepare(`
+    INSERT INTO messages (id, sender_id, sender_name, receiver_id, content, created_at)
+    VALUES (?, ?, ?, ?, ?, unixepoch())
+  `).bind(id, bot.id, bot.username, target.id, msg).run();
 }
 
 async function runBotMarketAI(env, bot) {
@@ -163,47 +211,83 @@ async function runBotMarketAI(env, bot) {
 
 async function runBotAI(env, bot, def) {
     const botPlanet = await env.DB.prepare('SELECT * FROM planets WHERE user_id = ? AND is_main = 1').bind(bot.id).first();
-    if (!botPlanet) return;
+    const gameState = await env.DB.prepare('SELECT * FROM game_state WHERE user_id = ?').bind(bot.id).first();
+    if (!botPlanet || !gameState) return;
 
-    // Find a human target
-    const target = await env.DB.prepare(`
-        SELECT g.* FROM galaxy_map g
-        JOIN users u ON u.id = g.user_id
-        WHERE u.is_bot = 0
-        ORDER BY RANDOM() LIMIT 1
-    `).first();
+    const roll = Math.random();
+    
+    // 1. Mission Logic (Attack/Spy) - 30% of AI ticks
+    if (roll < 0.3) {
+        // Find a human target
+        const target = await env.DB.prepare(`
+            SELECT g.* FROM galaxy_map g
+            JOIN users u ON u.id = g.user_id
+            WHERE u.is_bot = 0
+            ORDER BY RANDOM() LIMIT 1
+        `).first();
 
-    if (!target) return;
+        if (!target) return;
 
-    const missionType = Math.random() < 0.7 ? 'spy' : 'attack';
-    const ships = JSON.parse(botPlanet.fleet);
-    const sentShips = [];
+        const missionType = Math.random() < 0.7 ? 'spy' : 'attack';
+        const ships = JSON.parse(botPlanet.fleet || '[]');
+        const sentShips = [];
 
-    if (missionType === 'spy') {
-        const spyShip = ships.find(s => s.id === 'fighter_s' || s.id === 'spy');
-        if (spyShip && spyShip.count > 0) {
-            sentShips.push({ ...spyShip, count: 1 });
-        }
-    } else {
-        // Attack with 30% of fleet
-        ships.forEach(s => {
-            if (s.count > 10) {
-                const amt = Math.floor(s.count * 0.3);
-                sentShips.push({ ...s, count: amt });
-                s.count -= amt;
+        if (missionType === 'spy') {
+            const spyShip = ships.find(s => s.id === 'fighter_s' || s.id === 'spy');
+            if (spyShip && spyShip.count > 0) {
+                sentShips.push({ ...spyShip, count: 1 });
             }
-        });
+        } else {
+            // Attack with 30-50% of fleet
+            const ratio = 0.3 + (Math.random() * 0.2);
+            ships.forEach(s => {
+                if (s.count > 5) {
+                    const amt = Math.floor(s.count * ratio);
+                    if (amt > 0) {
+                        sentShips.push({ ...s, count: amt });
+                        s.count -= amt;
+                    }
+                }
+            });
+            if (sentShips.length > 0) {
+                await env.DB.prepare('UPDATE planets SET fleet = ? WHERE id = ?').bind(JSON.stringify(ships), botPlanet.id).run();
+            }
+        }
+
         if (sentShips.length > 0) {
-            await env.DB.prepare('UPDATE planets SET fleet = ? WHERE id = ?').bind(JSON.stringify(ships), botPlanet.id).run();
+            const arriveAt = Math.floor(Date.now() / 1000) + 600;
+            await env.DB.prepare(`
+                INSERT INTO fleet_missions (id, user_id, origin_planet_id, target_user_id, mission_type, target_coords, target_name, status, ships, arrive_at, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'travelling', ?, ?, unixepoch())
+            `).bind(crypto.randomUUID(), bot.id, botPlanet.id, target.user_id, missionType, target.coords, target.planet_name, JSON.stringify(sentShips), arriveAt).run();
+        }
+    } 
+    // 2. Building Logic (Infrastructure) - 30% of AI ticks
+    else if (roll < 0.6) {
+        const buildings = JSON.parse(botPlanet.buildings || '[]');
+        const targetB = buildings[Math.floor(Math.random() * buildings.length)];
+        if (targetB && botPlanet.metal > 5000) {
+            targetB.level += 1;
+            await env.DB.prepare(`
+                UPDATE planets SET buildings = ?, metal = metal - 5000, crystal = crystal - 2500 
+                WHERE id = ?
+            `).bind(JSON.stringify(buildings), botPlanet.id).run();
         }
     }
-
-    if (sentShips.length > 0) {
-        const arriveAt = Math.floor(Date.now() / 1000) + 600; // Fixed 10 min for bots
-        await env.DB.prepare(`
-            INSERT INTO fleet_missions (id, user_id, origin_planet_id, target_user_id, mission_type, target_coords, target_name, status, ships, arrive_at, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'travelling', ?, ?, unixepoch())
-        `).bind(crypto.randomUUID(), bot.id, botPlanet.id, target.user_id, missionType, target.coords, target.planet_name, JSON.stringify(sentShips), arriveAt).run();
+    // 3. Fleet Replenishment - 40% of AI ticks
+    else {
+        const ships = JSON.parse(botPlanet.fleet || '[]');
+        const stats = TIER_STATS[def.tier];
+        
+        ships.forEach(s => {
+            const max = stats.fleet[s.id] || 0;
+            if (s.count < max && botPlanet.metal > 10000) {
+                const add = Math.floor((max - s.count) * 0.2) + 5;
+                s.count += add;
+            }
+        });
+        
+        await env.DB.prepare('UPDATE planets SET fleet = ? WHERE id = ?').bind(JSON.stringify(ships), botPlanet.id).run();
     }
 }
 
