@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aika/sdk": "file:../../aika-sdk",
+    "@aika/sdk": "file:./lib/aika-sdk",
     "pinia": "^2.1.0",
     "vue": "^3.4.0",
     "vue-router": "^4.3.0"
