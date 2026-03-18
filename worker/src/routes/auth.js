@@ -46,7 +46,7 @@ async function findAvailableCoords(env) {
  * @param {object} hubPayload - decoded AikaHub JWT payload { userId, email, nickname, role }
  * @returns {Promise<object>} local user record
  */
-async function findOrCreateGameUser(env, hubPayload) {
+export async function findOrCreateGameUser(env, hubPayload) {
   const email = (hubPayload.email || '').toLowerCase().trim();
   const nickname = hubPayload.nickname || email.split('@')[0];
   const hubUserId = hubPayload.userId;

@@ -19,6 +19,7 @@ import { handleGetFleetMovements, handleScanPhalanx, handleInterceptFleet } from
 import { handleGetTacticalBattle, handleSubmitFormation, handleSubmitOrders, handleAdvanceRound, handleAutoResolve } from './routes/tactical.js';
 import { corsHeaders, jsonError } from './utils/response.js';
 import { verifyJWT } from './utils/jwt.js';
+import { findOrCreateGameUser } from './routes/auth.js';
 import { simulateBots } from './utils/bots.js';
 import { processWorldEvents } from './utils/events.js';
 import { cleanupTimeline } from './utils/timeline.js';
@@ -45,17 +46,14 @@ async function authenticateRequest(request, env) {
     try {
       const payload = JSON.parse(atob(parts[0]));
       if (payload && payload.userId) {
-        // AikaHub token — look up the local user by email
-        const email = (payload.email || '').toLowerCase().trim();
-        if (email) {
-          const user = await env.DB.prepare('SELECT id, username, is_admin FROM users WHERE email = ?').bind(email).first();
-          if (user) {
-            return { ok: true, user: { sub: user.id, username: user.username, isAdmin: user.is_admin } };
-          }
-        }
-        // User not found locally yet — use hub data directly
-        // The first API call after login may need to create the user via hub-sync
-        return { ok: true, user: { sub: payload.userId, username: payload.nickname || payload.email?.split('@')[0] || 'unknown', isAdmin: (payload.role === 'admin' || payload.role === 'superadmin') ? 1 : 0 } };
+        // AikaHub token — look up or auto-create local game user
+        const user = await findOrCreateGameUser(env, {
+          userId: payload.userId,
+          email: payload.email || '',
+          nickname: payload.nickname || payload.email?.split('@')[0] || 'unknown',
+          role: payload.role || 'user',
+        });
+        return { ok: true, user: { sub: user.id, username: user.username, isAdmin: user.is_admin } };
       }
     } catch {
       // Not an AikaHub token format, fall through
