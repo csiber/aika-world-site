@@ -131,5 +131,5 @@ class AikaSDK {
 }
 
 export { AikaSDK };
-export { getUser, getToken } from './auth.js';
-export { clearAll as clearAuth } from './storage.js';
+export { getUser } from './auth.js';
+export { getToken, clearAll as clearAuth } from './storage.js';
