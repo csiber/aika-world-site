@@ -198,6 +198,43 @@
           </div>
         </div>
 
+        <!-- TERRITORY TAB -->
+        <div v-if="activeTab === 'territory'" class="tab-content territory-view">
+          <div class="panel">
+            <div class="panel-header"><h3>🗺️ Szövetségi Területek</h3></div>
+            <div class="panel-body">
+              <div class="territory-stats">
+                <div class="t-stat">
+                  <span class="t-stat-val">{{ totalTerritory }}</span>
+                  <span class="t-stat-label">Irányított rendszer</span>
+                </div>
+                <div class="t-stat">
+                  <span class="t-stat-val">+{{ territory.length > 0 ? Math.round(territory.reduce((s, t) => s + t.bonus_value, 0) / territory.length * 100) : 0 }}%</span>
+                  <span class="t-stat-label">Átlag termelés bónusz</span>
+                </div>
+                <div class="t-stat">
+                  <span class="t-stat-val">+10%</span>
+                  <span class="t-stat-label">Flotta sebesség (saját terület)</span>
+                </div>
+              </div>
+
+              <div v-if="territory.length === 0" class="empty-territory">
+                <div class="peace-icon">🗺️</div>
+                <p>Még nincs irányított naprendszer. Több bolygót kell birtokolni egy rendszerben a területfoglaláshoz.</p>
+              </div>
+              <div v-else class="territory-list">
+                <div v-for="t in territory" :key="`${t.galaxy}:${t.system_num}`" class="territory-item">
+                  <div class="t-coords">[{{ t.galaxy }}:{{ t.system_num }}]</div>
+                  <div class="t-info">
+                    <span class="t-strength">Erő: {{ t.claim_strength }}/5</span>
+                    <span class="t-bonus">+{{ Math.round(t.bonus_value * 100) }}% termelés</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- WARS TAB -->
         <div v-if="activeTab === 'wars'" class="tab-content wars-view">
           <div class="panel">
@@ -258,10 +295,13 @@ const busy = ref(false);
 const inviteUser = ref('');
 const wars = ref([]);
 const targetAllianceId = ref('');
+const territory = ref([]);
+const totalTerritory = ref(0);
 
 const tabs = [
   { id: 'overview', label: 'Áttekintés', icon: '🏛️' },
   { id: 'members',  label: 'Tagok',      icon: '👥' },
+  { id: 'territory', label: 'Terület',   icon: '🗺️' },
   { id: 'bank',      label: 'Bank',       icon: '🏦' },
   { id: 'wars',      label: 'Háború',     icon: '⚔️' }
 ];
@@ -283,6 +323,14 @@ const otherAlliances = computed(() => allianceStore.list.filter(a => a.id !== al
 
 async function loadWars() {
     try { const data = await api.get('/alliance/wars'); wars.value = data.wars || []; } catch {}
+}
+
+async function loadTerritory() {
+    try {
+      const data = await api.getAllianceTerritory();
+      territory.value = data.territory || [];
+      totalTerritory.value = data.total_systems || 0;
+    } catch {}
 }
 
 async function declareWar() {
@@ -327,6 +375,7 @@ async function doDonate() {
 onMounted(() => {
     allianceStore.load();
     loadWars();
+    loadTerritory();
 });
 </script>
 
@@ -437,6 +486,20 @@ onMounted(() => {
 .peace-icon { font-size: 48px; margin-bottom: 15px; opacity: 0.5; }
 
 .declare-row { display: flex; gap: 10px; margin-top: 15px; }
+
+/* Territory */
+.territory-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+.t-stat { text-align: center; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--border); }
+.t-stat-val { display: block; font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900; color: var(--accent); }
+.t-stat-label { display: block; font-size: 10px; text-transform: uppercase; color: var(--text-dim); margin-top: 6px; letter-spacing: 1px; }
+.empty-territory { padding: 50px; text-align: center; color: var(--text-dim); }
+.territory-list { display: flex; flex-direction: column; gap: 8px; }
+.territory-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(0,200,255,0.03); border: 1px solid rgba(0,200,255,0.1); border-radius: 6px; }
+.t-coords { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700; color: var(--accent); }
+.t-info { display: flex; gap: 15px; font-size: 11px; }
+.t-strength { color: var(--text-dim); }
+.t-bonus { color: var(--accent3); font-weight: 600; }
+@media (max-width: 600px) { .territory-stats { grid-template-columns: 1fr; } }
 
 /* Global helper */
 .full-width { width: 100%; }

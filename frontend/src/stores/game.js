@@ -12,6 +12,12 @@ export const useGameStore = defineStore('game', () => {
   const error   = ref(null);
   const notifications = ref([]);
   const serverTimeOffset = ref(0);
+  const activeBattle = ref(null);
+  const sectorClaims = ref([]);
+  const fleetSightings = ref([]);
+  const activityTimeline = ref([]);
+  const unreadTimelineCount = ref(0);
+  const lastTimelineRead = ref(0);
 
   // ── Computed ──────────────────────────────────────────────
   const activePlanet = computed(() => state.value?.activePlanet || {});
@@ -187,11 +193,69 @@ export const useGameStore = defineStore('game', () => {
     return state.value.activePlanet.resources.metal >= cost.metal && state.value.activePlanet.resources.crystal >= cost.crystal;
   }
 
+  // ── RTS Phase 1 Actions ──────────────────────────────────
+  async function loadBattle(battleId) {
+    try {
+      const data = await api.getTacticalBattle(battleId);
+      activeBattle.value = data.battle || null;
+      return data;
+    } catch (e) { notify(`❌ ${e.message}`, 'red'); return null; }
+  }
+
+  async function loadTerritory(galaxy) {
+    try {
+      const data = await api.getTerritoryMap(galaxy);
+      sectorClaims.value = data.claims || [];
+      return data;
+    } catch (e) { return null; }
+  }
+
+  async function loadFleetMovements(galaxy, system) {
+    try {
+      const data = await api.getFleetMovements(galaxy, system);
+      fleetSightings.value = data.fleets || data.sightings || [];
+      return data;
+    } catch (e) { notify(`❌ ${e.message}`, 'red'); return null; }
+  }
+
+  async function loadTimeline(limit = 50) {
+    try {
+      const data = await api.getTimeline(limit);
+      const oldCount = unreadTimelineCount.value;
+      activityTimeline.value = data.events || [];
+      unreadTimelineCount.value = data.unread_count || 0;
+      lastTimelineRead.value = data.last_read || 0;
+
+      // Browser notification for new events (if tab not focused)
+      if (data.unread_count > oldCount && oldCount >= 0 && document.hidden) {
+        const newest = activityTimeline.value[0];
+        if (newest && Notification.permission === 'granted') {
+          try {
+            new Notification('Aika World', { body: newest.title, icon: '/favicon.ico' });
+          } catch (_) {}
+        }
+      }
+
+      return data;
+    } catch (e) { return null; }
+  }
+
+  async function markTimelineRead() {
+    try {
+      const data = await api.markTimelineRead();
+      unreadTimelineCount.value = 0;
+      lastTimelineRead.value = data.last_read || Math.floor(Date.now() / 1000);
+      return true;
+    } catch (e) { return false; }
+  }
+
   return {
     state, queue, storage, loading, error, notifications,
     activePlanet, resources, rates, buildings, research, fleet, defense, planets, score,
     prodBuildings, infraBuildings, storageFill, energyWarning,
+    activeBattle, sectorClaims, fleetSightings, activityTimeline, unreadTimelineCount, lastTimelineRead,
     loadState, switchPlanet, upgradeBuilding, startResearch, buildFleet, buildDefense, syncResources, renamePlanet,
     tickResources, notify, queueItemIsActive, getBuildCost, getResearchCost, canAfford,
+    loadBattle, loadTerritory, loadFleetMovements, loadTimeline, markTimelineRead,
   };
 });

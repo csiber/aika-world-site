@@ -26,6 +26,10 @@
           <div class="user-name">{{ auth.username }}</div>
           <div class="user-pts">{{ scoreFormatted }} pt</div>
         </div>
+        <button class="timeline-bell" @click="showTimeline = true" title="Aktivitás">
+          🔔
+          <span v-if="gameStore.unreadTimelineCount > 0" class="bell-badge">{{ gameStore.unreadTimelineCount }}</span>
+        </button>
         <div v-if="allianceStore.inAlliance" class="alliance-badge" @click="activeTab = 'alliance'" title="Szövetség">
           [{{ allianceStore.alliance?.tag }}]
         </div>
@@ -95,6 +99,7 @@
 
     <BotPanel />
     <TourOverlay />
+    <ActivityTimeline :visible="showTimeline" @close="showTimeline = false" />
   </div>
 
   <!-- Loading State -->
@@ -141,6 +146,7 @@ import BotPanel       from '@/components/BotPanel.vue';
 import ControlSwitch  from '@/components/LangSwitch.vue';
 import ChangelogModal from '@/components/ChangelogModal.vue';
 import TourOverlay    from '@/components/TourOverlay.vue';
+import ActivityTimeline from '@/components/ActivityTimeline.vue';
 import { useLangStore }  from '@/stores/lang.js';
 import { APP_VERSION }   from '@/data/changelog.js';
 
@@ -154,6 +160,7 @@ const L             = useLangStore();
 
 const activeTab      = ref('overview');
 const showChangelog  = ref(false);
+const showTimeline   = ref(false);
 
 // Safe computed accessors
 const resources = computed(() => gameStore.state?.activePlanet?.resources || { metal: 0, crystal: 0, energy: 0, deus: 0 });
@@ -188,16 +195,31 @@ function onLogout() {
   router.push('/login');
 }
 
-let tickTimer, syncTimer;
+let tickTimer, syncTimer, timelineTimer;
 
 onMounted(async () => {
   auth.refresh(); // sync SDK auth state
   await gameStore.loadState();
   await msgStore.loadMessages();
   await allianceStore.load();
-  await gameStore.syncResources(); 
+  await gameStore.syncResources();
   tickTimer = setInterval(() => gameStore.tickResources(), 1000);
   syncTimer = setInterval(() => gameStore.syncResources(), 30000);
+
+  // Timeline polling (every 30s)
+  await gameStore.loadTimeline(50);
+  timelineTimer = setInterval(() => gameStore.loadTimeline(50), 30000);
+
+  // Request browser notification permission (Notification API)
+  if ('Notification' in window && Notification.permission === 'default') {
+    const pushEnabled = localStorage.getItem('aika_push_enabled');
+    if (pushEnabled !== 'denied') {
+      try {
+        const perm = await Notification.requestPermission();
+        localStorage.setItem('aika_push_enabled', perm === 'granted' ? 'true' : 'denied');
+      } catch (_) {}
+    }
+  }
 
   if (!localStorage.getItem('aika_tour_finished')) {
     setTimeout(() => {
@@ -211,6 +233,7 @@ onMounted(async () => {
 onUnmounted(() => {
   clearInterval(tickTimer);
   clearInterval(syncTimer);
+  clearInterval(timelineTimer);
   const bot = useBotStore();
   if (bot.active) bot.stop();
 });
@@ -251,6 +274,10 @@ onUnmounted(() => {
 
 .alliance-badge { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--accent4); background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.2); padding: 2px 6px; border-radius: 3px; cursor: pointer; transition: all 0.2s; }
 .alliance-badge:hover { background: rgba(255,215,0,0.15); border-color: var(--accent4); }
+
+.timeline-bell { position: relative; background: none; border: 1px solid var(--border); color: var(--text-dim); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.timeline-bell:hover { background: rgba(0,200,255,0.08); border-color: var(--accent); color: var(--accent); }
+.bell-badge { position: absolute; top: -4px; right: -4px; background: var(--accent2); color: white; font-size: 8px; font-family: 'Orbitron', sans-serif; min-width: 14px; height: 14px; border-radius: 7px; display: flex; align-items: center; justify-content: center; padding: 0 3px; animation: glow-pulse 2s ease-in-out infinite; }
 
 .logout-btn { background: none; border: 1px solid rgba(255,58,122,0.3); color: var(--accent2); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .logout-btn:hover { background: rgba(255,58,122,0.1); border-color: var(--accent2); }

@@ -13,10 +13,15 @@ import { handleAlliance } from './routes/alliance.js';
 import { handleProfile }  from './routes/profile.js';
 import { handleAdmin }    from './routes/admin.js';
 import { handleMarket }   from './routes/market.js';
+import { handleTimeline } from './routes/timeline.js';
+import { handleGetTerritoryMap, handleGetAllianceTerritory, handleRecalcSectorControl } from './routes/territory.js';
+import { handleGetFleetMovements, handleScanPhalanx, handleInterceptFleet } from './routes/fleet_intel.js';
+import { handleGetTacticalBattle, handleSubmitFormation, handleSubmitOrders, handleAdvanceRound, handleAutoResolve } from './routes/tactical.js';
 import { corsHeaders, jsonError } from './utils/response.js';
 import { verifyJWT } from './utils/jwt.js';
 import { simulateBots } from './utils/bots.js';
 import { processWorldEvents } from './utils/events.js';
+import { cleanupTimeline } from './utils/timeline.js';
 
 /**
  * Decode AikaHub JWT payload (base64-encoded first segment).
@@ -66,6 +71,8 @@ export default {
     ctx.waitUntil(simulateBots(env));
     ctx.waitUntil(resolveAllMissions(env));
     ctx.waitUntil(processWorldEvents(env));
+    ctx.waitUntil(handleRecalcSectorControl(env));
+    ctx.waitUntil(cleanupTimeline(env));
   },
 
   async fetch(request, env, ctx) {
@@ -92,6 +99,39 @@ export default {
         if (!authResult.ok) return jsonError(401, authResult.error, request);
         const user = authResult.user;
 
+        // Fleet Intel routes (must be before generic /api/game handler)
+        if (url.pathname === '/api/game/fleet-movements' && request.method === 'GET')
+                                                        return await handleGetFleetMovements(request, env, url, user.sub);
+        if (url.pathname === '/api/game/phalanx/scan' && request.method === 'POST')
+                                                        return await handleScanPhalanx(request, env, user.sub);
+        if (url.pathname.startsWith('/api/game/fleet-intercept/') && request.method === 'POST')
+                                                        return await handleInterceptFleet(request, env, url, user.sub);
+
+        // Tactical Battle routes (must be before generic /api/game handler)
+        if (url.pathname.startsWith('/api/game/tactical/')) {
+          const tacticalPath = url.pathname.replace('/api/game/tactical/', '');
+          const parts = tacticalPath.split('/');
+          const battleId = parts[0];
+          const action = parts[1] || null;
+
+          if (!action && request.method === 'GET')
+            return await handleGetTacticalBattle(request, env, user.sub, battleId);
+          if (action === 'formation' && request.method === 'POST')
+            return await handleSubmitFormation(request, env, user.sub, battleId);
+          if (action === 'orders' && request.method === 'POST')
+            return await handleSubmitOrders(request, env, user.sub, battleId);
+          if (action === 'advance' && request.method === 'POST')
+            return await handleAdvanceRound(request, env, user.sub, battleId);
+          if (action === 'auto-resolve' && request.method === 'POST')
+            return await handleAutoResolve(request, env, user.sub, battleId);
+
+          return jsonError(404, 'Tactical endpoint not found', request);
+        }
+
+        // Timeline routes (must be before generic /api/game handler)
+        if (url.pathname.startsWith('/api/game/timeline'))
+                                                        return await handleTimeline(request, env, url, user);
+
         if (url.pathname.startsWith('/api/game'))       return await handleGame(request, env, url, user);
         if (url.pathname === '/api/rankings')           return await handleRankings(request, env, url, user);
         if (url.pathname.startsWith('/api/messages'))   return await handleMessages(request, env, url, user);
@@ -101,6 +141,10 @@ export default {
         if (url.pathname.startsWith('/api/alliance'))   return await handleAlliance(request, env, url, user);
         if (url.pathname.startsWith('/api/profile'))    return await handleProfile(request, env, url, user);
         if (url.pathname.startsWith('/api/market'))     return await handleMarket(request, env, url, user);
+        if (url.pathname === '/api/territory/map' && request.method === 'GET')
+                                                        return await handleGetTerritoryMap(request, env, user.sub);
+        if (url.pathname === '/api/territory/alliance' && request.method === 'GET')
+                                                        return await handleGetAllianceTerritory(request, env, user.sub);
 
         return jsonError(404, 'Not found', request);
       }

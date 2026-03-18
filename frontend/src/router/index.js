@@ -21,6 +21,13 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/tactical/:battleId',
+    name: 'TacticalBattle',
+    component: () => import('@/views/TacticalBattleWrapperView.vue'),
+    meta: { requiresAuth: true },
+    props: true,
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/',
   },

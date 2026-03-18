@@ -48,9 +48,21 @@
                 <th style="text-align:right;">Akciók</th>
               </tr>
             </thead>
+            <!-- Territory Banner for this system -->
+            <tr v-if="getSystemClaim(currentSys)" class="territory-banner-row">
+              <td colspan="6" class="territory-banner" :style="{ borderLeftColor: allianceColor(getSystemClaim(currentSys).alliance_id) }">
+                <span class="territory-tag" :style="{ color: allianceColor(getSystemClaim(currentSys).alliance_id) }">
+                  [{{ getSystemClaim(currentSys).alliance_tag }}]
+                </span>
+                Terület — +{{ Math.round(getSystemClaim(currentSys).bonus_value * 100) }}% termelés, +10% flotta sebesség
+                <span v-if="getSystemRelay(currentSys)" class="relay-icon" title="Relay pont aktív — +50% sebesség">📡</span>
+              </td>
+            </tr>
             <tbody>
               <!-- Slots 1-15 (Planets) -->
-              <tr v-for="slot in 15" :key="slot" :class="getCell(slot).type">
+              <tr v-for="slot in 15" :key="slot" :class="[getCell(slot).type, { 'claimed-system': !!getSystemClaim(currentSys) }]"
+                  :style="getSystemClaim(currentSys) ? { '--claim-color': allianceColor(getSystemClaim(currentSys).alliance_id) } : {}"
+                  :title="getSystemClaim(currentSys) ? `Irányítja: [${getSystemClaim(currentSys).alliance_tag}] — +${Math.round(getSystemClaim(currentSys).bonus_value * 100)}% termelés, +10% flotta sebesség` : ''">
                 <td class="slot-num">{{ slot }}</td>
                 <td class="slot-visual">
                   <span v-if="getCell(slot).emoji" class="p-emoji">{{ getCell(slot).emoji }}</span>
@@ -110,6 +122,67 @@
       </div>
     </div>
 
+    <!-- Fleet Tracker (Live Fleet Movements) -->
+    <FleetTracker :fleets="trackedFleets" @intercept="openInterceptModal" />
+
+    <!-- Phalanx Scan Button -->
+    <div v-if="hasPhalanx" class="panel phalanx-panel">
+      <div class="panel-body phalanx-row">
+        <span class="phalanx-icon">📡</span>
+        <span class="phalanx-label">Szenzor Falanx (Szint {{ phalanxLevel }})</span>
+        <span class="phalanx-range">Hatótáv: ±{{ phalanxLevel * 2 }} rendszer</span>
+        <button class="btn-scan" @click="doScanPhalanx" :disabled="scanning">
+          {{ scanning ? 'Szkennelés...' : 'Szkennel' }}
+        </button>
+      </div>
+      <div v-if="scanResults.length > 0" class="scan-results">
+        <div class="scan-title">Észlelt flották:</div>
+        <div v-for="s in scanResults" :key="s.id" class="scan-item">
+          <span class="scan-owner">{{ s.owner_name }}</span>
+          <span class="scan-route">{{ s.origin_coords }} → {{ s.target_coords }}</span>
+          <span class="scan-type">{{ missionLabel(s.mission_type) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Intercept Ship Selection Modal -->
+    <Transition name="fade">
+      <div v-if="showInterceptModal" class="modal-overlay" @click.self="showInterceptModal = false">
+        <div class="panel fleet-setup-modal">
+          <div class="panel-header">
+            <h3>🎯 Elfogás indítása</h3>
+            <button class="close-btn" @click="showInterceptModal = false">✕</button>
+          </div>
+          <div class="panel-body">
+            <div class="target-summary">
+              Célpont: <strong>{{ interceptTarget?.owner_name }}</strong> flottája → {{ interceptTarget?.target_coords }}
+            </div>
+
+            <div v-if="availableShips.length === 0" class="empty-msg">Nincs elérhető hajó ezen a bolygón.</div>
+            <div v-else class="fleet-setup-grid">
+              <div v-for="ship in availableShips" :key="ship.id" class="fleet-setup-row">
+                <div class="ship-info">
+                  <span class="ship-icon">{{ ship.icon }}</span>
+                  <span class="ship-name">{{ ship.name }}</span>
+                  <span class="ship-count">({{ ship.count }})</span>
+                </div>
+                <div class="ship-input-wrap">
+                  <button class="btn-xs" @click="interceptShips[ship.id] = ship.count">MAX</button>
+                  <input type="number" v-model.number="interceptShips[ship.id]" min="0" :max="ship.count" class="ship-input" />
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn-primary btn-danger" @click="confirmIntercept" :disabled="!hasInterceptShips || !!actionBusy">
+                {{ actionBusy ? '...' : '🎯 ELFOGÁS INDÍTÁSA' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Fleet Setup Modal (Overlay) -->
     <Transition name="fade">
       <div v-if="showFleetSetup" class="modal-overlay" @click.self="showFleetSetup = false">
@@ -151,12 +224,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useGameStore } from '@/stores/game.js';
 import { useAuthStore } from '@/stores/auth.js';
 import { useLangStore } from '@/stores/lang.js';
 import { api } from '@/api/client.js';
 import { audio } from '@/utils/botAudio.js';
+import FleetTracker from '@/components/FleetTracker.vue';
 
 const game = useGameStore();
 const auth = useAuthStore();
@@ -169,6 +243,8 @@ const players    = ref([]);
 const dominance  = ref({});
 const selected   = ref(null);
 const actionBusy = ref(null);
+const territoryClaims = ref([]);
+const relayPoints = ref([]);
 
 const currentDominator = computed(() => dominance.value[currentGal.value]);
 
@@ -210,6 +286,30 @@ const availableShips = computed(() => {
 const hasSelectedShips = computed(() => Object.values(selectedShips.value).some(v => v > 0));
 const hasColonyShip = computed(() => game.fleet.some(f => f.id === 'colony' && f.count > 0));
 
+// ── Fleet Tracker state ──
+const trackedFleets = ref([]);
+const scanning = ref(false);
+const scanResults = ref([]);
+const showInterceptModal = ref(false);
+const interceptTarget = ref(null);
+const interceptShips = ref({});
+const hasInterceptShips = computed(() => Object.values(interceptShips.value).some(v => v > 0));
+
+// Phalanx detection
+const hasPhalanx = computed(() => {
+  const buildings = game.activePlanet?.buildings || [];
+  const phalanx = buildings.find(b => b.id === 'sensor_phalanx');
+  return phalanx && phalanx.level > 0;
+});
+const phalanxLevel = computed(() => {
+  const buildings = game.activePlanet?.buildings || [];
+  return buildings.find(b => b.id === 'sensor_phalanx')?.level || 0;
+});
+
+function missionLabel(type) {
+  return { spy: 'Kém', attack: 'Támadás', harvest: 'Bányász', expedition: 'Expedíció', colonize: 'Gyarmat', intercept: 'Elfogás', unknown: '???' }[type] || type;
+}
+
 function changeGal(delta) {
   audio.click();
   currentGal.value = Math.max(1, Math.min(9, currentGal.value + delta));
@@ -224,16 +324,35 @@ function changeSys(delta) {
 async function loadGalaxy() {
   loading.value = true;
   try {
-    const [galData, domData] = await Promise.all([
+    const [galData, domData, terData] = await Promise.all([
       api.getGalaxy(currentGal.value, currentSys.value),
-      api.get('/alliance/dominance')
+      api.get('/alliance/dominance'),
+      api.getTerritoryMap(currentGal.value)
     ]);
     players.value = galData.players || [];
     dominance.value = domData.sectors || {};
+    territoryClaims.value = terData.claims || [];
+    relayPoints.value = terData.relays || [];
   } catch (e) {
     game.notify(`Hiba: ${e.message}`, 'red');
   }
   loading.value = false;
+}
+
+function getSystemClaim(systemNum) {
+  return territoryClaims.value.find(c => c.system_num === systemNum);
+}
+
+function getSystemRelay(systemNum) {
+  return relayPoints.value.find(r => r.system_num === systemNum);
+}
+
+function allianceColor(allianceId) {
+  if (!allianceId) return '';
+  let hash = 0;
+  for (let i = 0; i < allianceId.length; i++) { hash = allianceId.charCodeAt(i) + ((hash << 5) - hash); }
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 70%, 50%)`;
 }
 
 function getCell(slot) {
@@ -332,6 +451,53 @@ async function doExpedition() {
     actionBusy.value = null;
 }
 
+// ── Fleet tracking ──
+async function loadFleetMovements() {
+  try {
+    const data = await api.getFleetMovements(currentGal.value, currentSys.value);
+    trackedFleets.value = data.fleets || [];
+  } catch (e) { /* silent */ }
+}
+
+async function doScanPhalanx() {
+  scanning.value = true;
+  try {
+    const data = await api.scanPhalanx(currentGal.value, currentSys.value);
+    scanResults.value = data.detected || [];
+    audio.click();
+    if (scanResults.value.length === 0) {
+      game.notify('Nincs észlelt flottamozgás ebben a rendszerben', 'blue');
+    } else {
+      game.notify(`${scanResults.value.length} flotta észlelve!`, 'green');
+    }
+    await loadFleetMovements();
+  } catch (e) { audio.error(); game.notify(`${e.message}`, 'red'); }
+  scanning.value = false;
+}
+
+function openInterceptModal(fleet) {
+  audio.click();
+  interceptTarget.value = fleet;
+  showInterceptModal.value = true;
+  interceptShips.value = {};
+  availableShips.value.forEach(s => interceptShips.value[s.id] = 0);
+}
+
+async function confirmIntercept() {
+  if (!interceptTarget.value) return;
+  actionBusy.value = 'intercept';
+  try {
+    const ships = Object.entries(interceptShips.value).filter(([_, c]) => c > 0).map(([id, count]) => ({ id, count }));
+    await api.interceptFleet(interceptTarget.value.id, ships);
+    audio.mission();
+    game.notify('Elfogó flotta elindult!', 'red');
+    showInterceptModal.value = false;
+    await game.loadState();
+    await loadFleetMovements();
+  } catch (e) { audio.error(); game.notify(`${e.message}`, 'red'); }
+  actionBusy.value = null;
+}
+
 async function doQuickColonize(cell) {
   actionBusy.value = 'colony';
   try {
@@ -343,11 +509,15 @@ async function doQuickColonize(cell) {
   actionBusy.value = null;
 }
 
+let fleetRefreshTimer;
 onMounted(() => {
   const m = game.activePlanet?.coords?.match(/\[(\d+):(\d+):(\d+)\]/);
   if (m) { currentGal.value = parseInt(m[1]); currentSys.value = parseInt(m[2]); }
   loadGalaxy();
+  loadFleetMovements();
+  fleetRefreshTimer = setInterval(loadFleetMovements, 10000);
 });
+onUnmounted(() => clearInterval(fleetRefreshTimer));
 </script>
 
 <style scoped>
@@ -439,8 +609,51 @@ onMounted(() => {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
+/* Territory Overlay */
+.territory-banner-row td { padding: 0 !important; border-bottom: none !important; }
+.territory-banner {
+  padding: 6px 15px !important;
+  background: rgba(0,0,0,0.4);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  border-left: 3px solid var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.territory-tag { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 11px; }
+.relay-icon { font-size: 14px; margin-left: auto; animation: pulse-relay 2s infinite; }
+@keyframes pulse-relay { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+tr.claimed-system td { background: rgba(var(--claim-color-rgb, 0,200,255), 0.03); border-left: 2px solid var(--claim-color, transparent); }
+tr.claimed-system:hover td { background: rgba(var(--claim-color-rgb, 0,200,255), 0.06); }
+
+/* Phalanx Panel */
+.phalanx-panel { background: var(--bg-panel); border: 1px solid var(--border); }
+.phalanx-row { display: flex; align-items: center; gap: 10px; padding: 10px 15px; }
+.phalanx-icon { font-size: 18px; }
+.phalanx-label { font-family: 'Orbitron', sans-serif; font-size: 11px; color: var(--text-bright); text-transform: uppercase; }
+.phalanx-range { font-size: 10px; color: var(--text-dim); margin-left: auto; }
+.btn-scan { background: rgba(0,200,255,0.1); border: 1px solid rgba(0,200,255,0.3); color: var(--accent); padding: 5px 12px; border-radius: 4px; cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 10px; text-transform: uppercase; transition: all 0.2s; }
+.btn-scan:hover { background: rgba(0,200,255,0.2); border-color: var(--accent); }
+.btn-scan:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.scan-results { padding: 10px 15px; border-top: 1px solid var(--border); }
+.scan-title { font-size: 10px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
+.scan-item { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: rgba(255,58,92,0.05); border: 1px solid rgba(255,58,92,0.15); border-radius: 4px; margin-bottom: 4px; font-size: 10px; }
+.scan-owner { color: #ff3a5c; font-weight: 600; }
+.scan-route { color: var(--text-dim); font-family: 'Orbitron', sans-serif; font-size: 9px; }
+.scan-type { margin-left: auto; color: var(--accent); text-transform: uppercase; font-size: 8px; }
+
+/* Intercept button style */
+.btn-danger { background: rgba(255,58,92,0.15) !important; border-color: rgba(255,58,92,0.4) !important; color: #ff3a5c !important; }
+.btn-danger:hover { background: rgba(255,58,92,0.25) !important; }
+
 @media (max-width: 600px) {
   .nav-row { flex-direction: column; gap: 15px; }
   .system-table th:nth-child(5), .system-table td:nth-child(5) { display: none; }
+  .phalanx-row { flex-wrap: wrap; }
 }
 </style>

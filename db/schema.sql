@@ -149,7 +149,8 @@ INSERT INTO default_buildings(data) VALUES (
     {"id":"robotics","name":"Robot Gyár","icon":"🤖","level":1,"baseCost":{"metal":400,"crystal":120},"type":"infra"},
     {"id":"shipyard","name":"Hajógyár","icon":"🏭","level":1,"baseCost":{"metal":400,"crystal":200},"type":"infra"},
     {"id":"lab","name":"Kutatólabor","icon":"🔬","level":1,"baseCost":{"metal":200,"crystal":400},"type":"infra"},
-    {"id":"defense","name":"Védelmi Rendszer","icon":"🛡️","level":1,"baseCost":{"metal":200,"crystal":150},"type":"infra"}
+    {"id":"defense","name":"Védelmi Rendszer","icon":"🛡️","level":1,"baseCost":{"metal":200,"crystal":150},"type":"infra"},
+    {"id":"sensor_phalanx","name":"Szenzor Falanx","icon":"📡","level":0,"baseCost":{"metal":20000,"crystal":40000,"deus":20000},"type":"infra","costMult":1.5,"req":{"buildings":{"lab":5},"research":{"spy":3}}}
   ]'
 );
 
@@ -181,9 +182,9 @@ DELETE FROM default_fleet;
 INSERT INTO default_fleet(data) VALUES (
   '[
     {"id":"fighter_s","name":"Kis Vadász","icon":"✈️","count":0,"attack":50,"shield":10,"cargo":0,"speed":12500,"cost":{"metal":3000,"crystal":1000}},
-    {"id":"fighter_l","name":"Nagy Vadász","icon":"🛸","count":0,"attack":400,"shield":100,"cargo":0,"speed":8000,"cost":{"metal":25000,"crystal":7500}},
-    {"id":"cruiser","name":"Cirkáló","icon":"🚀","count":0,"attack":800,"shield":400,"cargo":800,"speed":5000,"cost":{"metal":50000,"crystal":15000}},
-    {"id":"battleship","name":"Csatahajó","icon":"🛰️","count":0,"attack":4000,"shield":2000,"cargo":1500,"speed":3000,"cost":{"metal":150000,"crystal":50000}},
+    {"id":"fighter_l","name":"Nagy Vadász","icon":"🛸","count":0,"attack":400,"shield":100,"cargo":0,"speed":8000,"cost":{"metal":25000,"crystal":7500},"abilities":[{"id":"evasive_maneuver","name":"Kitérő Manőver","cooldown":2,"dodge_chance":0.4,"duration":1,"icon":"💨"}]},
+    {"id":"cruiser","name":"Cirkáló","icon":"🚀","count":0,"attack":800,"shield":400,"cargo":800,"speed":5000,"cost":{"metal":50000,"crystal":15000},"abilities":[{"id":"plasma_salvo","name":"Plazma Sortűz","cooldown":2,"damage_mult":2.5,"target":"weakest","icon":"💥"}]},
+    {"id":"battleship","name":"Csatahajó","icon":"🛰️","count":0,"attack":4000,"shield":2000,"cargo":1500,"speed":3000,"cost":{"metal":150000,"crystal":50000},"abilities":[{"id":"shield_overcharge","name":"Pajzs Túltöltés","cooldown":3,"shield_mult":2.0,"duration":1,"icon":"🛡️"}]},
     {"id":"miner","name":"Bányász","icon":"⛏️","count":0,"attack":5,"shield":25,"cargo":5000,"speed":3000,"cost":{"metal":10000,"crystal":20000}},
     {"id":"colony","name":"Gyarmatosító","icon":"🌍","count":0,"attack":0,"shield":100,"cargo":7500,"speed":2500,"cost":{"metal":10000,"crystal":20000}}
   ]'

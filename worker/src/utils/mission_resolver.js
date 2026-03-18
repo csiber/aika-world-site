@@ -4,6 +4,8 @@
  */
 
 import { runBattle, runExpedition } from './combat_logic.js';
+import { logTimelineEvent } from './timeline.js';
+import { createTacticalBattle, autoResolveBattle } from './tactical_engine.js';
 
 async function getPlanetState(env, planetId) {
   try {
@@ -48,10 +50,21 @@ export async function resolveMissionsForUser(env, userId) {
     const arrived = await env.DB.prepare(`SELECT * FROM fleet_missions WHERE user_id = ? AND status = 'travelling' AND arrive_at <= ?`).bind(userId, now).all();
 
     for (const mission of arrived.results) {
+      // Skip missions that are being intercepted — they are resolved by the intercept mission
+      if (mission.is_intercepted === 1 && mission.mission_type !== 'intercept') {
+        continue;
+      }
+
+      // ── Intercept mission resolution ──
+      if (mission.mission_type === 'intercept') {
+        await resolveInterceptMission(env, mission, userId, username, now);
+        continue;
+      }
+
       // ACS Check: If this is a union attack, we find ALL missions in this union
       let attackerFleets = [];
       let participantUserIds = [userId];
-      
+
       if (mission.union_id && mission.mission_type === 'attack') {
           const unionMissions = await env.DB.prepare('SELECT * FROM fleet_missions WHERE union_id = ? AND status = "travelling"').bind(mission.union_id).all();
           // Union resolving strategy: Resolve only when the LAST fleet arrives, or at the set time?
@@ -76,28 +89,19 @@ export async function resolveMissionsForUser(env, userId) {
       // BUT for Attack, we need multi-attacker logic
       
       if (mission.mission_type === 'attack') {
-          const targetPlanet = await getPlanetState(env, (await env.DB.prepare('SELECT id FROM planets WHERE user_id = ? AND coords = ?').bind(mission.target_user_id, mission.target_coords).first())?.id);
+          const targetPlanetRow = await env.DB.prepare('SELECT id FROM planets WHERE user_id = ? AND coords = ?').bind(mission.target_user_id, mission.target_coords).first();
+          const targetPlanet = targetPlanetRow ? await getPlanetState(env, targetPlanetRow.id) : null;
           if (targetPlanet) {
               const targetGS = await getGlobalState(env, mission.target_user_id);
               const targetUserRow = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(mission.target_user_id).first();
-              
+
               // Multi-Attacker setup
-              let combinedAtkFleet = [];
-              // Simplistic: combine all ships into one massive fleet for the simulator
-              // In reality, each attacker should have their own tech bonuses applied.
-              // I'll adjust runBattle to accept an array of attackers or handle it here.
-              
               const attackerStates = await Promise.all(attackerFleets.map(async (af) => {
                   const gs = await getGlobalState(env, af.userId);
                   const u = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(af.userId).first();
                   return { username: u.username, fleet: af.ships, research: JSON.parse(gs.research || '[]'), userId: af.userId };
               }));
 
-              // For the current 3-round battle simulator, let's merge them into one "Super Attacker"
-              // with the HIGHEST tech levels among participants? Or average? 
-              // OGame standard: each fleet uses its own tech.
-              // I will simulate one battle where the "attacker" is the union.
-              
               const mergedShips = [];
               attackerStates.forEach(as => {
                   as.fleet.forEach(s => {
@@ -105,47 +109,75 @@ export async function resolveMissionsForUser(env, userId) {
                       if (t) t.count += s.count; else mergedShips.push({...s});
                   });
               });
-              
-              const unionResearch = attackerStates[0].research; // Use first one's tech for now (simple ACS)
 
-              const defenderState = { 
-                username: targetUserRow?.username || 'Ellenség', 
-                fleet: targetPlanet.fleet, 
-                defense: targetPlanet.defense, 
-                research: JSON.parse(targetGS?.research || '[]'), 
-                buildings: targetPlanet.buildings, 
-                resources: targetPlanet.resources 
-              };
-              
-              const battle = runBattle({ username: 'Szövetségi Flotta', fleet: mergedShips, research: unionResearch }, defenderState);
-              result = { ...result, ...battle };
-              
-              // Distribute losses back to attackers (proportional)
-              // ...
-              
-              currentShips = battle.attackerRemainingFleet; // For this specific mission
-              targetPlanet.fleet = battle.defenderRemainingFleet;
-              targetPlanet.defense = battle.defenderRemainingDefense;
-              targetPlanet.resources = battle.defenderResources;
-              await savePlanetState(env, targetPlanet.id, targetPlanet);
-              result.loot = battle.loot;
+              // ── Tactical Battle: Create battle and set mission to battle_pending ──
+              try {
+                  const battleId = await createTacticalBattle(
+                      env, mission.id, userId, mission.target_user_id,
+                      mergedShips, targetPlanet.fleet, targetPlanet.defense,
+                      mission.target_coords
+                  );
 
-              if (battle.debris) {
-                  await env.DB.prepare(`UPDATE galaxy_map SET debris_metal = debris_metal + ?, debris_crystal = debris_crystal + ? WHERE coords = ?`)
-                      .bind(battle.debris.metal, battle.debris.crystal, mission.target_coords).run();
-              }
+                  // Set mission to battle_pending — it will be resolved when the tactical battle finishes
+                  await env.DB.prepare(`UPDATE fleet_missions SET status = 'battle_pending', result = ?, updated_at = unixepoch() WHERE id = ?`)
+                      .bind(JSON.stringify({ ...result, tacticalBattleId: battleId }), mission.id).run();
 
-              if (battle.moonCreated) {
-                  const planetId = targetPlanet.id;
-                  const moonExists = await env.DB.prepare('SELECT id FROM moons WHERE planet_id = ?').bind(planetId).first();
-                  if (!moonExists) {
-                      const moonId = crypto.randomUUID();
-                      const defMoonB = await env.DB.prepare('SELECT data FROM default_moon_buildings').first();
-                      await env.DB.prepare(`
-                          INSERT INTO moons (id, planet_id, user_id, name, size, buildings, fleet, defense, resources)
-                          VALUES (?, ?, ?, 'Hold', ?, ?, '[]', '[]', '{"metal":0,"crystal":0,"deus":0}')
-                      `).bind(moonId, planetId, mission.target_user_id, 2000 + Math.floor(Math.random() * 6000), defMoonB?.data || '[]').run();
-                      result.moonCreated = true;
+                  // Timeline notification
+                  await logTimelineEvent(env, userId, 'battle_started', 'Taktikai csata indult!', `Célpont: ${mission.target_coords} — Készülj a formáció felállítására!`, '⚔️');
+                  await logTimelineEvent(env, mission.target_user_id, 'fleet_attacked', 'Támadás érkezik!', `Támadó: ${username} — Koordináták: ${mission.target_coords} — Készülj a védekezésre!`, '⚔️');
+
+                  continue; // Skip normal returning logic — battle_pending will be handled separately
+              } catch (tacticalErr) {
+                  console.error('Tactical battle creation failed, falling back to instant battle:', tacticalErr);
+                  // Fallback: use the old instant battle system
+                  const unionResearch = attackerStates[0].research;
+                  const defenderState = {
+                      username: targetUserRow?.username || 'Ellenség',
+                      fleet: targetPlanet.fleet,
+                      defense: targetPlanet.defense,
+                      research: JSON.parse(targetGS?.research || '[]'),
+                      buildings: targetPlanet.buildings,
+                      resources: targetPlanet.resources
+                  };
+
+                  const battle = runBattle({ username: 'Szövetségi Flotta', fleet: mergedShips, research: unionResearch }, defenderState);
+                  result = { ...result, ...battle };
+                  currentShips = battle.attackerRemainingFleet;
+                  targetPlanet.fleet = battle.defenderRemainingFleet;
+                  targetPlanet.defense = battle.defenderRemainingDefense;
+                  targetPlanet.resources = battle.defenderResources;
+                  await savePlanetState(env, targetPlanet.id, targetPlanet);
+                  result.loot = battle.loot;
+
+                  if (battle.attackerWins) {
+                      await logTimelineEvent(env, userId, 'battle_won', 'Csata megnyerve!', `Célpont: ${mission.target_coords} — Zsákmány: ${Math.floor(battle.loot?.metal || 0)} fém, ${Math.floor(battle.loot?.crystal || 0)} kristály`, '🏆');
+                  } else {
+                      await logTimelineEvent(env, userId, 'battle_lost', 'Csata elveszítve!', `Célpont: ${mission.target_coords} — A flottád megsemmisült.`, '💀');
+                  }
+                  await logTimelineEvent(env, mission.target_user_id, 'fleet_attacked', 'Támadás a bolygódon!', `Támadó: ${username} — Koordináták: ${mission.target_coords}`, '⚔️');
+                  if (battle.attackerWins) {
+                      await logTimelineEvent(env, mission.target_user_id, 'battle_lost', 'Védelmed elesett!', `Támadó: ${username} — Zsákmányolva: ${Math.floor(battle.loot?.metal || 0)} fém`, '💀');
+                  } else {
+                      await logTimelineEvent(env, mission.target_user_id, 'battle_won', 'Támadás visszaverve!', `Támadó: ${username} — A támadó flottája megsemmisült.`, '🏆');
+                  }
+
+                  if (battle.debris) {
+                      await env.DB.prepare(`UPDATE galaxy_map SET debris_metal = debris_metal + ?, debris_crystal = debris_crystal + ? WHERE coords = ?`)
+                          .bind(battle.debris.metal, battle.debris.crystal, mission.target_coords).run();
+                  }
+
+                  if (battle.moonCreated) {
+                      const planetId = targetPlanet.id;
+                      const moonExists = await env.DB.prepare('SELECT id FROM moons WHERE planet_id = ?').bind(planetId).first();
+                      if (!moonExists) {
+                          const moonId = crypto.randomUUID();
+                          const defMoonB = await env.DB.prepare('SELECT data FROM default_moon_buildings').first();
+                          await env.DB.prepare(`
+                              INSERT INTO moons (id, planet_id, user_id, name, size, buildings, fleet, defense, resources)
+                              VALUES (?, ?, ?, 'Hold', ?, ?, '[]', '[]', '{"metal":0,"crystal":0,"deus":0}')
+                          `).bind(moonId, planetId, mission.target_user_id, 2000 + Math.floor(Math.random() * 6000), defMoonB?.data || '[]').run();
+                          result.moonCreated = true;
+                      }
                   }
               }
           }
@@ -164,6 +196,8 @@ export async function resolveMissionsForUser(env, userId) {
               .bind(newId, userId, result.planetName, result.emoji, mission.target_coords, defB?.data || '[]', defF?.data || '[]', defD?.data || '[]').run();
             await env.DB.prepare(`INSERT OR IGNORE INTO galaxy_map (user_id, username, planet_name, planet_emoji, coords, score, is_main) VALUES (?, ?, ?, ?, ?, ?, 0)`)
               .bind(userId, username, result.planetName, result.emoji, mission.target_coords, 0).run();
+            // Timeline: colony established
+            await logTimelineEvent(env, userId, 'colony_established', 'Új kolónia!', `${result.planetName} — Koordináták: ${mission.target_coords}`, '🌍');
             nextStatus = 'done';
           }
       }
@@ -193,6 +227,89 @@ export async function resolveMissionsForUser(env, userId) {
         .bind(msgId, userId, missionIcon(mission.mission_type) + ' Küldetés', missionSubject(mission.mission_type, mission.target_name), formatMissionResult(mission, result), 'combat').run();
     }
 
+    // 1b. Check battle_pending missions — resolve if tactical battle is done or timed out
+    const pending = await env.DB.prepare(`SELECT * FROM fleet_missions WHERE user_id = ? AND status = 'battle_pending'`).bind(userId, now).all();
+    for (const mission of pending.results) {
+      const mResult = JSON.parse(mission.result || '{}');
+      const battleId = mResult.tacticalBattleId;
+      if (!battleId) continue;
+
+      const tacticalBattle = await env.DB.prepare('SELECT * FROM tactical_battles WHERE id = ?').bind(battleId).first();
+      if (!tacticalBattle) continue;
+
+      // Auto-resolve if timer expired and still in pending_formation
+      if (tacticalBattle.status === 'pending_formation' && now >= tacticalBattle.auto_resolve_at) {
+        try { await autoResolveBattle(env, battleId); } catch (e) { console.error('Auto-resolve failed:', e); continue; }
+      }
+
+      // Check if resolved
+      const updatedBattle = await env.DB.prepare('SELECT * FROM tactical_battles WHERE id = ?').bind(battleId).first();
+      if (updatedBattle.status !== 'resolved') continue;
+
+      // Battle resolved — apply results like the old system
+      const battle = JSON.parse(updatedBattle.result);
+      const travelTime = Math.max(60, mission.arrive_at - mission.created_at);
+      const returnAt = now + travelTime;
+
+      // Apply loot caps against defender resources
+      const targetPlanetRow = await env.DB.prepare('SELECT id FROM planets WHERE user_id = ? AND coords = ?').bind(mission.target_user_id, mission.target_coords).first();
+      const targetPlanet = targetPlanetRow ? await getPlanetState(env, targetPlanetRow.id) : null;
+
+      if (targetPlanet && battle.attackerWins) {
+        const cargo = battle.attackerRemainingFleet.reduce((s, u) => s + ((u.cargo || 0) * u.count), 0);
+        battle.loot.metal   = Math.min(cargo / 2.5, targetPlanet.resources.metal * 0.5);
+        battle.loot.crystal = Math.min(cargo / 2.5, targetPlanet.resources.crystal * 0.5);
+        battle.loot.deus    = Math.min(cargo / 10,  (targetPlanet.resources.deus || 0) * 0.3);
+        targetPlanet.resources.metal   -= battle.loot.metal;
+        targetPlanet.resources.crystal -= battle.loot.crystal;
+        targetPlanet.resources.deus    -= battle.loot.deus;
+      }
+
+      if (targetPlanet) {
+        targetPlanet.fleet   = battle.defenderRemainingFleet;
+        targetPlanet.defense = battle.defenderRemainingDefense;
+        await savePlanetState(env, targetPlanet.id, targetPlanet);
+      }
+
+      const currentShips = battle.attackerRemainingFleet;
+      const fullResult = { ...mResult, ...battle };
+
+      // Timeline events
+      if (battle.attackerWins) {
+        await logTimelineEvent(env, userId, 'battle_won', 'Taktikai csata megnyerve!', `Célpont: ${mission.target_coords} — Zsákmány: ${Math.floor(battle.loot?.metal || 0)} fém, ${Math.floor(battle.loot?.crystal || 0)} kristály`, '🏆');
+      } else {
+        await logTimelineEvent(env, userId, 'battle_lost', 'Taktikai csata elveszítve!', `Célpont: ${mission.target_coords}`, '💀');
+      }
+      await logTimelineEvent(env, mission.target_user_id, battle.attackerWins ? 'battle_lost' : 'battle_won', battle.attackerWins ? 'Védelmed elesett!' : 'Támadás visszaverve!', `Támadó: ${username} — Koordináták: ${mission.target_coords}`, battle.attackerWins ? '💀' : '🏆');
+
+      // Debris
+      if (battle.debris) {
+        await env.DB.prepare(`UPDATE galaxy_map SET debris_metal = debris_metal + ?, debris_crystal = debris_crystal + ? WHERE coords = ?`)
+          .bind(battle.debris.metal, battle.debris.crystal, mission.target_coords).run();
+      }
+
+      // Moon creation
+      if (battle.moonCreated && targetPlanet) {
+        const moonExists = await env.DB.prepare('SELECT id FROM moons WHERE planet_id = ?').bind(targetPlanet.id).first();
+        if (!moonExists) {
+          const moonId = crypto.randomUUID();
+          const defMoonB = await env.DB.prepare('SELECT data FROM default_moon_buildings').first();
+          await env.DB.prepare(`
+            INSERT INTO moons (id, planet_id, user_id, name, size, buildings, fleet, defense, resources)
+            VALUES (?, ?, ?, 'Hold', ?, ?, '[]', '[]', '{"metal":0,"crystal":0,"deus":0}')
+          `).bind(moonId, targetPlanet.id, mission.target_user_id, 2000 + Math.floor(Math.random() * 6000), defMoonB?.data || '[]').run();
+          fullResult.moonCreated = true;
+        }
+      }
+
+      await env.DB.prepare(`UPDATE fleet_missions SET status='returning', result=?, ships=?, return_at=? WHERE id=?`)
+        .bind(JSON.stringify(fullResult), JSON.stringify(currentShips), returnAt, mission.id).run();
+
+      const msgId = crypto.randomUUID();
+      await env.DB.prepare('INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)')
+        .bind(msgId, userId, missionIcon('attack') + ' Küldetés', missionSubject('attack', mission.target_name), formatMissionResult(mission, fullResult), 'combat').run();
+    }
+
     // 2. Fleets returning home
     const returned = await env.DB.prepare(`SELECT * FROM fleet_missions WHERE user_id = ? AND status = 'returning' AND return_at <= ?`).bind(userId, now).all();
     for (const mission of returned.results) {
@@ -212,6 +329,8 @@ export async function resolveMissionsForUser(env, userId) {
         }
         await savePlanetState(env, originPlanet.id, originPlanet);
       }
+      // Timeline: fleet returned home
+      await logTimelineEvent(env, userId, 'fleet_arrived', 'Flottád visszatért!', `Koordináták: ${originPlanet?.coords || 'ismeretlen'} — Típus: ${mission.mission_type}`, '🚀');
       await env.DB.prepare(`UPDATE fleet_missions SET status='done' WHERE id=?`).bind(mission.id).run();
     }
     return arrived.results.length + returned.results.length;
@@ -221,9 +340,87 @@ export async function resolveMissionsForUser(env, userId) {
   }
 }
 
-function missionIcon(type) { return { spy: '🔍', attack: '⚔️', colonize: '🌍', return: '↩️', harvest: '🚛', expedition: '🌌' }[type] || '📡'; }
+// ── Intercept Resolution ──────────────────────────────────────────────────────
+
+async function resolveInterceptMission(env, mission, userId, username, now) {
+  const travelTime = Math.max(60, mission.arrive_at - mission.created_at);
+  const returnAt = now + travelTime;
+  let interceptorShips = JSON.parse(mission.ships || '[]');
+  let result = {};
+
+  const targetMission = await env.DB.prepare(
+    'SELECT * FROM fleet_missions WHERE intercepted_by = ? AND is_intercepted = 1'
+  ).bind(mission.id).first();
+
+  if (!targetMission) {
+    result = { interceptFailed: true, message: 'A célflotta eltűnt mielőtt az elfogás megtörtént volna.' };
+    await env.DB.prepare(`UPDATE fleet_missions SET status='returning', result=?, return_at=? WHERE id=?`)
+      .bind(JSON.stringify(result), returnAt, mission.id).run();
+    const msgId = crypto.randomUUID();
+    await env.DB.prepare('INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(msgId, userId, '🎯 Elfogás', 'Elfogás sikertelen', 'A célflotta eltűnt mielőtt az elfogás megtörtént volna.', 'combat').run();
+    return;
+  }
+
+  const interceptorGS = await getGlobalState(env, userId);
+  const interceptorResearch = JSON.parse(interceptorGS?.research || '[]');
+  const targetUserId = targetMission.user_id;
+  const targetGS = await getGlobalState(env, targetUserId);
+  const targetResearch = JSON.parse(targetGS?.research || '[]');
+  const targetUserRow = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(targetUserId).first();
+  const targetUsername = targetUserRow?.username || 'Ismeretlen';
+  const targetShips = JSON.parse(targetMission.ships || '[]');
+
+  const battle = runBattle(
+    { username, fleet: interceptorShips, research: interceptorResearch },
+    { username: targetUsername, fleet: targetShips, defense: [], research: targetResearch, buildings: [], resources: { metal: 0, crystal: 0, deus: 0 } }
+  );
+  result = { ...battle, interceptCoords: mission.intercept_coords };
+
+  if (battle.attackerWins) {
+    interceptorShips = battle.attackerRemainingFleet;
+    result.loot = battle.loot;
+    await env.DB.prepare(`UPDATE fleet_missions SET status='done', result=?, ships='[]' WHERE id=?`)
+      .bind(JSON.stringify({ destroyed: true, interceptedBy: username, interceptCoords: mission.intercept_coords }), targetMission.id).run();
+    const targetMsgId = crypto.randomUUID();
+    await env.DB.prepare('INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(targetMsgId, targetUserId, '🎯 Elfogás', `Flottád elfogva: ${targetMission.target_name}`,
+        `A flottádat elfogták és megsemmisítették útközben!\n\nElfogó: ${username}\nHelyszín: ${mission.intercept_coords}\nCél volt: ${targetMission.target_coords}`, 'combat').run();
+    await logTimelineEvent(env, userId, 'intercept_won', 'Elfogás sikeres!', `Célpont: ${targetUsername} — Helyszín: ${mission.intercept_coords}`, '🎯');
+    await logTimelineEvent(env, targetUserId, 'fleet_intercepted', 'Flottád elfogva!', `Elfogó: ${username} — Helyszín: ${mission.intercept_coords}`, '🎯');
+    await env.DB.prepare(`UPDATE fleet_missions SET status='returning', result=?, ships=?, return_at=? WHERE id=?`)
+      .bind(JSON.stringify(result), JSON.stringify(interceptorShips), returnAt, mission.id).run();
+  } else {
+    await env.DB.prepare(`UPDATE fleet_missions SET is_intercepted = 0, intercepted_by = NULL, intercept_coords = NULL WHERE id=?`)
+      .bind(targetMission.id).run();
+    await env.DB.prepare(`UPDATE fleet_missions SET ships = ? WHERE id = ?`)
+      .bind(JSON.stringify(battle.defenderRemainingFleet), targetMission.id).run();
+    await env.DB.prepare(`UPDATE fleet_missions SET status='done', result=?, ships='[]' WHERE id=?`)
+      .bind(JSON.stringify(result), mission.id).run();
+    await logTimelineEvent(env, userId, 'intercept_lost', 'Elfogás sikertelen!', `Célpont: ${targetUsername} — A flottád megsemmisült.`, '💀');
+    await logTimelineEvent(env, targetUserId, 'intercept_survived', 'Elfogási kísérlet visszaverve!', `Támadó: ${username} — Helyszín: ${mission.intercept_coords}`, '🏆');
+    const targetMsgId = crypto.randomUUID();
+    await env.DB.prepare('INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(targetMsgId, targetUserId, '🎯 Elfogás', 'Elfogási kísérlet visszaverve',
+        `Egy ellenséges flotta megpróbálta elfogni a flottádat, de sikeresen visszaverték!\n\nTámadó: ${username}\nHelyszín: ${mission.intercept_coords}`, 'combat').run();
+  }
+
+  if (battle.debris && (battle.debris.metal > 0 || battle.debris.crystal > 0)) {
+    const interceptCoords = mission.intercept_coords || mission.target_coords;
+    await env.DB.prepare(`UPDATE galaxy_map SET debris_metal = debris_metal + ?, debris_crystal = debris_crystal + ? WHERE coords = ?`)
+      .bind(battle.debris.metal, battle.debris.crystal, interceptCoords).run();
+  }
+
+  const interceptorResult = battle.attackerWins ? 'GYŐZELEM' : 'VERESÉG';
+  const msgId = crypto.randomUUID();
+  await env.DB.prepare('INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)')
+    .bind(msgId, userId, '🎯 Elfogás', `Elfogás — ${interceptorResult}`,
+      `🎯 ELFOGÁS JELENTÉS — ${interceptorResult}\n\nCélpont: ${targetUsername}\nHelyszín: ${mission.intercept_coords}\n\nZsákmány:\nFém: ${Math.floor(result.loot?.metal || 0)}\nKristály: ${Math.floor(result.loot?.crystal || 0)}`, 'combat').run();
+}
+
+function missionIcon(type) { return { spy: '🔍', attack: '⚔️', colonize: '🌍', return: '↩️', harvest: '🚛', expedition: '🌌', intercept: '🎯' }[type] || '📡'; }
 function missionSubject(type, name) {
-  const subjects = { spy: `Kémjelentés — ${name}`, attack: `Harci jelentés — ${name}`, colonize: `Gyarmatosítás — ${name}`, return: `Flotta visszaérkezett — ${name}`, harvest: `Újrahasznosítás — ${name}`, expedition: `Expedíció Jelentés — ${name}` };
+  const subjects = { spy: `Kémjelentés — ${name}`, attack: `Harci jelentés — ${name}`, colonize: `Gyarmatosítás — ${name}`, return: `Flotta visszaérkezett — ${name}`, harvest: `Újrahasznosítás — ${name}`, expedition: `Expedíció Jelentés — ${name}`, intercept: `Elfogás jelentés — ${name}` };
   return subjects[type] || `Küldetés — ${name}`;
 }
 
@@ -235,6 +432,10 @@ function formatMissionResult(mission, result) {
   if (mission.mission_type === 'attack') {
     const moonText = result.moonCreated ? '\n\n🌑 ÚJ HOLD KELETKEZETT!' : (result.moonChance > 0 ? `\n\nHold esély: ${result.moonChance}%` : '');
     return `⚔️ HARCI JELENTÉS — ${result.attackerWins ? 'GYŐZELEM' : 'VERESÉG'}\n\nZsákmány:\nFém: ${Math.floor(result.loot?.metal || 0)}\nKristály: ${Math.floor(result.loot?.crystal || 0)}\n\n[DETAILED_REPORT:${mission.id}]${moonText}`;
+  }
+  if (mission.mission_type === 'intercept') {
+    const outcome = result.attackerWins ? 'GYŐZELEM' : 'VERESÉG';
+    return `🎯 ELFOGÁS JELENTÉS — ${outcome}\n\nHelyszín: ${result.interceptCoords || 'Ismeretlen'}\n\nZsákmány:\nFém: ${Math.floor(result.loot?.metal || 0)}\nKristály: ${Math.floor(result.loot?.crystal || 0)}`;
   }
   if (mission.mission_type === 'harvest') {
       return `🚛 ÚJRAHASZNOSÍTÁS JELENTÉS\n\nKoordináta: ${mission.target_coords}\nGyűjtött fém: ${Math.floor(result.loot?.metal || 0)}\nGyűjtött kristály: ${Math.floor(result.loot?.crystal || 0)}`;

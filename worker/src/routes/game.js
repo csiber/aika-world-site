@@ -6,6 +6,7 @@
 import { jsonResponse, jsonError } from '../utils/response.js';
 import { resolveMissionsForUser } from '../utils/mission_resolver.js';
 import { getActiveEvents } from '../utils/events.js';
+import { logTimelineEvent } from '../utils/timeline.js';
 
 // ── Game formulas ─────────────────────────────────────────────────────────────
 
@@ -155,6 +156,16 @@ async function mergeTemplates(env, state) {
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
+async function getTerritoryBonus(env, coords, allianceId) {
+  if (!allianceId) return 0;
+  const parse = (c) => (c.match(/\d+/g) || [1,1,1]).map(Number);
+  const [galaxy, system] = parse(coords);
+  const claim = await env.DB.prepare('SELECT claim_strength FROM sector_claims WHERE galaxy = ? AND system_num = ? AND alliance_id = ?')
+    .bind(galaxy, system, allianceId).first();
+  if (!claim) return 0;
+  return Math.min(0.25, 0.05 * claim.claim_strength);
+}
+
 async function getFullState(env, userId) {
   const userRow = await env.DB.prepare('SELECT username FROM users WHERE id = ?').bind(userId).first();
   if (!userRow) return null;
@@ -166,21 +177,30 @@ async function getFullState(env, userId) {
     const alliance = await env.DB.prepare('SELECT level FROM alliances WHERE id = ?').bind(membership.alliance_id).first();
     if (alliance) allianceLevel = alliance.level;
   }
+  const allianceId = membership?.alliance_id || null;
   
   const { results: pRows } = await env.DB.prepare('SELECT * FROM planets WHERE user_id = ?').bind(userId).all();
-  const planets = pRows.map(p => {
+  const planets = [];
+  for (const p of pRows) {
     const b = JSON.parse(p.buildings);
     const r = JSON.parse(gsRow.research);
-    return {
+    const baseRates = recalcRates(b, r, allianceLevel, p.coords);
+    const tBonus = await getTerritoryBonus(env, p.coords, allianceId);
+    if (tBonus > 0) {
+      baseRates.metal = Math.floor(baseRates.metal * (1 + tBonus));
+      baseRates.crystal = Math.floor(baseRates.crystal * (1 + tBonus));
+      baseRates.deus = Math.floor(baseRates.deus * (1 + tBonus));
+    }
+    planets.push({
         id: p.id, name: p.name, emoji: p.emoji, coords: p.coords, updatedAt: p.updated_at,
-        resources: JSON.parse(p.resources), 
-        rates: recalcRates(b, r, allianceLevel, p.coords), 
-        buildings: b, 
-        fleet: JSON.parse(p.fleet), 
-        defense: JSON.parse(p.defense || '[]'), 
+        resources: JSON.parse(p.resources),
+        rates: baseRates,
+        buildings: b,
+        fleet: JSON.parse(p.fleet),
+        defense: JSON.parse(p.defense || '[]'),
         isMain: p.is_main === 1, isMoon: false
-    };
-  });
+    });
+  }
 
   const { results: mRows } = await env.DB.prepare(`
     SELECT m.*, p.coords as parent_coords 
@@ -189,19 +209,27 @@ async function getFullState(env, userId) {
     WHERE m.user_id = ?
   `).bind(userId).all();
 
-  const moons = mRows.map(m => {
+  const moons = [];
+  for (const m of mRows) {
     const b = JSON.parse(m.buildings);
     const r = JSON.parse(gsRow.research);
-    return {
+    const baseRates = recalcRates(b, r, allianceLevel, m.parent_coords);
+    const tBonus = await getTerritoryBonus(env, m.parent_coords, allianceId);
+    if (tBonus > 0) {
+      baseRates.metal = Math.floor(baseRates.metal * (1 + tBonus));
+      baseRates.crystal = Math.floor(baseRates.crystal * (1 + tBonus));
+      baseRates.deus = Math.floor(baseRates.deus * (1 + tBonus));
+    }
+    moons.push({
         id: m.id, name: m.name, emoji: '🌑', coords: m.parent_coords, updatedAt: m.created_at,
-        resources: JSON.parse(m.resources || '{"metal":0,"crystal":0,"deus":0}'), 
-        rates: recalcRates(b, r, allianceLevel, m.parent_coords), 
-        buildings: b, 
-        fleet: JSON.parse(m.fleet), 
-        defense: JSON.parse(m.defense || '[]'), 
+        resources: JSON.parse(m.resources || '{"metal":0,"crystal":0,"deus":0}'),
+        rates: baseRates,
+        buildings: b,
+        fleet: JSON.parse(m.fleet),
+        defense: JSON.parse(m.defense || '[]'),
         isMain: false, isMoon: true
-    };
-  });
+    });
+  }
 
   const allBodies = [...planets, ...moons];
   let activePlanetId = gsRow.active_planet_id;
@@ -239,9 +267,11 @@ async function processQueue(env, userId, fullState) {
     if (item.item_type === 'building') {
       const b = planet.buildings.find(x => x.id === item.item_id);
       if (b) { b.level = item.target_level; planet.rates = recalcRates(planet.buildings, fullState.research, fullState.allianceLevel, planet.coords); fullState.score += 50; }
+      await logTimelineEvent(env, userId, 'building_complete', `${item.item_name || 'Épület'} kész!`, `Szint ${item.target_level} — ${planet.name || 'Bolygó'}`, '🏗️');
     } else if (item.item_type === 'research') {
       const r = fullState.research.find(x => x.id === item.item_id);
       if (r) { r.level = item.target_level; if (item.item_id === 'energy_tech') { for (const p of fullState.planets) { p.rates = recalcRates(p.buildings, fullState.research, fullState.allianceLevel, p.coords); } } fullState.score += 100; }
+      await logTimelineEvent(env, userId, 'research_complete', `${item.item_name || 'Kutatás'} kész!`, `Szint ${item.target_level}`, '🔬');
     } else if (item.item_type === 'fleet') {
       const f = planet.fleet.find(x => x.id === item.item_id);
       if (f) { f.count += item.target_level; fullState.score += 20 * item.target_level; }
@@ -300,11 +330,110 @@ export async function incrementQuest(env, userId, type, targetId = null, amount 
   }
 }
 
+// ── RTS Phase 1: Inline table migrations ─────────────────────────────────────
+
+async function ensureRtsTables(env) {
+  // Tactical Battles
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS tactical_battles (
+      id TEXT PRIMARY KEY,
+      mission_id TEXT NOT NULL,
+      attacker_id TEXT NOT NULL,
+      defender_id TEXT NOT NULL,
+      attacker_fleet TEXT NOT NULL,
+      defender_fleet TEXT NOT NULL,
+      attacker_formation TEXT DEFAULT NULL,
+      defender_formation TEXT DEFAULT NULL,
+      attacker_orders TEXT DEFAULT '[]',
+      defender_orders TEXT DEFAULT '[]',
+      status TEXT NOT NULL DEFAULT 'pending_formation',
+      current_round INTEGER NOT NULL DEFAULT 0,
+      max_rounds INTEGER NOT NULL DEFAULT 6,
+      round_log TEXT NOT NULL DEFAULT '[]',
+      result TEXT DEFAULT NULL,
+      auto_resolve_at INTEGER NOT NULL,
+      planet_coords TEXT DEFAULT NULL,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+    )
+  `).run();
+
+  // Sector Claims
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS sector_claims (
+      id TEXT PRIMARY KEY,
+      galaxy INTEGER NOT NULL,
+      system_num INTEGER NOT NULL,
+      alliance_id TEXT NOT NULL,
+      claim_strength INTEGER NOT NULL DEFAULT 0,
+      bonus_type TEXT DEFAULT 'standard',
+      bonus_value REAL NOT NULL DEFAULT 0.05,
+      claimed_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      UNIQUE(galaxy, system_num)
+    )
+  `).run();
+
+  // Relay Points
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS relay_points (
+      id TEXT PRIMARY KEY,
+      galaxy INTEGER NOT NULL,
+      system_num INTEGER NOT NULL,
+      bonus_type TEXT NOT NULL DEFAULT 'speed',
+      bonus_value REAL NOT NULL DEFAULT 0.50,
+      UNIQUE(galaxy, system_num)
+    )
+  `).run();
+
+  // Fleet Sightings
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS fleet_sightings (
+      id TEXT PRIMARY KEY,
+      observer_id TEXT NOT NULL,
+      mission_id TEXT NOT NULL,
+      owner_id TEXT NOT NULL,
+      origin_coords TEXT NOT NULL,
+      target_coords TEXT NOT NULL,
+      ship_summary TEXT NOT NULL,
+      arrive_at INTEGER NOT NULL,
+      detected_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      expires_at INTEGER NOT NULL
+    )
+  `).run();
+
+  // Activity Timeline
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS activity_timeline (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      detail TEXT DEFAULT NULL,
+      icon TEXT DEFAULT '📋',
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    )
+  `).run();
+  await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_timeline_user ON activity_timeline(user_id, created_at DESC)`).run();
+
+  // fleet_missions column extensions
+  try { await env.DB.prepare('ALTER TABLE fleet_missions ADD COLUMN origin_coords TEXT').run(); } catch (_) { /* already exists */ }
+  try { await env.DB.prepare('ALTER TABLE fleet_missions ADD COLUMN is_intercepted INTEGER DEFAULT 0').run(); } catch (_) { /* already exists */ }
+  try { await env.DB.prepare('ALTER TABLE fleet_missions ADD COLUMN intercept_coords TEXT DEFAULT NULL').run(); } catch (_) { /* already exists */ }
+  try { await env.DB.prepare('ALTER TABLE fleet_missions ADD COLUMN intercepted_by TEXT DEFAULT NULL').run(); } catch (_) { /* already exists */ }
+
+  // alliance territory_count column
+  try { await env.DB.prepare('ALTER TABLE alliances ADD COLUMN territory_count INTEGER DEFAULT 0').run(); } catch (_) { /* already exists */ }
+
+  // timeline read tracking
+  try { await env.DB.prepare('ALTER TABLE game_state ADD COLUMN last_timeline_read INTEGER DEFAULT 0').run(); } catch (_) { /* already exists */ }
+}
+
 export async function handleGame(request, env, url, user) {
   const userId = user.sub;
   const path   = url.pathname;
   const method = request.method;
 
+  try { await ensureRtsTables(env); } catch (e) { console.error('RTS table migration error:', e); }
   try { await resolveMissionsForUser(env, userId); } catch (e) { console.error('Instant mission resolution error:', e); }
 
   await ensureDailyQuests(env, userId);

@@ -78,6 +78,26 @@ export const api = {
   getMyProfile: () => request('GET', '/profile/me'),
   getProfile: (username) => request('GET', `/profile/${username}`),
 
+  // Tactical Battles
+  getTacticalBattle: (battleId) => request('GET', `/game/tactical/${battleId}`),
+  submitFormation: (battleId, formation) => request('POST', `/game/tactical/${battleId}/formation`, { formation }),
+  submitOrders: (battleId, orders) => request('POST', `/game/tactical/${battleId}/orders`, { orders }),
+  advanceRound: (battleId) => request('POST', `/game/tactical/${battleId}/advance`),
+  autoResolveBattle: (battleId) => request('POST', `/game/tactical/${battleId}/auto-resolve`),
+
+  // Sector Control
+  getTerritoryMap: (galaxy) => request('GET', `/territory/map?galaxy=${galaxy}`),
+  getAllianceTerritory: () => request('GET', '/territory/alliance'),
+
+  // Fleet Intercept & Phalanx
+  getFleetMovements: (galaxy, system) => request('GET', `/game/fleet-movements?galaxy=${galaxy}&system=${system}`),
+  scanPhalanx: (galaxy, system) => request('POST', '/game/phalanx/scan', { galaxy, system }),
+  interceptFleet: (missionId, ships) => request('POST', `/game/fleet-intercept/${missionId}`, { ships }),
+
+  // Activity Timeline
+  getTimeline: (limit = 50) => request('GET', `/game/timeline?limit=${limit}`),
+  markTimelineRead: () => request('POST', '/game/timeline/read'),
+
   // Market
   getMarketOffers: () => request('GET', '/market/list'),
   createMarketOffer: (offerRes, offerAmt, seekRes, seekAmt, planetId) => request('POST', '/market/create', { offerRes, offerAmt, seekRes, seekAmt, planetId }),

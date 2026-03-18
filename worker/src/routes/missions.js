@@ -51,6 +51,47 @@ function calcTravelTime(fromCoords, targetCoords, research, baseSeconds = 300) {
   return Math.max(60, Math.floor((baseSeconds + dist / 10) / driveBonus));
 }
 
+async function calcTravelTimeWithTerritory(env, userId, fromCoords, targetCoords, research, baseSeconds = 300) {
+  let time = calcTravelTime(fromCoords, targetCoords, research, baseSeconds);
+
+  const membership = await env.DB.prepare('SELECT alliance_id FROM alliance_members WHERE user_id = ?').bind(userId).first();
+  if (!membership) return time;
+
+  const parse = (c) => (c.match(/\d+/g) || [1,1,1]).map(Number);
+  const [g1, s1] = parse(fromCoords);
+  const [g2, s2] = parse(targetCoords);
+
+  // Check relay points controlled by player's alliance
+  const originRelay = await env.DB.prepare(`
+    SELECT rp.bonus_value FROM relay_points rp
+    JOIN sector_claims sc ON rp.galaxy = sc.galaxy AND rp.system_num = sc.system_num
+    WHERE rp.galaxy = ? AND rp.system_num = ? AND sc.alliance_id = ?
+  `).bind(g1, s1, membership.alliance_id).first();
+
+  const destRelay = await env.DB.prepare(`
+    SELECT rp.bonus_value FROM relay_points rp
+    JOIN sector_claims sc ON rp.galaxy = sc.galaxy AND rp.system_num = sc.system_num
+    WHERE rp.galaxy = ? AND rp.system_num = ? AND sc.alliance_id = ?
+  `).bind(g2, s2, membership.alliance_id).first();
+
+  // Relay bonus: 1.5x speed if either system has a controlled relay
+  if (originRelay || destRelay) {
+    time = Math.floor(time / 1.5);
+  }
+
+  // Sector control bonus: 1.1x speed if both systems are alliance-controlled
+  const originClaim = await env.DB.prepare('SELECT 1 FROM sector_claims WHERE galaxy = ? AND system_num = ? AND alliance_id = ?')
+    .bind(g1, s1, membership.alliance_id).first();
+  const destClaim = await env.DB.prepare('SELECT 1 FROM sector_claims WHERE galaxy = ? AND system_num = ? AND alliance_id = ?')
+    .bind(g2, s2, membership.alliance_id).first();
+
+  if (originClaim && destClaim) {
+    time = Math.floor(time / 1.1);
+  }
+
+  return Math.max(60, time);
+}
+
 // ── Automated Resolution ──────────────────────────────────────────────────────
 
 export async function resolveAllMissions(env) {
@@ -152,7 +193,7 @@ export async function handleMissions(request, env, url, user) {
     const { fleet: newFleet, sentShips } = extractShips(planet.fleet, ships);
     if (sentShips.length === 0) return jsonError(400, 'Nincs küldhető flotta', request);
     planet.fleet = newFleet; await savePlanetState(env, planet.id, planet);
-    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(planet.coords, targetCoords, JSON.parse(gs.research), 60);
+    const arriveAt = Math.floor(Date.now() / 1000) + await calcTravelTimeWithTerritory(env, userId, planet.coords, targetCoords, JSON.parse(gs.research), 60);
     let res = { success: true };
     if (targetUserId) {
         const targetP = await env.DB.prepare('SELECT * FROM planets WHERE user_id = ? AND coords = ?').bind(targetUserId, targetCoords).first();
@@ -164,8 +205,8 @@ export async function handleMissions(request, env, url, user) {
             res.defense = JSON.parse(targetP.defense || '[]').filter(d => d.count > 0); 
         }
     }
-    await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, target_user_id, mission_type, target_coords, target_name, status, ships, result, arrive_at, created_at) VALUES (?, ?, ?, ?, 'spy', ?, ?, 'travelling', ?, ?, ?, unixepoch())`)
-      .bind(crypto.randomUUID(), userId, planet.id, targetUserId || null, targetCoords, targetName || 'Ismeretlen', JSON.stringify(sentShips), JSON.stringify(res), arriveAt).run();
+    await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, target_user_id, mission_type, target_coords, target_name, status, ships, result, arrive_at, created_at, origin_coords) VALUES (?, ?, ?, ?, 'spy', ?, ?, 'travelling', ?, ?, ?, unixepoch(), ?)`)
+      .bind(crypto.randomUUID(), userId, planet.id, targetUserId || null, targetCoords, targetName || 'Ismeretlen', JSON.stringify(sentShips), JSON.stringify(res), arriveAt, planet.coords).run();
     await incrementQuest(env, userId, 'mission', 'spy');
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
@@ -178,9 +219,9 @@ export async function handleMissions(request, env, url, user) {
     const { fleet: newFleet, sentShips } = extractShips(planet.fleet, ships);
     if (sentShips.length === 0) return jsonError(400, 'Nincs küldhető flotta', request);
     planet.fleet = newFleet; await savePlanetState(env, planet.id, planet);
-    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(planet.coords, targetCoords, JSON.parse(gs.research), 180);
-    await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, target_user_id, mission_type, target_coords, target_name, status, ships, arrive_at, created_at) VALUES (?, ?, ?, ?, 'attack', ?, ?, 'travelling', ?, ?, unixepoch())`)
-      .bind(crypto.randomUUID(), userId, planet.id, targetUserId, targetCoords, targetName || 'Ismeretlen', JSON.stringify(sentShips), arriveAt).run();
+    const arriveAt = Math.floor(Date.now() / 1000) + await calcTravelTimeWithTerritory(env, userId, planet.coords, targetCoords, JSON.parse(gs.research), 180);
+    await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, target_user_id, mission_type, target_coords, target_name, status, ships, arrive_at, created_at, origin_coords) VALUES (?, ?, ?, ?, 'attack', ?, ?, 'travelling', ?, ?, unixepoch(), ?)`)
+      .bind(crypto.randomUUID(), userId, planet.id, targetUserId, targetCoords, targetName || 'Ismeretlen', JSON.stringify(sentShips), arriveAt, planet.coords).run();
     await incrementQuest(env, userId, 'mission', 'attack');
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
@@ -192,9 +233,9 @@ export async function handleMissions(request, env, url, user) {
     const { fleet: newFleet, sentShips } = extractShips(planet.fleet, ships);
     if (sentShips.length === 0) return jsonError(400, 'Nincs küldhető flotta', request);
     planet.fleet = newFleet; await savePlanetState(env, planet.id, planet);
-    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(planet.coords, targetCoords, JSON.parse(gs.research), 120);
-    await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, arrive_at, created_at) VALUES (?, ?, ?, 'harvest', ?, ?, 'travelling', ?, ?, unixepoch())`)
-      .bind(crypto.randomUUID(), userId, planet.id, targetCoords, targetName || 'Törmelékmező', JSON.stringify(sentShips), arriveAt).run();
+    const arriveAt = Math.floor(Date.now() / 1000) + await calcTravelTimeWithTerritory(env, userId, planet.coords, targetCoords, JSON.parse(gs.research), 120);
+    await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, arrive_at, created_at, origin_coords) VALUES (?, ?, ?, 'harvest', ?, ?, 'travelling', ?, ?, unixepoch(), ?)`)
+      .bind(crypto.randomUUID(), userId, planet.id, targetCoords, targetName || 'Törmelékmező', JSON.stringify(sentShips), arriveAt, planet.coords).run();
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
 
@@ -206,9 +247,9 @@ export async function handleMissions(request, env, url, user) {
     const { fleet: newFleet, sentShips } = extractShips(planet.fleet, ships);
     if (sentShips.length === 0) return jsonError(400, 'Nincs küldhető flotta', request);
     planet.fleet = newFleet; await savePlanetState(env, planet.id, planet);
-    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(planet.coords, targetCoords, JSON.parse(gs.research), 300);
-    await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, arrive_at, created_at) VALUES (?, ?, ?, 'expedition', ?, 'Mélyűr', 'travelling', ?, ?, unixepoch())`)
-      .bind(crypto.randomUUID(), userId, planet.id, targetCoords, JSON.stringify(sentShips), arriveAt).run();
+    const arriveAt = Math.floor(Date.now() / 1000) + await calcTravelTimeWithTerritory(env, userId, planet.coords, targetCoords, JSON.parse(gs.research), 300);
+    await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, arrive_at, created_at, origin_coords) VALUES (?, ?, ?, 'expedition', ?, 'Mélyűr', 'travelling', ?, ?, unixepoch(), ?)`)
+      .bind(crypto.randomUUID(), userId, planet.id, targetCoords, JSON.stringify(sentShips), arriveAt, planet.coords).run();
     await incrementQuest(env, userId, 'mission', 'expedition');
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
@@ -227,10 +268,10 @@ export async function handleMissions(request, env, url, user) {
     
     colShip.count--; await savePlanetState(env, planet.id, planet);
     const pName = `${user.username} új gyarmata`;
-    const arriveAt = Math.floor(Date.now() / 1000) + calcTravelTime(planet.coords, targetCoords, JSON.parse(gs.research), 600);
+    const arriveAt = Math.floor(Date.now() / 1000) + await calcTravelTimeWithTerritory(env, userId, planet.coords, targetCoords, JSON.parse(gs.research), 600);
     
-    await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, result, arrive_at, created_at) VALUES (?, ?, ?, ?, 'colonize', ?, ?, 'travelling', ?, ?, ?, unixepoch())`)
-      .bind(crypto.randomUUID(), userId, planet.id, targetCoords, pName, JSON.stringify([{id:'colony', count:1}]), JSON.stringify({success:true, planetName:pName, emoji:'🪐'}), arriveAt).run();
+    await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, result, arrive_at, created_at, origin_coords) VALUES (?, ?, ?, 'colonize', ?, ?, 'travelling', ?, ?, ?, unixepoch(), ?)`)
+      .bind(crypto.randomUUID(), userId, planet.id, targetCoords, pName, JSON.stringify([{id:'colony', count:1}]), JSON.stringify({success:true, planetName:pName, emoji:'🪐'}), arriveAt, planet.coords).run();
     await incrementQuest(env, userId, 'mission', 'colonize');
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
