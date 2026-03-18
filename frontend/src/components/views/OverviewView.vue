@@ -193,6 +193,7 @@ import { useGameStore } from '@/stores/game.js';
 import { useLangStore } from '@/stores/lang.js';
 import { api } from '@/api/client.js';
 import { audio } from '@/utils/botAudio.js';
+import sdk from '@/sdk.js';
 import BuildingItem from '@/components/BuildingItem.vue';
 import QueueItem    from '@/components/QueueItem.vue';
 
@@ -268,7 +269,7 @@ async function sendToAika() {
   try {
     const res = await fetch('/api/aika-chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('aika_token')}` },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sdk.getToken()}` },
       body: JSON.stringify({ message: msg, context: { resources: game.resources, rates: game.rates, score: game.score, buildingsCount: game.buildings.length, fleetTotal: totalShips.value, activeMissions: missions.value.length } })
     });
     const data = await res.json();

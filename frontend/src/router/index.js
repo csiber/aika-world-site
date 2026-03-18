@@ -31,9 +31,14 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const auth = useAuthStore();
+
+  // Refresh SDK state (picks up ?aika_token= from URL if present)
+  auth.refresh();
+
   if (to.meta.requiresAuth && !auth.isLoggedIn) {
+    // Redirect to login page which will trigger SDK requireAuth
     return next('/login');
   }
   if (to.meta.guest && auth.isLoggedIn) {

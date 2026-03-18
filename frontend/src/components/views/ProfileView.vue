@@ -40,30 +40,15 @@
         </div>
       </div>
 
-      <!-- Security / Change Password -->
+      <!-- Security — managed by AikaHub -->
       <div class="panel">
         <div class="panel-header"><span class="panel-icon">🔒</span><h3>Biztonság</h3></div>
         <div class="panel-body">
-          <div class="section-title">Jelszó módosítása</div>
-          <form class="password-form" @submit.prevent="doChangePassword">
-            <div class="field">
-              <label>Jelenlegi jelszó</label>
-              <input v-model="pwCurrent" type="password" class="input" placeholder="••••••••" autocomplete="current-password" required />
-            </div>
-            <div class="field">
-              <label>Új jelszó</label>
-              <input v-model="pwNew" type="password" class="input" placeholder="••••••••" autocomplete="new-password" required />
-            </div>
-            <div class="field">
-              <label>Új jelszó újra</label>
-              <input v-model="pwNew2" type="password" class="input" placeholder="••••••••" autocomplete="new-password" required />
-            </div>
-            <button type="submit" class="btn-primary" :disabled="pwBusy" style="width:100%;margin-top:10px;">
-              {{ pwBusy ? 'Mentés...' : 'Jelszó frissítése' }}
-            </button>
-            <div v-if="pwError" class="error-msg" style="margin-top:10px;">❌ {{ pwError }}</div>
-            <div v-if="pwSuccess" class="success-msg" style="margin-top:10px;">✅ {{ pwSuccess }}</div>
-          </form>
+          <p style="color: var(--text-dim); font-size: 13px;">
+            A fiókod az AikaHub-on keresztül van kezelve.
+            A jelszó módosítását és egyéb biztonsági beállításokat az
+            <a :href="hubUrl" target="_blank" style="color: var(--accent);">AikaHub</a>-on végezheted el.
+          </p>
         </div>
       </div>
     </div>
@@ -91,12 +76,7 @@ const editName      = ref('');
 const saving        = ref(false);
 const emojiPickerFor = ref(null);
 
-const pwCurrent = ref('');
-const pwNew = ref('');
-const pwNew2 = ref('');
-const pwBusy = ref(false);
-const pwError = ref('');
-const pwSuccess = ref('');
+const hubUrl = 'https://aikahub.com';
 
 const planetEmojis = ['🌍','🌎','🌏','🪐','🌕','🔵','🟣','🟤','🔴','⚫','🌑','💫'];
 
@@ -125,23 +105,6 @@ function toggleEmojiPicker(id) {
 async function pickEmoji(id, emoji) {
   emojiPickerFor.value = null;
   await game.renamePlanet(id, null, emoji);
-}
-
-async function doChangePassword() {
-  pwError.value = '';
-  pwSuccess.value = '';
-  if (!pwCurrent.value || !pwNew.value) { pwError.value = 'Minden mező kitöltése kötelező'; return; }
-  if (pwNew.value !== pwNew2.value) { pwError.value = 'Az új jelszavak nem egyeznek'; return; }
-  
-  pwBusy.value = true;
-  try {
-    await api.changePassword(pwCurrent.value, pwNew.value);
-    pwSuccess.value = 'Jelszó sikeresen megváltoztatva!';
-    pwCurrent.value = ''; pwNew.value = ''; pwNew2.value = '';
-  } catch (e) {
-    pwError.value = e.message;
-  }
-  pwBusy.value = false;
 }
 
 onMounted(loadProfile);

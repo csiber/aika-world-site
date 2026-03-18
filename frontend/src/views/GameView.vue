@@ -191,7 +191,7 @@ function onLogout() {
 let tickTimer, syncTimer;
 
 onMounted(async () => {
-  await auth.checkMe(); 
+  auth.refresh(); // sync SDK auth state
   await gameStore.loadState();
   await msgStore.loadMessages();
   await allianceStore.load();

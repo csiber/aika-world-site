@@ -83,6 +83,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import sdk from '@/sdk.js';
 
 const stats = ref(null);
 const users = ref([]);
@@ -91,7 +92,7 @@ const loading = ref(false);
 const gift = ref({ metal: 10000, crystal: 5000, deus: 1000 });
 
 async function loadAdminData() {
-  const token = localStorage.getItem('aika_token');
+  const token = sdk.getToken();
   const [sRes, uRes] = await Promise.all([
     fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } }),
     fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } })
@@ -116,7 +117,7 @@ async function sendGift() {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('aika_token')}` 
+        'Authorization': `Bearer ${sdk.getToken()}` 
       },
       body: JSON.stringify({
         targetUserId: selectedUser.value.id,
@@ -140,7 +141,7 @@ async function seedBots() {
     try {
         const res = await fetch('/api/admin/bots/seed', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('aika_token')}` }
+            headers: { 'Authorization': `Bearer ${sdk.getToken()}` }
         });
         const data = await res.json();
         alert(`Sikeres: ${data.created} bot létrehozva.`);
@@ -154,7 +155,7 @@ async function simulateBots() {
     try {
         const res = await fetch('/api/admin/bots/simulate', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('aika_token')}` }
+            headers: { 'Authorization': `Bearer ${sdk.getToken()}` }
         });
         const data = await res.json();
         alert(`Szimuláció kész: ${data.updated} bot frissítve.`);
