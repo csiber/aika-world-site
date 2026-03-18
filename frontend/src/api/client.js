@@ -1,15 +1,29 @@
+/**
+ * AIKA World — API Client
+ * Uses AikaHub SDK for authentication (Bearer token).
+ */
+import sdk from '@/sdk.js';
+
 const BASE = '/api';
 
-function getToken() { return localStorage.getItem('aika_token'); }
+function getToken() { return sdk.getToken(); }
 
-async function request(method, path, body = null, auth = true) {
+async function request(method, path, body = null) {
   const headers = { 'Content-Type': 'application/json' };
-  if (auth) headers['Authorization'] = `Bearer ${getToken()}`;
-  
+  const token = getToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   const options = { method, headers };
   if (body) options.body = JSON.stringify(body);
 
   const res = await fetch(BASE + path, options);
+
+  // If 401, SDK handles redirect to AikaHub login
+  if (res.status === 401) {
+    sdk.logout();
+    return new Promise(() => {}); // never resolves, page navigates away
+  }
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'API Error');
   return data;
@@ -18,12 +32,6 @@ async function request(method, path, body = null, auth = true) {
 export const api = {
   post: (path, body) => request('POST', path, body),
   get: (path) => request('GET', path),
-
-  // Auth
-  login: (email, password, captcha) => request('POST', '/auth/login', { email, password, captcha }, false),
-  register: (username, email, password, captcha) => request('POST', '/auth/register', { username, email, password, captcha }, false),
-  getMe: () => request('GET', '/auth/me'),
-  changePassword: (currentPassword, newPassword) => request('POST', '/auth/change-password', { currentPassword, newPassword }),
 
   // Game
   getState: () => request('GET', '/game/state'),
