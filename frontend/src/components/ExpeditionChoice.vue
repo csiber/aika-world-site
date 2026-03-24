@@ -1,5 +1,5 @@
 <template>
-  <div class="expedition-overlay" @click.self="/* non-dismissable */">
+  <div class="expedition-overlay" @click.self.prevent>
     <div class="expedition-modal">
       <!-- Animated background particles -->
       <div class="particle-bg" aria-hidden="true">
