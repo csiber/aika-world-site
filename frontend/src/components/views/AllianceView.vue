@@ -345,6 +345,204 @@
             </div>
           </div>
         </div>
+
+        <!-- DIPLOMACY TAB -->
+        <div v-if="activeTab === 'diplomacy'" class="tab-content diplomacy-view">
+          <!-- Active Treaties -->
+          <div class="panel">
+            <div class="panel-header"><h3>{{ L.t('alliance.diplomacy.activeTreaties') }}</h3></div>
+            <div class="panel-body">
+              <div v-if="activeTreaties.length === 0" class="empty-war">
+                <div class="peace-icon">📜</div>
+                <p>{{ L.t('alliance.diplomacy.noTreaties') }}</p>
+              </div>
+              <div v-else class="treaty-list">
+                <div v-for="t in activeTreaties" :key="t.id" class="treaty-item">
+                  <div class="treaty-info">
+                    <span class="treaty-type-badge" :class="treatyTypeBadgeClass(t.type)">{{ L.t('alliance.diplomacy.types.' + t.type) }}</span>
+                    <span class="treaty-partner">{{ treatyPartnerName(t) }}</span>
+                    <span class="treaty-status active">{{ L.t('alliance.diplomacy.status.active') }}</span>
+                  </div>
+                  <div class="treaty-actions" v-if="isLeader">
+                    <button class="btn-danger-outline btn-sm" @click="cancelTreaty(t)" :disabled="busy">{{ L.t('alliance.diplomacy.cancel') }}</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pending Proposals: Incoming -->
+          <div class="panel" style="margin-top: 20px;">
+            <div class="panel-header"><h3>{{ L.t('alliance.diplomacy.pendingProposals') }} — {{ L.t('alliance.diplomacy.incoming') }}</h3></div>
+            <div class="panel-body">
+              <div v-if="pendingIncoming.length === 0" class="empty-war">
+                <p>{{ L.t('alliance.diplomacy.noPending') }}</p>
+              </div>
+              <div v-else class="treaty-list">
+                <div v-for="t in pendingIncoming" :key="t.id" class="treaty-item incoming">
+                  <div class="treaty-info">
+                    <span class="treaty-type-badge" :class="treatyTypeBadgeClass(t.type)">{{ L.t('alliance.diplomacy.types.' + t.type) }}</span>
+                    <span class="treaty-partner">{{ treatyPartnerName(t) }}</span>
+                    <span class="treaty-status pending">{{ L.t('alliance.diplomacy.status.pending') }}</span>
+                  </div>
+                  <div class="treaty-desc">
+                    <span v-if="t.type === 'nap'">{{ L.t('alliance.diplomacy.napDesc') }}</span>
+                    <span v-if="t.type === 'trade'">{{ L.t('alliance.diplomacy.tradeDesc') }}</span>
+                    <span v-if="t.type === 'vassalage'">{{ L.t('alliance.diplomacy.vassalageDesc') }}</span>
+                  </div>
+                  <div class="treaty-actions" v-if="isLeader">
+                    <button class="btn-primary btn-sm" @click="acceptTreaty(t.id)" :disabled="busy">{{ L.t('alliance.diplomacy.accept') }}</button>
+                    <button class="btn-danger-outline btn-sm" @click="declineTreaty(t.id)" :disabled="busy">{{ L.t('alliance.diplomacy.decline') }}</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pending Proposals: Outgoing -->
+          <div class="panel" style="margin-top: 20px;">
+            <div class="panel-header"><h3>{{ L.t('alliance.diplomacy.pendingProposals') }} — {{ L.t('alliance.diplomacy.outgoing') }}</h3></div>
+            <div class="panel-body">
+              <div v-if="pendingOutgoing.length === 0" class="empty-war">
+                <p>{{ L.t('alliance.diplomacy.noPending') }}</p>
+              </div>
+              <div v-else class="treaty-list">
+                <div v-for="t in pendingOutgoing" :key="t.id" class="treaty-item outgoing">
+                  <div class="treaty-info">
+                    <span class="treaty-type-badge" :class="treatyTypeBadgeClass(t.type)">{{ L.t('alliance.diplomacy.types.' + t.type) }}</span>
+                    <span class="treaty-partner">{{ treatyPartnerName(t) }}</span>
+                    <span class="treaty-status pending">{{ L.t('alliance.diplomacy.status.pending') }}</span>
+                  </div>
+                  <div class="treaty-actions" v-if="isLeader">
+                    <button class="btn-danger-outline btn-sm" @click="cancelTreaty(t)" :disabled="busy">{{ L.t('alliance.diplomacy.cancel') }}</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Propose Treaty -->
+          <div v-if="isLeader" class="panel" style="margin-top: 20px;">
+            <div class="panel-header"><h3>{{ L.t('alliance.diplomacy.proposeTreaty') }}</h3></div>
+            <div class="panel-body">
+              <div v-if="!showProposeForm">
+                <button class="btn-primary" @click="showProposeForm = true">{{ L.t('alliance.diplomacy.proposeTreaty') }}</button>
+              </div>
+              <div v-else class="propose-form">
+                <div class="form-group">
+                  <label>{{ L.t('alliance.diplomacy.selectTarget') }}</label>
+                  <select v-model="proposeTarget" class="input">
+                    <option disabled value="">{{ L.t('alliance.diplomacy.selectTarget') }}</option>
+                    <option v-for="a in otherAlliances" :key="a.id" :value="a.id">[{{ a.tag }}] {{ a.name }}</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>{{ L.t('alliance.diplomacy.selectType') }}</label>
+                  <select v-model="proposeType" class="input">
+                    <option disabled value="">{{ L.t('alliance.diplomacy.selectType') }}</option>
+                    <option value="nap">{{ L.t('alliance.diplomacy.types.nap') }}</option>
+                    <option value="trade">{{ L.t('alliance.diplomacy.types.trade') }}</option>
+                    <option value="vassalage">{{ L.t('alliance.diplomacy.types.vassalage') }}</option>
+                  </select>
+                </div>
+                <div v-if="proposeType" class="treaty-type-desc">
+                  <span v-if="proposeType === 'nap'">{{ L.t('alliance.diplomacy.napDesc') }}</span>
+                  <span v-if="proposeType === 'trade'">{{ L.t('alliance.diplomacy.tradeDesc') }}</span>
+                  <span v-if="proposeType === 'vassalage'">{{ L.t('alliance.diplomacy.vassalageDesc') }}</span>
+                </div>
+                <div class="propose-actions">
+                  <button class="btn-primary" @click="proposeTreaty" :disabled="!proposeTarget || !proposeType || busy">{{ L.t('alliance.diplomacy.propose') }}</button>
+                  <button class="btn-danger-outline" @click="showProposeForm = false">Vissza</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STRUCTURES TAB -->
+        <div v-if="activeTab === 'structures'" class="tab-content structures-view">
+          <div class="structures-grid">
+            <div v-for="sd in structureDefs" :key="sd.type" class="structure-card" :class="{ active: getStructure(sd.type)?.isActive, building: getStructure(sd.type) && !getStructure(sd.type)?.isActive }">
+              <div class="struct-header">
+                <span class="struct-icon">{{ sd.icon }}</span>
+                <div class="struct-title-block">
+                  <h3 class="struct-name">{{ L.t('alliance.structures.' + sd.nameKey) }}</h3>
+                  <p class="struct-desc">{{ L.t('alliance.structures.' + sd.descKey) }}</p>
+                </div>
+                <span v-if="getStructure(sd.type)?.isActive" class="struct-status-badge active-badge">{{ L.t('alliance.structures.active') }}</span>
+                <span v-else-if="getStructure(sd.type)" class="struct-status-badge building-badge">{{ L.t('alliance.structures.building') }}</span>
+              </div>
+
+              <!-- Not started -->
+              <div v-if="!getStructure(sd.type)" class="struct-body">
+                <div class="struct-cost">
+                  <span class="cost-label">{{ L.t('alliance.structures.required') }}:</span>
+                  <span v-if="sd.required.metal > 0" class="cost-item metal">{{ L.n(sd.required.metal) }} {{ L.t('alliance.structures.metal') }}</span>
+                  <span v-if="sd.required.crystal > 0" class="cost-item crystal">{{ L.n(sd.required.crystal) }} {{ L.t('alliance.structures.crystal') }}</span>
+                  <span v-if="sd.required.deus > 0" class="cost-item deus">{{ L.n(sd.required.deus) }} {{ L.t('alliance.structures.deus') }}</span>
+                </div>
+                <button v-if="canManage" class="btn-primary full-width" @click="startBuild(sd.type)" :disabled="busy">{{ L.t('alliance.structures.startBuild') }}</button>
+              </div>
+
+              <!-- Under construction -->
+              <div v-else-if="!getStructure(sd.type).isActive" class="struct-body">
+                <div class="struct-progress-section">
+                  <div v-for="res in ['metal', 'crystal', 'deus']" :key="res" class="res-progress-row" v-show="sd.required[res] > 0">
+                    <div class="res-progress-label">
+                      <span class="res-name" :class="res">{{ L.t('alliance.structures.' + res) }}</span>
+                      <span class="res-nums">{{ L.n(getStructure(sd.type).contributions[res]) }} / {{ L.n(sd.required[res]) }}</span>
+                    </div>
+                    <div class="res-progress-bar-wrap">
+                      <div class="res-progress-bar" :class="res" :style="{ width: Math.min(100, (getStructure(sd.type).contributions[res] / sd.required[res]) * 100) + '%' }"></div>
+                    </div>
+                  </div>
+                </div>
+                <button class="btn-primary full-width" @click="openContributeModal(getStructure(sd.type))" :disabled="busy">{{ L.t('alliance.structures.contribute') }}</button>
+              </div>
+
+              <!-- Active -->
+              <div v-else class="struct-body struct-active-body">
+                <div class="struct-bonus-active">{{ L.t('alliance.structures.' + sd.descKey) }}</div>
+                <button class="btn-outline full-width" @click="loadContributors(getStructure(sd.type))">{{ L.t('alliance.structures.contributors') || 'Top Contributors' }}</button>
+              </div>
+
+              <!-- Contributors list (shown when loaded) -->
+              <div v-if="structContributors[getStructure(sd.type)?.id]" class="struct-contributors">
+                <h4>{{ L.t('alliance.structures.contributors') || 'Top Contributors' }}</h4>
+                <div v-for="(c, idx) in structContributors[getStructure(sd.type)?.id]" :key="c.user_id" class="contrib-row">
+                  <span class="contrib-rank">#{{ idx + 1 }}</span>
+                  <span class="contrib-name">{{ c.username }}</span>
+                  <span class="contrib-total">{{ L.n(c.metal + c.crystal + c.deus) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contribute Modal -->
+          <div v-if="showContributeModal" class="modal-overlay" @click.self="showContributeModal = false">
+            <div class="modal-box">
+              <h3>{{ L.t('alliance.structures.contribute') }}</h3>
+              <p class="modal-hint">{{ contributeTarget?.def?.nameEn || contributeTarget?.type }}</p>
+              <div class="donate-form-new">
+                <div class="input-row">
+                  <div class="input-field" v-if="contributeTarget?.required?.metal > 0">
+                    <label>{{ L.t('alliance.structures.metal') }}</label>
+                    <input type="number" v-model.number="contribForm.metal" min="0" />
+                  </div>
+                  <div class="input-field" v-if="contributeTarget?.required?.crystal > 0">
+                    <label>{{ L.t('alliance.structures.crystal') }}</label>
+                    <input type="number" v-model.number="contribForm.crystal" min="0" />
+                  </div>
+                  <div class="input-field" v-if="contributeTarget?.required?.deus > 0">
+                    <label>{{ L.t('alliance.structures.deus') }}</label>
+                    <input type="number" v-model.number="contribForm.deus" min="0" />
+                  </div>
+                </div>
+                <button class="btn-primary full-width" @click="doContribute" :disabled="busy">{{ L.t('alliance.structures.contributeBtn') }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -372,12 +570,35 @@ const totalTerritory = ref(0);
 const selectedWar = ref(null);
 const selectedWarStats = ref(null);
 
+// Diplomacy
+const activeTreaties = ref([]);
+const pendingIncoming = ref([]);
+const pendingOutgoing = ref([]);
+const showProposeForm = ref(false);
+const proposeTarget = ref('');
+const proposeType = ref('');
+
+// Structures
+const structures = ref([]);
+const structContributors = ref({});
+const showContributeModal = ref(false);
+const contributeTarget = ref(null);
+const contribForm = ref({ metal: 0, crystal: 0, deus: 0 });
+
+const structureDefs = [
+  { type: 'defense', icon: '\u{1F6E1}\uFE0F', nameKey: 'defenseBastion', descKey: 'defenseBastionDesc', required: { metal: 500000, crystal: 300000, deus: 0 } },
+  { type: 'trade', icon: '\u{1F3EA}', nameKey: 'tradeHub', descKey: 'tradeHubDesc', required: { metal: 300000, crystal: 500000, deus: 0 } },
+  { type: 'research', icon: '\u{1F52C}', nameKey: 'researchNexus', descKey: 'researchNexusDesc', required: { metal: 200000, crystal: 200000, deus: 100000 } },
+];
+
 const tabs = [
   { id: 'overview', label: 'Áttekintés', icon: '🏛️' },
   { id: 'members',  label: 'Tagok',      icon: '👥' },
   { id: 'territory', label: 'Terület',   icon: '🗺️' },
   { id: 'bank',      label: 'Bank',       icon: '🏦' },
-  { id: 'wars',      label: 'Háború',     icon: '⚔️' }
+  { id: 'wars',      label: 'Háború',     icon: '⚔️' },
+  { id: 'diplomacy', label: L.t('alliance.diplomacy.title'), icon: '🤝' },
+  { id: 'structures', label: L.t('alliance.structures.title'), icon: '🛰️' }
 ];
 
 const form = ref({ name: '', tag: '', desc: '' });
@@ -483,6 +704,67 @@ function formatTimeLeft(endsAt) {
     return `${mins}${L.t('time.min')}`;
 }
 
+// ── Diplomacy ──
+async function loadDiplomacy() {
+  try {
+    const [activeData, pendingData] = await Promise.all([
+      api.getActiveTreaties(),
+      api.getPendingTreaties(),
+    ]);
+    activeTreaties.value = activeData.treaties || [];
+    pendingIncoming.value = pendingData.incoming || [];
+    pendingOutgoing.value = pendingData.outgoing || [];
+  } catch {}
+}
+
+async function proposeTreaty() {
+  if (!proposeTarget.value || !proposeType.value) return;
+  busy.value = true;
+  try {
+    await api.proposeTreaty(proposeTarget.value, proposeType.value);
+    proposeTarget.value = '';
+    proposeType.value = '';
+    showProposeForm.value = false;
+    await loadDiplomacy();
+  } catch (e) { alert(e.message); }
+  busy.value = false;
+}
+
+async function acceptTreaty(id) {
+  busy.value = true;
+  try { await api.acceptTreaty(id); await loadDiplomacy(); } catch (e) { alert(e.message); }
+  busy.value = false;
+}
+
+async function declineTreaty(id) {
+  busy.value = true;
+  try { await api.declineTreaty(id); await loadDiplomacy(); } catch (e) { alert(e.message); }
+  busy.value = false;
+}
+
+async function cancelTreaty(treaty) {
+  if (treaty.type === 'nap' && treaty.status === 'active') {
+    if (!confirm(L.t('alliance.diplomacy.cancelNapWarn'))) return;
+  }
+  busy.value = true;
+  try { await api.cancelTreaty(treaty.id); await loadDiplomacy(); } catch (e) { alert(e.message); }
+  busy.value = false;
+}
+
+function treatyTypeBadgeClass(type) {
+  if (type === 'nap') return 'badge-nap';
+  if (type === 'trade') return 'badge-trade';
+  if (type === 'vassalage') return 'badge-vassalage';
+  return '';
+}
+
+function treatyPartnerName(treaty) {
+  if (treaty.alliance_a_id === allianceStore.alliance?.id) {
+    return `[${treaty.alliance_b_tag}] ${treaty.alliance_b_name}`;
+  }
+  return `[${treaty.alliance_a_tag}] ${treaty.alliance_a_name}`;
+}
+
 async function createAlliance() {
   if (!form.value.name || !form.value.tag) return alert('Név és TAG kötelező!');
   busy.value = true;
@@ -517,6 +799,7 @@ onMounted(() => {
     loadWars();
     loadWarHistory();
     loadTerritory();
+    loadDiplomacy();
 });
 </script>
 
@@ -673,6 +956,33 @@ onMounted(() => {
 .t-strength { color: var(--text-dim); }
 .t-bonus { color: var(--accent3); font-weight: 600; }
 @media (max-width: 600px) { .territory-stats { grid-template-columns: 1fr; } }
+
+/* Diplomacy */
+.treaty-list { display: flex; flex-direction: column; gap: 12px; }
+.treaty-item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 18px; background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px; transition: border-color 0.2s; }
+.treaty-item:hover { border-color: rgba(0,200,255,0.3); }
+.treaty-item.incoming { border-left: 3px solid var(--accent); }
+.treaty-item.outgoing { border-left: 3px solid var(--text-dim); }
+
+.treaty-info { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.treaty-type-badge { font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-nap { background: rgba(0,120,255,0.15); color: #4da6ff; border: 1px solid rgba(0,120,255,0.3); }
+.badge-trade { background: rgba(0,200,100,0.15); color: #00cc66; border: 1px solid rgba(0,200,100,0.3); }
+.badge-vassalage { background: rgba(160,80,255,0.15); color: #b366ff; border: 1px solid rgba(160,80,255,0.3); }
+
+.treaty-partner { font-weight: 600; font-size: 13px; color: var(--text-bright); }
+.treaty-status { font-size: 10px; text-transform: uppercase; font-family: 'Orbitron', sans-serif; padding: 2px 8px; border-radius: 3px; letter-spacing: 0.5px; }
+.treaty-status.active { color: #0f6; background: rgba(0,255,100,0.1); border: 1px solid rgba(0,255,100,0.2); }
+.treaty-status.pending { color: #ffa500; background: rgba(255,165,0,0.1); border: 1px solid rgba(255,165,0,0.2); }
+
+.treaty-desc { width: 100%; font-size: 11px; color: var(--text-dim); padding-left: 2px; }
+
+.treaty-actions { display: flex; gap: 8px; align-items: center; }
+
+.propose-form { display: flex; flex-direction: column; gap: 15px; }
+.propose-actions { display: flex; gap: 10px; }
+
+.treaty-type-desc { font-size: 12px; color: var(--text-dim); background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border-left: 3px solid var(--accent); }
 
 /* Global helper */
 .full-width { width: 100%; }

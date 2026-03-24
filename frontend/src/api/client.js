@@ -120,6 +120,23 @@ export const api = {
   markNotificationRead: (id) => request('POST', `/notifications/read/${id}`),
   subscribeNotifications: (sub) => request('POST', '/notifications/subscribe', sub),
 
+  // Diplomacy
+  proposeTreaty: (targetAllianceId, type) => request('POST', '/diplomacy/propose', { targetAllianceId, type }),
+  acceptTreaty: (id) => request('POST', `/diplomacy/${id}/accept`),
+  declineTreaty: (id) => request('POST', `/diplomacy/${id}/decline`),
+  cancelTreaty: (id) => request('POST', `/diplomacy/${id}/cancel`),
+  getActiveTreaties: () => request('GET', '/diplomacy/active'),
+  getPendingTreaties: () => request('GET', '/diplomacy/pending'),
+
+  // Alliance Structures
+  getAllianceStructures: () => request('GET', '/alliance/structures'),
+  buildStructure: (type) => request('POST', '/alliance/structures/build', { type }),
+  contributeToStructure: (structureId, metal, crystal, deus) => request('POST', '/alliance/structures/contribute', { structureId, metal, crystal, deus }),
+  getStructureContributions: (id) => request('GET', `/alliance/structures/${id}/contributions`),
+
+  // Alliance Donate
+  donateAlliance: (metal, crystal, deus) => request('POST', '/alliance/donate', { metal, crystal, deus }),
+
   // Market
   getMarketOffers: () => request('GET', '/market/list'),
   createMarketOffer: (offerRes, offerAmt, seekRes, seekAmt, planetId) => request('POST', '/market/create', { offerRes, offerAmt, seekRes, seekAmt, planetId }),
