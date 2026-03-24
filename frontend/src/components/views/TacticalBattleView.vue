@@ -186,6 +186,13 @@
         </div>
       </div>
 
+      <!-- ═══ BATTLE CANVAS VISUALIZATION ═══ -->
+      <BattleCanvas
+        v-if="battle.status === 'resolved' && battle.result"
+        :battleData="battle.result"
+        :playing="true"
+      />
+
       <!-- ═══ RESOLVED PHASE ═══ -->
       <div v-if="battle.status === 'resolved' && battle.result" class="phase-result">
         <div class="result-banner" :class="{ won: battle.result.attackerWins === isAttacker, lost: battle.result.attackerWins !== isAttacker }">
@@ -247,6 +254,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useGameStore } from '@/stores/game.js';
 import { api } from '@/api/client.js';
+import BattleCanvas from '@/components/BattleCanvas.vue';
 
 const props = defineProps({
   battleId: { type: String, required: true },
