@@ -34,6 +34,7 @@
         <div v-if="allianceStore.inAlliance" class="alliance-badge" @click="activeTab = 'alliance'" title="Szövetség">
           [{{ allianceStore.alliance?.tag }}]
         </div>
+        <button class="audio-toggle" @click="toggleMute" :title="isMuted ? 'Unmute' : 'Mute'">{{ isMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A' }}</button>
         <button class="logout-btn" @click="onLogout" title="Kilépés">⏻</button>
       </div>
     </header>
@@ -150,6 +151,8 @@ import TourOverlay    from '@/components/TourOverlay.vue';
 import ActivityTimeline from '@/components/ActivityTimeline.vue';
 import { useLangStore }  from '@/stores/lang.js';
 import { APP_VERSION }   from '@/data/changelog.js';
+import { audioEngine }   from '@/audio/AudioEngine.js';
+import { startAmbientMusic, stopAmbientMusic } from '@/audio/music.js';
 
 const router        = useRouter();
 const auth          = useAuthStore();
@@ -162,6 +165,20 @@ const L             = useLangStore();
 const activeTab      = ref('overview');
 const showChangelog  = ref(false);
 const showTimeline   = ref(false);
+const isMuted        = ref(audioEngine.muted);
+
+// Audio: init on first user click (browser autoplay policy)
+function initAudio() {
+  audioEngine.init();
+  startAmbientMusic();
+  document.removeEventListener('click', initAudio);
+}
+
+function toggleMute() {
+  const newState = !audioEngine.muted;
+  audioEngine.setMuted(newState);
+  isMuted.value = newState;
+}
 
 // Safe computed accessors
 const resources = computed(() => gameStore.state?.activePlanet?.resources || { metal: 0, crystal: 0, energy: 0, deus: 0 });
@@ -199,6 +216,7 @@ function onLogout() {
 let tickTimer, syncTimer, timelineTimer;
 
 onMounted(async () => {
+  document.addEventListener('click', initAudio);
   auth.refresh(); // sync SDK auth state
   await gameStore.loadState();
   await msgStore.loadMessages();
@@ -235,6 +253,8 @@ onUnmounted(() => {
   clearInterval(tickTimer);
   clearInterval(syncTimer);
   clearInterval(timelineTimer);
+  document.removeEventListener('click', initAudio);
+  stopAmbientMusic();
   const bot = useBotStore();
   if (bot.active) bot.stop();
 });
@@ -279,6 +299,9 @@ onUnmounted(() => {
 .timeline-bell { position: relative; background: none; border: 1px solid var(--border); color: var(--text-dim); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .timeline-bell:hover { background: rgba(0,200,255,0.08); border-color: var(--accent); color: var(--accent); }
 .bell-badge { position: absolute; top: -4px; right: -4px; background: var(--accent2); color: white; font-size: 8px; font-family: 'Orbitron', sans-serif; min-width: 14px; height: 14px; border-radius: 7px; display: flex; align-items: center; justify-content: center; padding: 0 3px; animation: glow-pulse 2s ease-in-out infinite; }
+
+.audio-toggle { background: none; border: 1px solid var(--border); color: var(--text-dim); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.audio-toggle:hover { background: rgba(0,200,255,0.08); border-color: var(--accent); color: var(--accent); }
 
 .logout-btn { background: none; border: 1px solid rgba(255,58,122,0.3); color: var(--accent2); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .logout-btn:hover { background: rgba(255,58,122,0.1); border-color: var(--accent2); }

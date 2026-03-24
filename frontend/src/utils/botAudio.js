@@ -1,49 +1,52 @@
 /**
  * AIKA WORLD — Audio Utility (Synthesized Web Audio)
+ * Now delegates to the central AudioEngine for unified volume/mute control.
  */
+
+import { audioEngine } from '@/audio/AudioEngine.js';
 
 class BotAudio {
   constructor() {
-    this.ctx = null;
     this.enabled = true;
     this.volume = 0.1;
   }
 
+  /** Initialise the shared AudioEngine context */
   init() {
-    if (this.ctx) return;
-    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    audioEngine.init();
   }
 
+  /** @private */
   playTone(freq, type, duration, volMult = 1) {
-    if (!this.enabled || !this.ctx) return;
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (!this.enabled || !audioEngine.ctx || audioEngine.muted) return;
+    if (audioEngine.ctx.state === 'suspended') audioEngine.ctx.resume();
 
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
+    const osc = audioEngine.ctx.createOscillator();
+    const gain = audioEngine.ctx.createGain();
 
     osc.type = type;
-    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-    
-    gain.gain.setValueAtTime(this.volume * volMult, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+    osc.frequency.setValueAtTime(freq, audioEngine.ctx.currentTime);
+
+    gain.gain.setValueAtTime(this.volume * volMult, audioEngine.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioEngine.ctx.currentTime + duration);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(audioEngine.sfxGain || audioEngine.ctx.destination);
 
     osc.start();
-    osc.stop(this.ctx.currentTime + duration);
+    osc.stop(audioEngine.ctx.currentTime + duration);
   }
 
   // UI Sounds
   click()    { this.playTone(800, 'sine', 0.1, 0.5); }
-  success()  { 
-    this.playTone(600, 'sine', 0.2, 0.5); 
+  success()  {
+    this.playTone(600, 'sine', 0.2, 0.5);
     setTimeout(() => this.playTone(900, 'sine', 0.3, 0.5), 100);
   }
-  error()    { 
-    this.playTone(200, 'sawtooth', 0.3, 0.5); 
+  error()    {
+    this.playTone(200, 'sawtooth', 0.3, 0.5);
   }
-  build()    { 
+  build()    {
     this.playTone(400, 'square', 0.1, 0.3);
     setTimeout(() => this.playTone(500, 'square', 0.1, 0.3), 100);
   }

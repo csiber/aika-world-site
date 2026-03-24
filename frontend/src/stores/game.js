@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { api } from '@/api/client.js';
 import { useLangStore } from '@/stores/lang.js';
 import { audio } from '@/utils/botAudio.js';
+import { sfx } from '@/audio/sounds.js';
 
 export const useGameStore = defineStore('game', () => {
   const state   = ref(null);
@@ -121,6 +122,7 @@ export const useGameStore = defineStore('game', () => {
       const data = await api.buildFleet(shipId, amount);
       updateFromResponse(data);
       audio.build();
+      sfx.fleetLaunch();
       notify('Hajóépítés elindítva', 'blue');
       return true;
     } catch (e) { audio.error(); notify(`❌ ${e.message}`, 'red'); return false; }
@@ -138,10 +140,18 @@ export const useGameStore = defineStore('game', () => {
 
   async function syncResources() {
     try {
+      const oldQueueIds = new Set(queue.value.map(q => q.item_id || q.id));
       const data = await api.syncState();
       updateFromResponse(data);
       const qData = await api.getQueue();
-      queue.value = qData.queue || [];
+      const newQueue = qData.queue || [];
+      // Detect completed queue items and play completion sound
+      if (oldQueueIds.size > 0) {
+        const newQueueIds = new Set(newQueue.map(q => q.item_id || q.id));
+        const completed = [...oldQueueIds].filter(id => !newQueueIds.has(id));
+        if (completed.length > 0) sfx.buildComplete();
+      }
+      queue.value = newQueue;
     } catch (e) {}
   }
 
