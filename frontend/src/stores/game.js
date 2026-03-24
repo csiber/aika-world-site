@@ -16,6 +16,7 @@ export const useGameStore = defineStore('game', () => {
   const activeBattle = ref(null);
   const sectorClaims = ref([]);
   const fleetSightings = ref([]);
+  const fleetPositions = ref([]);
   const activityTimeline = ref([]);
   const unreadTimelineCount = ref(0);
   const lastTimelineRead = ref(0);
@@ -229,6 +230,14 @@ export const useGameStore = defineStore('game', () => {
     } catch (e) { notify(`❌ ${e.message}`, 'red'); return null; }
   }
 
+  async function loadFleetPositions(galaxy, system) {
+    try {
+      const data = await api.getFleetPositions(galaxy, system);
+      fleetPositions.value = data.fleets || [];
+      return data;
+    } catch (e) { return null; }
+  }
+
   async function loadTimeline(limit = 50) {
     try {
       const data = await api.getTimeline(limit);
@@ -264,9 +273,9 @@ export const useGameStore = defineStore('game', () => {
     state, queue, storage, loading, error, notifications,
     activePlanet, resources, rates, buildings, research, fleet, defense, planets, score, darkMatter,
     prodBuildings, infraBuildings, storageFill, energyWarning,
-    activeBattle, sectorClaims, fleetSightings, activityTimeline, unreadTimelineCount, lastTimelineRead,
+    activeBattle, sectorClaims, fleetSightings, fleetPositions, activityTimeline, unreadTimelineCount, lastTimelineRead,
     loadState, switchPlanet, upgradeBuilding, startResearch, buildFleet, buildDefense, syncResources, renamePlanet,
     tickResources, notify, queueItemIsActive, getBuildCost, getResearchCost, canAfford,
-    loadBattle, loadTerritory, loadFleetMovements, loadTimeline, markTimelineRead,
+    loadBattle, loadTerritory, loadFleetMovements, loadFleetPositions, loadTimeline, markTimelineRead,
   };
 });

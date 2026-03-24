@@ -19,13 +19,19 @@
       <div v-if="tooltip.player" class="gc-tt-player">{{ tooltip.player }}</div>
       <div v-if="tooltip.score" class="gc-tt-score">Score: {{ tooltip.score.toLocaleString() }}</div>
       <div v-if="tooltip.debris" class="gc-tt-debris">Debris field</div>
-      <div class="gc-tt-slot">Slot {{ tooltip.slot }}</div>
+      <div v-if="tooltip.missionType" class="gc-tt-mission">{{ tooltip.missionType }}</div>
+      <div v-if="tooltip.ships" class="gc-tt-ships">{{ tooltip.ships }}</div>
+      <div v-if="tooltip.eta" class="gc-tt-eta">ETA: {{ tooltip.eta }}</div>
+      <div v-if="tooltip.slot" class="gc-tt-slot">Slot {{ tooltip.slot }}</div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, watch, onMounted, onUnmounted, computed, nextTick } from 'vue';
+import { useGameStore } from '@/stores/game.js';
+
+const gameStore = useGameStore();
 
 const props = defineProps({
   galaxy: { type: Number, default: 1 },
@@ -46,7 +52,10 @@ const centerX = canvasWidth / 2;
 const centerY = canvasHeight / 2;
 
 // Tooltip state
-const tooltip = ref({ visible: false, x: 0, y: 0, name: '', player: '', score: 0, slot: 0, debris: false });
+const tooltip = ref({
+  visible: false, x: 0, y: 0, name: '', player: '', score: 0, slot: 0,
+  debris: false, missionType: '', ships: '', eta: '',
+});
 
 // Background stars (generated once)
 const bgStars = [];
@@ -74,7 +83,7 @@ for (let i = 0; i < 30; i++) {
 // Planet slot positions (precomputed)
 function computeSlotPositions() {
   const slots = [];
-  // 3 concentric rings: inner (5 planets), middle (5), outer (5)
+  // 3 concentric rings: inner (3 planets), middle (5), outer (7)
   const rings = [
     { count: 3, radius: 80 },
     { count: 5, radius: 140 },
@@ -98,6 +107,173 @@ function computeSlotPositions() {
 }
 
 const slotPositions = computeSlotPositions();
+
+// ── Fleet position helpers ───────────────────────────────────────────────────
+
+function parseCoords(c) {
+  const m = c.match(/\[?(\d+):(\d+):(\d+)\]?/);
+  if (!m) return null;
+  return { galaxy: parseInt(m[1]), system: parseInt(m[2]), planet: parseInt(m[3]) };
+}
+
+/** Get canvas x/y for a coord string. Returns null if not in current system view. */
+function coordsToCanvasPos(coordStr) {
+  const c = parseCoords(coordStr);
+  if (!c) return null;
+  if (c.galaxy === props.galaxy && c.system === props.system) {
+    // Same system — find orbital position
+    const sp = slotPositions.find(s => s.slot === c.planet);
+    if (sp) return { x: sp.x, y: sp.y, inSystem: true };
+  }
+  // Different system/galaxy — pick an edge position based on direction
+  const edgeAngle = getEdgeAngle(coordStr);
+  return {
+    x: centerX + Math.cos(edgeAngle) * (canvasWidth * 0.46),
+    y: centerY + Math.sin(edgeAngle) * (canvasHeight * 0.46),
+    inSystem: false,
+  };
+}
+
+/** Deterministic edge angle for off-system coords so each unique coord gets a stable edge point. */
+function getEdgeAngle(coordStr) {
+  let hash = 0;
+  for (let i = 0; i < coordStr.length; i++) {
+    hash = ((hash << 5) - hash) + coordStr.charCodeAt(i);
+    hash |= 0;
+  }
+  return (Math.abs(hash) % 360) * (Math.PI / 180);
+}
+
+/** Compute fleet visual data for the current frame. */
+function computeFleetVisuals() {
+  const fleets = gameStore.fleetPositions;
+  if (!fleets || fleets.length === 0) return [];
+
+  const now = Math.floor(Date.now() / 1000);
+  const visuals = [];
+
+  for (const f of fleets) {
+    const origin = f.origin_coords;
+    const target = f.target_coords;
+    if (!origin || !target) continue;
+
+    const fromPos = coordsToCanvasPos(origin);
+    const toPos = coordsToCanvasPos(target);
+    if (!fromPos || !toPos) continue;
+
+    // At least one end must be in the current system view
+    if (!fromPos.inSystem && !toPos.inSystem) continue;
+
+    const departed = f.departed_at || f.created_at;
+    const arrive = f.arrive_at;
+    const totalDuration = arrive - departed;
+    if (totalDuration <= 0) continue;
+
+    const elapsed = now - departed;
+    const progress = Math.max(0, Math.min(1, elapsed / totalDuration));
+
+    // Interpolate position
+    const cx = fromPos.x + (toPos.x - fromPos.x) * progress;
+    const cy = fromPos.y + (toPos.y - fromPos.y) * progress;
+
+    // Direction angle
+    const angle = Math.atan2(toPos.y - fromPos.y, toPos.x - fromPos.x);
+
+    const color = f.is_own ? '#00ffff' : (f.is_allied ? '#00c8ff' : '#ff3a3a');
+
+    const shipSummary = (f.ship_summary || [])
+      .map(s => `${s.name || s.id} x${s.count}`)
+      .join(', ');
+
+    const etaSec = Math.max(0, arrive - now);
+    const etaMin = Math.floor(etaSec / 60);
+    const etaS = etaSec % 60;
+
+    visuals.push({
+      id: f.id,
+      fromX: fromPos.x, fromY: fromPos.y,
+      toX: toPos.x, toY: toPos.y,
+      cx, cy, angle, progress, color,
+      isOwn: f.is_own,
+      isAllied: f.is_allied,
+      missionType: f.mission_type || 'unknown',
+      ownerName: f.owner_name || '',
+      shipSummary,
+      eta: `${etaMin}m ${etaS}s`,
+    });
+  }
+  return visuals;
+}
+
+/** Draw fleet movement lines, animated dots, and trails. */
+function drawFleets(ctx) {
+  const visuals = computeFleetVisuals();
+  if (visuals.length === 0) return;
+
+  for (const fv of visuals) {
+    // Dotted line from origin to destination
+    ctx.save();
+    ctx.strokeStyle = fv.color + '30';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(fv.fromX, fv.fromY);
+    ctx.lineTo(fv.toX, fv.toY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Trail (fading line behind the dot)
+    const trailLen = 20;
+    const tx = fv.cx - Math.cos(fv.angle) * trailLen;
+    const ty = fv.cy - Math.sin(fv.angle) * trailLen;
+    const trailGrad = ctx.createLinearGradient(tx, ty, fv.cx, fv.cy);
+    trailGrad.addColorStop(0, fv.color + '00');
+    trailGrad.addColorStop(1, fv.color + '80');
+    ctx.strokeStyle = trailGrad;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(fv.cx, fv.cy);
+    ctx.stroke();
+
+    // Fleet dot with glow
+    const pulse = 1 + Math.sin(time * 4 + fv.progress * 10) * 0.25;
+    const dotRadius = 3.5 * pulse;
+
+    // Glow
+    const glowGrad = ctx.createRadialGradient(fv.cx, fv.cy, 0, fv.cx, fv.cy, dotRadius * 3);
+    glowGrad.addColorStop(0, fv.color + '60');
+    glowGrad.addColorStop(1, fv.color + '00');
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath();
+    ctx.arc(fv.cx, fv.cy, dotRadius * 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Core dot
+    ctx.fillStyle = fv.color;
+    ctx.beginPath();
+    ctx.arc(fv.cx, fv.cy, dotRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Direction arrow
+    const arrowLen = 8;
+    const arrowX = fv.cx + Math.cos(fv.angle) * (dotRadius + 3);
+    const arrowY = fv.cy + Math.sin(fv.angle) * (dotRadius + 3);
+    ctx.fillStyle = fv.color + 'aa';
+    ctx.beginPath();
+    ctx.moveTo(arrowX + Math.cos(fv.angle) * arrowLen, arrowY + Math.sin(fv.angle) * arrowLen);
+    ctx.lineTo(arrowX + Math.cos(fv.angle + 2.5) * arrowLen * 0.5, arrowY + Math.sin(fv.angle + 2.5) * arrowLen * 0.5);
+    ctx.lineTo(arrowX + Math.cos(fv.angle - 2.5) * arrowLen * 0.5, arrowY + Math.sin(fv.angle - 2.5) * arrowLen * 0.5);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Store for hit detection
+  fleetVisualsCache = visuals;
+}
+
+let fleetVisualsCache = [];
 
 // Get cell data for a slot
 function getCellData(slot) {
@@ -318,11 +494,23 @@ function draw() {
     ctx.fillText(sp.slot, sp.x, sp.y - size - 6);
   }
 
+  // Draw fleet movements on top of planets
+  drawFleets(ctx);
+
   // System info header
   ctx.font = '11px Orbitron, monospace';
   ctx.fillStyle = 'rgba(0,200,255,0.7)';
   ctx.textAlign = 'left';
   ctx.fillText(`Galaxy ${props.galaxy} - System ${props.system}`, 12, 18);
+
+  // Fleet count indicator
+  const fleetCount = fleetVisualsCache.length;
+  if (fleetCount > 0) {
+    ctx.font = '9px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(0,255,255,0.6)';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Fleets: ${fleetCount}`, 12, 32);
+  }
 
   // Legend
   const legendY = canvasHeight - 16;
@@ -347,7 +535,19 @@ function draw() {
   animFrame = requestAnimationFrame(draw);
 }
 
-// Hit detection
+// ── Hit detection ────────────────────────────────────────────────────────────
+
+function getFleetAt(mx, my) {
+  for (const fv of fleetVisualsCache) {
+    const dx = mx - fv.cx;
+    const dy = my - fv.cy;
+    if (dx * dx + dy * dy <= 12 * 12) {
+      return fv;
+    }
+  }
+  return null;
+}
+
 function getSlotAt(mx, my) {
   for (const sp of slotPositions) {
     const cell = getCellData(sp.slot);
@@ -366,6 +566,32 @@ function onMouseMove(e) {
   const rect = canvasEl.value.getBoundingClientRect();
   const mx = (e.clientX - rect.left) * (canvasWidth / rect.width);
   const my = (e.clientY - rect.top) * (canvasHeight / rect.height);
+
+  // Check fleet hit first (fleets are drawn on top)
+  const fleetHit = getFleetAt(mx, my);
+  if (fleetHit) {
+    const missionLabels = {
+      attack: 'Attack', spy: 'Espionage', harvest: 'Harvest',
+      expedition: 'Expedition', colonize: 'Colonize', intercept: 'Intercept',
+      unknown: 'Unknown',
+    };
+    tooltip.value = {
+      visible: true,
+      x: e.clientX - rect.left + 15,
+      y: e.clientY - rect.top - 10,
+      name: `Fleet: ${fleetHit.ownerName}`,
+      player: '',
+      score: 0,
+      slot: 0,
+      debris: false,
+      missionType: missionLabels[fleetHit.missionType] || fleetHit.missionType,
+      ships: fleetHit.shipSummary || '',
+      eta: fleetHit.eta,
+    };
+    canvasEl.value.style.cursor = 'pointer';
+    return;
+  }
+
   const hit = getSlotAt(mx, my);
   if (hit) {
     const cell = hit.cell;
@@ -378,6 +604,9 @@ function onMouseMove(e) {
       score: cell.score || 0,
       slot: cell.slot,
       debris: (cell.debris_metal > 0 || cell.debris_crystal > 0),
+      missionType: '',
+      ships: '',
+      eta: '',
     };
     canvasEl.value.style.cursor = 'pointer';
   } else {
@@ -404,12 +633,39 @@ function onClick(e) {
   }
 }
 
+// ── Fleet position polling (every 10s) ───────────────────────────────────────
+
+let fleetPollTimer = null;
+
+function startFleetPolling() {
+  stopFleetPolling();
+  // Initial load
+  gameStore.loadFleetPositions(props.galaxy, props.system);
+  fleetPollTimer = setInterval(() => {
+    gameStore.loadFleetPositions(props.galaxy, props.system);
+  }, 10000);
+}
+
+function stopFleetPolling() {
+  if (fleetPollTimer) {
+    clearInterval(fleetPollTimer);
+    fleetPollTimer = null;
+  }
+}
+
 onMounted(() => {
   nextTick(() => { animFrame = requestAnimationFrame(draw); });
+  startFleetPolling();
 });
 
 onUnmounted(() => {
   if (animFrame) cancelAnimationFrame(animFrame);
+  stopFleetPolling();
+});
+
+// Restart fleet polling when galaxy/system changes
+watch(() => [props.galaxy, props.system], () => {
+  startFleetPolling();
 });
 
 // Redraw when data changes
@@ -470,6 +726,25 @@ watch(() => [props.galaxy, props.system, props.players], () => {
 .gc-tt-debris {
   color: #ffe650;
   font-size: 9px;
+}
+
+.gc-tt-mission {
+  color: #ffa500;
+  font-size: 9px;
+  font-family: 'Orbitron', monospace;
+}
+
+.gc-tt-ships {
+  color: rgba(200, 220, 255, 0.5);
+  font-size: 8px;
+  max-width: 200px;
+  white-space: normal;
+}
+
+.gc-tt-eta {
+  color: #3aff7a;
+  font-size: 9px;
+  font-family: monospace;
 }
 
 .gc-tt-slot {

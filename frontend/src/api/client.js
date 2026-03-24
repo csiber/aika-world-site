@@ -99,6 +99,7 @@ export const api = {
 
   // Fleet Intercept & Phalanx
   getFleetMovements: (galaxy, system) => request('GET', `/game/fleet-movements?galaxy=${galaxy}&system=${system}`),
+  getFleetPositions: (galaxy, system) => request('GET', `/game/fleet-movements?galaxy=${galaxy}&system=${system}`),
   scanPhalanx: (galaxy, system) => request('POST', '/game/phalanx/scan', { galaxy, system }),
   interceptFleet: (missionId, ships) => request('POST', `/game/fleet-intercept/${missionId}`, { ships }),
 
