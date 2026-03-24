@@ -3,9 +3,10 @@
  * v2.8.1: ACS (Joint Attack) Support
  */
 
-import { runBattle, runExpedition } from './combat_logic.js';
+import { runBattle } from './combat_logic.js';
 import { logTimelineEvent } from './timeline.js';
 import { createTacticalBattle, autoResolveBattle } from './tactical_engine.js';
+import { rollExpeditionEvent } from './expedition_templates.js';
 
 async function getPlanetState(env, planetId) {
   try {
@@ -215,9 +216,80 @@ export async function resolveMissionsForUser(env, userId) {
       }
 
       if (mission.mission_type === 'expedition') {
-          const outcome = runExpedition(currentShips);
-          result = { ...result, ...outcome };
-          currentShips = outcome.remainingShips;
+          // Expedition 2.0: check for active chain, roll event
+          let existingChain = null;
+          try {
+            const lastChain = await env.DB.prepare(
+              'SELECT * FROM expedition_log WHERE user_id = ? AND chain_id IS NOT NULL ORDER BY created_at DESC LIMIT 1'
+            ).bind(userId).first();
+            if (lastChain) {
+              const chainDef = (await import('./expedition_templates.js')).CHAIN_EXPEDITIONS.find(c => {
+                return c.steps.some(s => s.type === lastChain.event_type);
+              });
+              if (chainDef && lastChain.chain_step + 1 < chainDef.totalSteps) {
+                existingChain = {
+                  chainId: lastChain.chain_id,
+                  chainStep: lastChain.chain_step + 1,
+                  chainDefId: chainDef.id,
+                };
+              }
+            }
+          } catch (e) {
+            // expedition_log table may not exist yet, ignore
+          }
+
+          const event = rollExpeditionEvent(currentShips, userId, existingChain);
+
+          if (event.hasChoice) {
+            // Pause mission — awaiting player choice
+            nextStatus = 'awaiting_choice';
+            result.expeditionEvent = {
+              type: event.type,
+              choices: event.choices || [],
+              chainId: event.chainId || null,
+              chainStep: event.chainStep || 0,
+              isChain: event.isChain || false,
+              chainDefId: event.chainDefId || null,
+            };
+          } else {
+            // Resolve immediately
+            const outcome = event.resolve(currentShips);
+            result = { ...result, expeditionOutcome: outcome, loot: outcome.loot || {} };
+
+            // Apply ship losses
+            if (outcome.shipLoss && Object.keys(outcome.shipLoss).length > 0) {
+              for (const s of currentShips) {
+                const key = s.type || s.id;
+                if (outcome.shipLoss[key]) {
+                  s.count = Math.max(0, s.count - outcome.shipLoss[key]);
+                }
+              }
+              currentShips = currentShips.filter(s => s.count > 0);
+            }
+
+            // Apply dark matter reward
+            if (outcome.darkMatter > 0) {
+              try {
+                await env.DB.prepare("ALTER TABLE game_state ADD COLUMN dark_matter INTEGER DEFAULT 0").run();
+              } catch { /* already exists */ }
+              await env.DB.prepare(
+                "UPDATE game_state SET dark_matter = COALESCE(dark_matter, 0) + ? WHERE user_id = ?"
+              ).bind(outcome.darkMatter, userId).run();
+            }
+
+            // Log to expedition_log
+            try {
+              await env.DB.prepare(
+                `INSERT INTO expedition_log (id, user_id, mission_id, event_type, choice_made, outcome_json, chain_id, chain_step, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+              ).bind(
+                crypto.randomUUID(), userId, mission.id, event.type, null,
+                JSON.stringify(outcome), event.chainId || null, event.chainStep || 0, now
+              ).run();
+            } catch (e) {
+              console.error('Failed to log expedition event:', e);
+            }
+          }
       }
 
       await env.DB.prepare(`UPDATE fleet_missions SET status=?, result=?, ships=?, return_at=? WHERE id=?`).bind(nextStatus, JSON.stringify(result), JSON.stringify(currentShips), returnAt, mission.id).run();

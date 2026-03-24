@@ -14,6 +14,7 @@ import { handleProfile }  from './routes/profile.js';
 import { handleAdmin }    from './routes/admin.js';
 import { handleMarket }   from './routes/market.js';
 import { handleQuests }   from './routes/quests.js';
+import { handleExpeditions } from './routes/expeditions.js';
 import { handleTimeline } from './routes/timeline.js';
 import { handleGetTerritoryMap, handleGetAllianceTerritory, handleRecalcSectorControl } from './routes/territory.js';
 import { handleGetFleetMovements, handleScanPhalanx, handleInterceptFleet } from './routes/fleet_intel.js';
@@ -142,6 +143,9 @@ export default {
         if (url.pathname.startsWith('/api/market'))     return await handleMarket(request, env, url, user);
         if (url.pathname.startsWith('/api/quests')) {
           return await handleQuests(request, env, user.sub);
+        }
+        if (url.pathname.startsWith('/api/expeditions')) {
+          return await handleExpeditions(request, env, user.sub);
         }
         if (url.pathname === '/api/territory/map' && request.method === 'GET')
                                                         return await handleGetTerritoryMap(request, env, user.sub);
