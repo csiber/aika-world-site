@@ -70,7 +70,7 @@
                   <span v-if="getCell(slot).hasMoon" class="p-moon" title="Hold">🌑</span>
                 </td>
                 <td class="slot-name">
-                  <div v-if="getCell(slot).type !== 'empty'">{{ getCell(slot).name }}</div>
+                  <div v-if="getCell(slot).type !== 'empty'">{{ getCell(slot).name }} <span v-if="getCell(slot).specialization" class="spec-icon-badge" :title="L.t('specialization.' + getCell(slot).specialization)">{{ specIcons[getCell(slot).specialization] }}</span></div>
                   <div v-else class="empty-text">Üres világűr</div>
                   <!-- Debris Field -->
                   <div v-if="getCell(slot).debris_metal > 0 || getCell(slot).debris_crystal > 0" class="debris-info" title="Törmelékmező">
@@ -359,8 +359,14 @@ function getCell(slot) {
   const coords = `[${currentGal.value}:${currentSys.value}:${slot}]`;
   const p = players.value.find(x => x.coords === coords);
   if (!p) return { slot, coords, type: 'empty', debris_metal: 0, debris_crystal: 0, hasMoon: false };
-  
+
   const isOwn = p.username === auth.username;
+  // Look up specialization from game store for own planets
+  let specialization = null;
+  if (isOwn) {
+    const storePlanet = (game.state?.planets || []).find(sp => sp.coords === coords);
+    if (storePlanet) specialization = storePlanet.specialization;
+  }
   return {
     slot, coords,
     type: isOwn ? 'own' : 'enemy',
@@ -371,9 +377,12 @@ function getCell(slot) {
     targetUserId: p.user_id,
     debris_metal: p.debris_metal || 0,
     debris_crystal: p.debris_crystal || 0,
-    hasMoon: !!p.has_moon
+    hasMoon: !!p.has_moon,
+    specialization
   };
 }
+
+const specIcons = { mining: '⛏️', military: '⚔️', research: '🔬', trade: '📦' };
 
 function selectCell(cell, type) {
   audio.click();
@@ -650,6 +659,9 @@ tr.claimed-system:hover td { background: rgba(var(--claim-color-rgb, 0,200,255),
 /* Intercept button style */
 .btn-danger { background: rgba(255,58,92,0.15) !important; border-color: rgba(255,58,92,0.4) !important; color: #ff3a5c !important; }
 .btn-danger:hover { background: rgba(255,58,92,0.25) !important; }
+
+/* Specialization icon badge */
+.spec-icon-badge { font-size: 12px; margin-left: 2px; vertical-align: middle; }
 
 @media (max-width: 600px) {
   .nav-row { flex-direction: column; gap: 15px; }

@@ -43,6 +43,7 @@ export const api = {
   buildDefense: (defenseId, amount) => request('POST', '/game/defense/build', { defenseId, amount }),
   getQueue: () => request('GET', '/game/queue'),
   renamePlanet: (planetId, name, emoji) => request('POST', '/game/planet/rename', { planetId, name, emoji }),
+  specializePlanet: (planetId, specialization) => request('POST', '/game/specialize', { planetId, specialization }),
 
   // Missions
   getGalaxy: (galaxy = 1, system = 1) => request('GET', `/galaxy?galaxy=${galaxy}&system=${system}`),

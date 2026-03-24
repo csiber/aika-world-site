@@ -35,16 +35,20 @@ function buildTime(level, roboticsLevel = 1) {
   return Math.floor(base * reduction);
 }
 
-function researchTime(level, labLevel = 1) {
+function researchTime(level, labLevel = 1, specialization = null) {
   const base = (level + 1) * 120;
   const reduction = Math.max(0.2, 1 - (labLevel - 1) * 0.07);
-  return Math.floor(base * reduction);
+  let time = Math.floor(base * reduction);
+  if (specialization === 'research') time = Math.floor(time * 0.75); // -25% research time
+  return time;
 }
 
-function fleetBuildTime(amount, shipCostTotal, shipyardLevel = 1) {
+function fleetBuildTime(amount, shipCostTotal, shipyardLevel = 1, specialization = null) {
   const base = Math.floor(3600 * amount * 0.5);
   const reduction = Math.max(0.15, 1 - (shipyardLevel - 1) * 0.08);
-  return Math.floor(base * reduction);
+  let time = Math.floor(base * reduction);
+  if (specialization === 'military') time = Math.floor(time * 0.85); // -15% fleet build time
+  return time;
 }
 
 function calcStorage(buildings, research) {
@@ -61,7 +65,7 @@ function calcStorage(buildings, research) {
   };
 }
 
-function recalcRates(buildings, research, allianceLevel = 1, coords = '[1:1:1]') {
+function recalcRates(buildings, research, allianceLevel = 1, coords = '[1:1:1]', specialization = null) {
   const galMatch = coords.match(/\[(\d+):/);
   const galaxy = galMatch ? parseInt(galMatch[1]) : 1;
 
@@ -96,11 +100,31 @@ function recalcRates(buildings, research, allianceLevel = 1, coords = '[1:1:1]')
   const energyEff = totalDemand > 0 ? Math.min(1, energyProd / totalDemand) : 1;
   const allianceBonus = 1 + (allianceLevel - 1) * 0.01;
 
+  let metalRate   = Math.floor(30 * Math.pow(1.1, Math.max(0, metalMine   - 1)) * energyEff * allianceBonus * gMetal * (metalMine > 0 ? 1 : 0));
+  let crystalRate = Math.floor(20 * Math.pow(1.1, Math.max(0, crystalMine - 1)) * energyEff * allianceBonus * gCrystal * (crystalMine > 0 ? 1 : 0));
+  let deusRate    = Math.floor(2  * Math.pow(1.15, Math.max(0, deusium - 1)) * energyEff * allianceBonus * gDeus * (deusium > 0 ? 1 : 0));
+
+  // Specialization bonuses
+  if (specialization === 'mining') {
+    metalRate   = Math.floor(metalRate * 1.30);
+    crystalRate = Math.floor(crystalRate * 1.30);
+    deusRate    = Math.floor(deusRate * 1.30);
+  }
+  if (specialization === 'research') {
+    metalRate   = Math.floor(metalRate * 0.90);
+    crystalRate = Math.floor(crystalRate * 0.90);
+  }
+  if (specialization === 'military') {
+    metalRate   = Math.floor(metalRate * 0.90);
+    crystalRate = Math.floor(crystalRate * 0.90);
+  }
+  // 'trade' has no rate modifier (bonuses are in storage/market)
+
   return {
-    metal:   Math.floor(30 * Math.pow(1.1, Math.max(0, metalMine   - 1)) * energyEff * allianceBonus * gMetal * (metalMine > 0 ? 1 : 0)),
-    crystal: Math.floor(20 * Math.pow(1.1, Math.max(0, crystalMine - 1)) * energyEff * allianceBonus * gCrystal * (crystalMine > 0 ? 1 : 0)),
+    metal:   metalRate,
+    crystal: crystalRate,
     energy:  energyProd,
-    deus:    Math.floor(2  * Math.pow(1.15, Math.max(0, deusium - 1)) * energyEff * allianceBonus * gDeus * (deusium > 0 ? 1 : 0)),
+    deus:    deusRate,
     energyProd,
     energyDemand: totalDemand,
     energyEff: Math.round(energyEff * 100),
@@ -185,7 +209,7 @@ async function getFullState(env, userId) {
   for (const p of pRows) {
     const b = JSON.parse(p.buildings);
     const r = JSON.parse(gsRow.research);
-    const baseRates = recalcRates(b, r, allianceLevel, p.coords);
+    const baseRates = recalcRates(b, r, allianceLevel, p.coords, p.specialization);
     const tBonus = await getTerritoryBonus(env, p.coords, allianceId);
     if (tBonus > 0) {
       baseRates.metal = Math.floor(baseRates.metal * (1 + tBonus));
@@ -199,7 +223,8 @@ async function getFullState(env, userId) {
         buildings: b,
         fleet: JSON.parse(p.fleet),
         defense: JSON.parse(p.defense || '[]'),
-        isMain: p.is_main === 1, isMoon: false
+        isMain: p.is_main === 1, isMoon: false,
+        specialization: p.specialization || null
     });
   }
 
@@ -267,11 +292,11 @@ async function processQueue(env, userId, fullState) {
     const planet = fullState.planets.find(p => p.id === item.planet_id) || fullState.activePlanet;
     if (item.item_type === 'building') {
       const b = planet.buildings.find(x => x.id === item.item_id);
-      if (b) { b.level = item.target_level; planet.rates = recalcRates(planet.buildings, fullState.research, fullState.allianceLevel, planet.coords); fullState.score += 50; }
+      if (b) { b.level = item.target_level; planet.rates = recalcRates(planet.buildings, fullState.research, fullState.allianceLevel, planet.coords, planet.specialization); fullState.score += 50; }
       await logTimelineEvent(env, userId, 'building_complete', `${item.item_name || 'Épület'} kész!`, `Szint ${item.target_level} — ${planet.name || 'Bolygó'}`, '🏗️');
     } else if (item.item_type === 'research') {
       const r = fullState.research.find(x => x.id === item.item_id);
-      if (r) { r.level = item.target_level; if (item.item_id === 'energy_tech') { for (const p of fullState.planets) { p.rates = recalcRates(p.buildings, fullState.research, fullState.allianceLevel, p.coords); } } fullState.score += 100; }
+      if (r) { r.level = item.target_level; if (item.item_id === 'energy_tech') { for (const p of fullState.planets) { p.rates = recalcRates(p.buildings, fullState.research, fullState.allianceLevel, p.coords, p.specialization); } } fullState.score += 100; }
       await logTimelineEvent(env, userId, 'research_complete', `${item.item_name || 'Kutatás'} kész!`, `Szint ${item.target_level}`, '🔬');
     } else if (item.item_type === 'fleet') {
       const f = planet.fleet.find(x => x.id === item.item_id);
@@ -427,6 +452,9 @@ async function ensureRtsTables(env) {
 
   // timeline read tracking
   try { await env.DB.prepare('ALTER TABLE game_state ADD COLUMN last_timeline_read INTEGER DEFAULT 0').run(); } catch (_) { /* already exists */ }
+
+  // planet specialization column
+  try { await env.DB.prepare('ALTER TABLE planets ADD COLUMN specialization TEXT DEFAULT NULL').run(); } catch (_) { /* already exists */ }
 }
 
 export async function handleGame(request, env, url, user) {
@@ -492,7 +520,7 @@ export async function handleGame(request, env, url, user) {
     await saveFullState(env, userId, fullState);
     const storage = calcStorage(fullState.activePlanet.buildings, fullState.research);
     const queue   = await env.DB.prepare('SELECT * FROM build_queue WHERE user_id = ? ORDER BY finish_at ASC').bind(userId).all();
-    const planetsSummary = fullState.planets.map(p => ({ id: p.id, name: p.name, emoji: p.emoji, coords: p.coords, isMain: p.isMain, isMoon: p.isMoon }));
+    const planetsSummary = fullState.planets.map(p => ({ id: p.id, name: p.name, emoji: p.emoji, coords: p.coords, isMain: p.isMain, isMoon: p.isMoon, specialization: p.specialization || null }));
     return jsonResponse(responseData({ 
       ok: true, 
       state: { 
@@ -519,7 +547,7 @@ export async function handleGame(request, env, url, user) {
     const totalCost = { metal: def.cost.metal * amount, crystal: def.cost.crystal * amount, deus: (def.cost.deus || 0) * amount };
     if (fullState.activePlanet.resources.metal < totalCost.metal || fullState.activePlanet.resources.crystal < totalCost.crystal) return jsonError(400, 'Nincs elég nyersanyag', request);
     fullState.activePlanet.resources.metal -= totalCost.metal; fullState.activePlanet.resources.crystal -= totalCost.crystal;
-    const seconds = fleetBuildTime(amount, totalCost, fullState.activePlanet.buildings.find(b => b.id === 'shipyard')?.level || 1);
+    const seconds = fleetBuildTime(amount, totalCost, fullState.activePlanet.buildings.find(b => b.id === 'shipyard')?.level || 1, fullState.activePlanet.specialization);
     const finishAt = Math.floor(Date.now() / 1000) + seconds;
     await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at) VALUES (?, ?, ?, ?, 'defense', ?, ?, ?)`).bind(crypto.randomUUID(), userId, fullState.activePlanet.id, defenseId, `${def.icon} ${def.name} ×${amount}`, amount, finishAt).run();
     await saveFullState(env, userId, fullState);
@@ -591,7 +619,7 @@ export async function handleGame(request, env, url, user) {
     fullState.activePlanet.resources.deus -= cost.deus;
     
     const labLevel = fullState.activePlanet.buildings.find(x => x.id === 'lab')?.level || 1;
-    const seconds = researchTime(r.level, labLevel); const finishAt = Math.floor(Date.now() / 1000) + seconds;
+    const seconds = researchTime(r.level, labLevel, fullState.activePlanet.specialization); const finishAt = Math.floor(Date.now() / 1000) + seconds;
     await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at) VALUES (?, ?, ?, ?, 'research', ?, ?, ?)`).bind(crypto.randomUUID(), userId, fullState.activePlanet.id, researchId, `🔬 ${r.name} → Szint ${r.level + 1}`, r.level + 1, finishAt).run();
     await saveFullState(env, userId, fullState);
     await trackQuestProgress(env, userId, 'research', 1);
@@ -609,12 +637,33 @@ export async function handleGame(request, env, url, user) {
     const totalCost = { metal: ship.cost.metal * amount, crystal: ship.cost.crystal * amount, deus: (ship.cost.deus || 0) * amount };
     if (fullState.activePlanet.resources.metal < totalCost.metal || fullState.activePlanet.resources.crystal < totalCost.crystal) return jsonError(400, 'Nincs elég nyersanyag', request);
     fullState.activePlanet.resources.metal -= totalCost.metal; fullState.activePlanet.resources.crystal -= totalCost.crystal;
-    const seconds = fleetBuildTime(amount, totalCost, fullState.activePlanet.buildings.find(b => b.id === 'shipyard')?.level || 1); const finishAt = Math.floor(Date.now() / 1000) + seconds;
+    const seconds = fleetBuildTime(amount, totalCost, fullState.activePlanet.buildings.find(b => b.id === 'shipyard')?.level || 1, fullState.activePlanet.specialization); const finishAt = Math.floor(Date.now() / 1000) + seconds;
     await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at) VALUES (?, ?, ?, ?, 'fleet', ?, ?, ?)`).bind(crypto.randomUUID(), userId, fullState.activePlanet.id, shipId, `${ship.icon} ${ship.name} ×${amount}`, amount, finishAt).run();
     await saveFullState(env, userId, fullState);
     await incrementQuest(env, userId, 'build', shipId, amount);
     await trackQuestProgress(env, userId, 'build_ship', amount);
     return jsonResponse(responseData({ ok: true, finishAt, cost: totalCost, state: fullState }), 200, request);
+  }
+
+  // POST /api/game/specialize
+  if (path === '/api/game/specialize' && method === 'POST') {
+    let body; try { body = await request.json(); } catch { return jsonError(400, 'Invalid JSON', request); }
+    const { planetId, specialization } = body;
+    const validTypes = ['mining', 'military', 'research', 'trade'];
+    if (!validTypes.includes(specialization)) return jsonError(400, 'Invalid specialization', request);
+
+    const planet = await env.DB.prepare(
+      `SELECT * FROM planets WHERE id = ?1 AND user_id = ?2`
+    ).bind(planetId, userId).first();
+    if (!planet) return jsonError(404, 'Planet not found', request);
+    if (planet.is_main) return jsonError(400, 'Cannot specialize main planet', request);
+    if (planet.specialization) return jsonError(400, 'Planet already specialized', request);
+
+    await env.DB.prepare(
+      `UPDATE planets SET specialization = ?1 WHERE id = ?2`
+    ).bind(specialization, planetId).run();
+
+    return jsonResponse(responseData({ ok: true, specialization }), 200, request);
   }
 
   if (path === '/api/game/sync' && method === 'POST') {

@@ -95,6 +95,48 @@
         </div>
       </div>
 
+      <!-- Planet Specialization -->
+      <div class="panel spec-panel">
+        <div class="panel-header"><span class="panel-icon">🎯</span><h3>{{ L.t('specialization.title') }}</h3></div>
+        <div class="panel-body">
+          <!-- Main planet -->
+          <div v-if="activePlanet.isMain" class="spec-badge balanced">
+            <span class="spec-icon">🌐</span> {{ L.t('specialization.mainPlanet') }}
+          </div>
+          <!-- Already specialized -->
+          <div v-else-if="activePlanet.specialization" class="spec-badge" :class="activePlanet.specialization">
+            <span class="spec-icon">{{ specIcon(activePlanet.specialization) }}</span>
+            {{ L.t('specialization.' + activePlanet.specialization) }}
+          </div>
+          <!-- Choose specialization -->
+          <div v-else>
+            <div class="spec-warning">{{ L.t('specialization.warning') }}</div>
+            <div class="spec-cards">
+              <div class="spec-card mining" @click="confirmSpecialize('mining')">
+                <div class="spec-card-icon">⛏️</div>
+                <div class="spec-card-title">{{ L.t('specialization.mining') }}</div>
+                <div class="spec-card-desc">{{ L.t('specialization.miningDesc') }}</div>
+              </div>
+              <div class="spec-card military" @click="confirmSpecialize('military')">
+                <div class="spec-card-icon">⚔️</div>
+                <div class="spec-card-title">{{ L.t('specialization.military') }}</div>
+                <div class="spec-card-desc">{{ L.t('specialization.militaryDesc') }}</div>
+              </div>
+              <div class="spec-card research" @click="confirmSpecialize('research')">
+                <div class="spec-card-icon">🔬</div>
+                <div class="spec-card-title">{{ L.t('specialization.research') }}</div>
+                <div class="spec-card-desc">{{ L.t('specialization.researchDesc') }}</div>
+              </div>
+              <div class="spec-card trade" @click="confirmSpecialize('trade')">
+                <div class="spec-card-icon">📦</div>
+                <div class="spec-card-title">{{ L.t('specialization.trade') }}</div>
+                <div class="spec-card-desc">{{ L.t('specialization.tradeDesc') }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- World Events -->
       <div v-if="game.state?.worldEvents?.length" class="panel events-panel mt-4">
         <div class="panel-header">
@@ -279,6 +321,21 @@ async function sendToAika() {
   aikaLoading.value = false;
 }
 
+function specIcon(type) {
+  const icons = { mining: '⛏️', military: '⚔️', research: '🔬', trade: '📦' };
+  return icons[type] || '🌐';
+}
+
+async function confirmSpecialize(type) {
+  if (!confirm(L.t('specialization.confirm'))) return;
+  try {
+    await api.specializePlanet(activePlanet.value.id, type);
+    audio.success();
+    game.notify(L.t('specialization.' + type) + '!', 'green');
+    await game.loadState();
+  } catch (e) { game.notify(`${e.message}`, 'red'); }
+}
+
 let timer;
 onMounted(() => {
   loadMissions();
@@ -356,6 +413,26 @@ onUnmounted(() => clearInterval(timer));
 .sv.energy { color: var(--energy); }
 .sv.deus { color: var(--accent); }
 
+/* Specialization */
+.spec-panel { margin-top: 10px; }
+.spec-warning { font-size: 11px; color: #ff6b6b; text-align: center; margin-bottom: 10px; font-family: 'Orbitron', sans-serif; }
+.spec-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.spec-card { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 12px; cursor: pointer; text-align: center; transition: all 0.2s; }
+.spec-card:hover { transform: translateY(-2px); }
+.spec-card.mining:hover { border-color: #f0a030; box-shadow: 0 0 12px rgba(240,160,48,0.3); }
+.spec-card.military:hover { border-color: #ff4444; box-shadow: 0 0 12px rgba(255,68,68,0.3); }
+.spec-card.research:hover { border-color: #44bbff; box-shadow: 0 0 12px rgba(68,187,255,0.3); }
+.spec-card.trade:hover { border-color: #44ff88; box-shadow: 0 0 12px rgba(68,255,136,0.3); }
+.spec-card-icon { font-size: 28px; margin-bottom: 6px; }
+.spec-card-title { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; color: var(--text-bright); margin-bottom: 4px; }
+.spec-card-desc { font-size: 10px; color: var(--text-dim); line-height: 1.4; }
+.spec-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 4px; font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; }
+.spec-badge.balanced { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: var(--text-dim); }
+.spec-badge.mining { background: rgba(240,160,48,0.1); border: 1px solid rgba(240,160,48,0.3); color: #f0a030; }
+.spec-badge.military { background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.3); color: #ff4444; }
+.spec-badge.research { background: rgba(68,187,255,0.1); border: 1px solid rgba(68,187,255,0.3); color: #44bbff; }
+.spec-badge.trade { background: rgba(68,255,136,0.1); border: 1px solid rgba(68,255,136,0.3); color: #44ff88; }
+
 @media (max-width: 900px) { .overview-grid { grid-template-columns: 1fr; } }
-@media (max-width: 480px) { .planet-visual { flex-direction: column; text-align: center; gap: 10px; } .planet-visual h2 { font-size: 16px; } .stat-grid { width: 100%; gap: 4px; } .stat-item { padding: 4px 6px; } }
+@media (max-width: 480px) { .planet-visual { flex-direction: column; text-align: center; gap: 10px; } .planet-visual h2 { font-size: 16px; } .stat-grid { width: 100%; gap: 4px; } .stat-item { padding: 4px 6px; } .spec-cards { grid-template-columns: 1fr; } }
 </style>
