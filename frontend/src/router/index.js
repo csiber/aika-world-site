@@ -21,6 +21,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/shop',
+    name: 'Shop',
+    component: () => import('@/views/GameView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/tactical/:battleId',
     name: 'TacticalBattle',
     component: () => import('@/views/TacticalBattleWrapperView.vue'),

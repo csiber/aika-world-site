@@ -82,6 +82,16 @@
       </button>
     </nav>
 
+    <!-- ── EVENT BANNER ── -->
+    <Transition name="slide-down">
+      <div v-if="activeEvent" class="event-banner" @click="activeTab = 'overview'">
+        <span class="event-icon">{{ activeEvent.meta?.icon || '🌋' }}</span>
+        <span class="event-name">{{ eventName }}</span>
+        <span class="event-sep">—</span>
+        <span class="event-time">{{ eventTimeRemaining }}</span>
+      </div>
+    </Transition>
+
     <!-- ── ENERGY WARNING ── -->
     <Transition name="slide-down">
       <div v-if="gameStore.energyWarning" class="energy-banner" :class="gameStore.energyWarning.level">
@@ -125,6 +135,7 @@
       <ProfileView   v-if="activeTab === 'profile'"   />
       <MarketView    v-if="activeTab === 'market'"    />
       <GuideView     v-if="activeTab === 'guide'"     />
+      <ShopView      v-if="activeTab === 'shop'"      />
       <AdminView     v-if="activeTab === 'admin'"     />
     </main>
 
@@ -174,12 +185,14 @@ import ProfileView   from '@/components/views/ProfileView.vue';
 import MarketView    from '@/components/views/MarketView.vue';
 import GuideView     from '@/components/views/GuideView.vue';
 import AdminView     from '@/components/views/AdminView.vue';
+import ShopView      from '@/components/views/ShopView.vue';
 import BotPanel       from '@/components/BotPanel.vue';
 import ControlSwitch  from '@/components/LangSwitch.vue';
 import ChangelogModal from '@/components/ChangelogModal.vue';
 import TourOverlay    from '@/components/TourOverlay.vue';
 import ActivityTimeline from '@/components/ActivityTimeline.vue';
 import { useLangStore }  from '@/stores/lang.js';
+import { api }           from '@/api/client.js';
 import { APP_VERSION }   from '@/data/changelog.js';
 import { audioEngine }   from '@/audio/AudioEngine.js';
 import { startAmbientMusic, stopAmbientMusic } from '@/audio/music.js';
@@ -198,6 +211,7 @@ const showChangelog  = ref(false);
 const showTimeline   = ref(false);
 const showNotifPanel = ref(false);
 const isMuted        = ref(audioEngine.muted);
+const activeEvent    = ref(null);
 
 // Audio: init on first user click (browser autoplay policy)
 function initAudio() {
@@ -231,6 +245,35 @@ const rates     = computed(() => gameStore.state?.activePlanet?.rates || { metal
 const planets   = computed(() => gameStore.state?.planets || []);
 const scoreFormatted = computed(() => (gameStore.state?.score || 0).toLocaleString('hu'));
 
+const eventName = computed(() => {
+  if (!activeEvent.value) return '';
+  const meta = activeEvent.value.meta;
+  if (!meta) return activeEvent.value.type || '';
+  const lang = L.currentLang || 'en';
+  return meta.name?.[lang] || meta.name?.en || activeEvent.value.type;
+});
+
+const eventTimeRemaining = computed(() => {
+  if (!activeEvent.value) return '';
+  const now = Math.floor(Date.now() / 1000);
+  const diff = (activeEvent.value.expiresAt || 0) - now;
+  if (diff <= 0) return L.t('events.ended') || 'Ended';
+  const days = Math.floor(diff / 86400);
+  const hours = Math.floor((diff % 86400) / 3600);
+  if (days > 0) return `${days}d ${hours}h`;
+  const mins = Math.floor((diff % 3600) / 60);
+  return `${hours}h ${mins}m`;
+});
+
+async function loadActiveEvent() {
+  try {
+    const data = await api.getActiveEvent();
+    activeEvent.value = data.event || null;
+  } catch (_) {
+    activeEvent.value = null;
+  }
+}
+
 const tabs = computed(() => {
   const t = [
     { id: 'overview',  label: L.t('nav.overview')  },
@@ -246,6 +289,7 @@ const tabs = computed(() => {
     { id: 'rankings',  label: L.t('nav.rankings')  },
     { id: 'profile',   label: L.t('nav.profile')   },
     { id: 'guide',     label: L.t('nav.guide')     },
+    { id: 'shop',      label: L.t('nav.shop') || '🟣 Shop' },
   ];
   if (auth.isAdmin) {
     t.push({ id: 'admin', label: '⚙️ Admin' });
@@ -258,7 +302,7 @@ function onLogout() {
   router.push('/login');
 }
 
-let tickTimer, syncTimer, timelineTimer, notifTimer;
+let tickTimer, syncTimer, timelineTimer, notifTimer, eventTimer;
 
 function closeNotifPanel(e) {
   if (showNotifPanel.value) showNotifPanel.value = false;
@@ -282,6 +326,10 @@ onMounted(async () => {
   await notifStore.load();
   notifTimer = setInterval(() => notifStore.load(), 60000);
   document.addEventListener('click', closeNotifPanel);
+
+  // Active event polling (every 5 min)
+  await loadActiveEvent();
+  eventTimer = setInterval(() => loadActiveEvent(), 300000);
 
   // Request browser notification permission (Notification API)
   if ('Notification' in window && Notification.permission === 'default') {
@@ -308,6 +356,7 @@ onUnmounted(() => {
   clearInterval(syncTimer);
   clearInterval(timelineTimer);
   clearInterval(notifTimer);
+  clearInterval(eventTimer);
   document.removeEventListener('click', initAudio);
   document.removeEventListener('click', closeNotifPanel);
   stopAmbientMusic();
@@ -386,6 +435,32 @@ onUnmounted(() => {
 .loading-icon { font-size: 64px; animation: pulse 2s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(0,200,255,0.5)); }
 .loading-text { font-family: 'Orbitron', sans-serif; font-size: 14px; color: var(--accent); letter-spacing: 2px; }
 @keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } }
+
+.event-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 1px;
+  background: linear-gradient(90deg, rgba(155,89,182,0.2) 0%, rgba(52,152,219,0.2) 50%, rgba(155,89,182,0.2) 100%);
+  border-bottom: 1px solid rgba(155,89,182,0.3);
+  color: #9b59b6;
+  cursor: pointer;
+  text-transform: uppercase;
+  animation: event-glow 3s ease-in-out infinite;
+}
+.event-banner:hover { background: rgba(155,89,182,0.25); }
+.event-icon { font-size: 16px; }
+.event-name { color: #bb86fc; font-weight: 700; }
+.event-sep { color: var(--text-dim, #666); }
+.event-time { color: var(--text-dim, #aaa); font-size: 10px; }
+@keyframes event-glow {
+  0%, 100% { box-shadow: inset 0 0 10px rgba(155,89,182,0.1); }
+  50% { box-shadow: inset 0 0 20px rgba(155,89,182,0.2); }
+}
 
 .energy-banner { padding: 5px 14px; font-size: 11px; text-align: center; font-family: 'Exo 2', sans-serif; }
 .energy-banner.warning  { background: rgba(255,165,0,0.15); border-bottom: 1px solid rgba(255,165,0,0.3); color: #ffaa00; }

@@ -114,6 +114,13 @@ export const api = {
   submitExpeditionChoice: (missionId, choice) => request('POST', `/api/expeditions/${missionId}/choose`, { choice }),
   getExpeditionHistory: () => request('GET', '/api/expeditions/history'),
 
+  // Dark Matter Shop
+  getShopItems: () => request('GET', '/shop'),
+  buyShopItem: (itemKey) => request('POST', '/shop/buy', { itemKey }),
+
+  // Seasonal Events
+  getActiveEvent: () => request('GET', '/events/active'),
+
   // Notifications
   getNotifications: () => request('GET', '/notifications'),
   markNotificationsRead: () => request('POST', '/notifications/read'),

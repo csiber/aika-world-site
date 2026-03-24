@@ -23,6 +23,8 @@ import { handleTimeline } from './routes/timeline.js';
 import { handleGetTerritoryMap, handleGetAllianceTerritory, handleRecalcSectorControl } from './routes/territory.js';
 import { handleGetFleetMovements, handleScanPhalanx, handleInterceptFleet } from './routes/fleet_intel.js';
 import { handleGetTacticalBattle, handleSubmitFormation, handleSubmitOrders, handleAdvanceRound, handleAutoResolve } from './routes/tactical.js';
+import { handleShop } from './routes/dm_shop.js';
+import { handleEvents, handleAdminEvents } from './routes/events.js';
 import { corsHeaders, jsonError } from './utils/response.js';
 import { verifyJWT } from './utils/jwt.js';
 import { findOrCreateGameUser } from './routes/auth.js';
@@ -94,6 +96,9 @@ export default {
         }
 
         // Admin (Internal auth check in route)
+        if (url.pathname.startsWith('/api/admin/events')) {
+          return await handleAdminEvents(request, env, url);
+        }
         if (url.pathname.startsWith('/api/admin/')) {
           return await handleAdmin(request, env, url);
         }
@@ -158,6 +163,8 @@ export default {
         if (url.pathname.startsWith('/api/expeditions')) {
           return await handleExpeditions(request, env, user.sub);
         }
+        if (url.pathname.startsWith('/api/shop'))       return await handleShop(request, env, url, user);
+        if (url.pathname.startsWith('/api/events'))     return await handleEvents(request, env, url, user);
         if (url.pathname === '/api/territory/map' && request.method === 'GET')
                                                         return await handleGetTerritoryMap(request, env, user.sub);
         if (url.pathname === '/api/territory/alliance' && request.method === 'GET')
