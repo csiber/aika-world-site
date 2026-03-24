@@ -4,7 +4,7 @@
  * @property {string} title - Display name
  * @property {{ en: string, hu?: string }} description - i18n descriptions
  * @property {string} [icon] - Emoji or URL
- * @property {string} [theme] - Card background theme: 'hacker' | 'space' | 'city' | 'racing' | 'life' | 'social' | CSS gradient
+ * @property {string} [theme] - Card background theme: 'hacker' | 'space' | 'life' | CSS gradient
  * @property {'free' | 'pro' | 'vip'} [access_type] - Default: 'free'
  * @property {string} [version]
  * @property {string} [hubUrl] - Default: 'https://aikahub.com'
