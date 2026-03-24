@@ -78,6 +78,13 @@
         </div>
       </div>
 
+      <!-- Expedition 2.0: awaiting choice modal -->
+      <ExpeditionChoice
+        v-if="awaitingChoiceMission"
+        :mission="awaitingChoiceMission"
+        @chosen="onExpeditionChosen"
+      />
+
       <!-- Quests Tab -->
       <div v-else class="panel-body">
         <div v-if="questsStore.loading && !questsStore.quests.length" class="empty-msg">{{ L.t('common.loading') || 'Betöltés...' }}</div>
@@ -196,13 +203,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGameStore } from '@/stores/game.js';
 import { useLangStore } from '@/stores/lang.js';
 import { useQuestsStore } from '@/stores/quests.js';
 import { api } from '@/api/client.js';
 import { audio } from '@/utils/botAudio.js';
+import ExpeditionChoice from '@/components/ExpeditionChoice.vue';
 
 const router = useRouter();
 
@@ -215,8 +223,18 @@ const busy     = ref(null);
 const activeTab = ref('missions');
 const claiming = ref(null);
 
+// Expedition 2.0 — awaiting choice
+const awaitingChoiceMission = computed(() =>
+  missions.value.find(m => m.status === 'awaiting_choice') || null
+);
+
+async function onExpeditionChosen(result) {
+  game.notify(result?.message || 'Expedition resolved!', 'blue');
+  await loadMissions();
+}
+
 const typeLabel = (t) => ({ spy: 'Kémkedés', attack: 'Támadás', colonize: 'Gyarmatosítás', harvest: 'Újrahasznosítás', expedition: 'Expedíció', intercept: 'Elfogás' }[t] || t);
-const statusLabel = (s) => ({ travelling: 'Úton', returning: 'Visszatérés', done: 'Befejezve', battle_pending: 'CSATA FOLYAMATBAN' }[s] || s);
+const statusLabel = (s) => ({ travelling: 'Úton', returning: 'Visszatérés', done: 'Befejezve', battle_pending: 'CSATA FOLYAMATBAN', awaiting_choice: 'DÖNTÉS SZÜKSÉGES' }[s] || s);
 const missionIcon = (t) => ({ spy: '🔍', attack: '⚔️', colonize: '🌍', harvest: '🚛', expedition: '🌌', intercept: '🎯' }[t] || '🚀');
 
 function getBattleId(m) {

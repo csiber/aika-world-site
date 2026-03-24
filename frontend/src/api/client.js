@@ -102,6 +102,10 @@ export const api = {
   getQuests: () => request('GET', '/api/quests'),
   claimQuest: (questId) => request('POST', `/api/quests/claim/${questId}`),
 
+  // Expeditions
+  submitExpeditionChoice: (missionId, choice) => request('POST', `/api/expeditions/${missionId}/choose`, { choice }),
+  getExpeditionHistory: () => request('GET', '/api/expeditions/history'),
+
   // Market
   getMarketOffers: () => request('GET', '/market/list'),
   createMarketOffer: (offerRes, offerAmt, seekRes, seekAmt, planetId) => request('POST', '/market/create', { offerRes, offerAmt, seekRes, seekAmt, planetId }),
