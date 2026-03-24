@@ -10,9 +10,12 @@ import { handleMessages } from './routes/messages.js';
 import { handleAikaChat } from './routes/aika.js';
 import { handleMissions, resolveAllMissions } from './routes/missions.js';
 import { handleAlliance } from './routes/alliance.js';
+import { handleAllianceWars } from './routes/alliance_wars.js';
 import { handleProfile }  from './routes/profile.js';
 import { handleAdmin }    from './routes/admin.js';
 import { handleMarket }   from './routes/market.js';
+import { handleDiplomacy } from './routes/diplomacy.js';
+import { handleStructures } from './routes/structures.js';
 import { handleNotifications } from './routes/notifications.js';
 import { handleQuests }   from './routes/quests.js';
 import { handleExpeditions } from './routes/expeditions.js';
@@ -139,6 +142,12 @@ export default {
         if (url.pathname === '/api/aika-chat')          return await handleAikaChat(request, env, url, user);
         if (url.pathname.startsWith('/api/missions') || url.pathname === '/api/galaxy')
                                                         return await handleMissions(request, env, url, user);
+        if (url.pathname.startsWith('/api/diplomacy'))    return await handleDiplomacy(request, env, url, user);
+        if (url.pathname.startsWith('/api/alliance/structures')) return await handleStructures(request, env, url, user);
+        if (url.pathname.startsWith('/api/alliance/war/')) {
+          const warResult = await handleAllianceWars(request, env, url, user);
+          if (warResult) return warResult;
+        }
         if (url.pathname.startsWith('/api/alliance'))   return await handleAlliance(request, env, url, user);
         if (url.pathname.startsWith('/api/profile'))    return await handleProfile(request, env, url, user);
         if (url.pathname.startsWith('/api/market'))     return await handleMarket(request, env, url, user);

@@ -75,6 +75,13 @@ export const api = {
   kickAllianceMember: (targetUserId) => request('POST', '/alliance/kick', { targetUserId }),
   promoteAllianceMember: (targetUserId, role) => request('POST', '/alliance/promote', { targetUserId, role }),
 
+  // Alliance Wars v2
+  declareWar: (targetAllianceId) => request('POST', '/alliance/war/declare', { targetAllianceId }),
+  getActiveWars: () => request('GET', '/alliance/war/active'),
+  getWarHistory: () => request('GET', '/alliance/war/history'),
+  getWarStats: (warId) => request('GET', `/alliance/war/${warId}/stats`),
+  surrenderWar: (warId) => request('POST', `/alliance/war/${warId}/surrender`),
+
   // Profile
   getMyProfile: () => request('GET', '/profile/me'),
   getProfile: (username) => request('GET', `/profile/${username}`),

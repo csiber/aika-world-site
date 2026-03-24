@@ -8,6 +8,9 @@ import { logTimelineEvent } from './timeline.js';
 import { createTacticalBattle, autoResolveBattle } from './tactical_engine.js';
 import { rollExpeditionEvent } from './expedition_templates.js';
 import { createNotification } from '../routes/notifications.js';
+import { updateWarContributions } from '../routes/alliance_wars.js';
+import { hasActiveNAP } from '../routes/diplomacy.js';
+import { hasDefenseBastion } from '../routes/structures.js';
 
 async function getPlanetState(env, planetId) {
   try {
@@ -91,6 +94,20 @@ export async function resolveMissionsForUser(env, userId) {
       // BUT for Attack, we need multi-attacker logic
       
       if (mission.mission_type === 'attack') {
+          // ── NAP Check: Block attacks between allied alliances ──
+          try {
+            const attackerMember = await env.DB.prepare('SELECT alliance_id FROM alliance_members WHERE user_id = ?').bind(userId).first();
+            const defenderMember = await env.DB.prepare('SELECT alliance_id FROM alliance_members WHERE user_id = ?').bind(mission.target_user_id).first();
+            if (attackerMember && defenderMember && await hasActiveNAP(env, attackerMember.alliance_id, defenderMember.alliance_id)) {
+              // NAP active — return fleet without attacking
+              await env.DB.prepare(`UPDATE fleet_missions SET status='returning', result=?, return_at=? WHERE id=?`)
+                .bind(JSON.stringify({ napBlocked: true, message: 'Megnemtámadási egyezmény érvényben — támadás blokkolva.' }), returnAt, mission.id).run();
+              await env.DB.prepare('INSERT INTO messages (id, user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?, ?)')
+                .bind(crypto.randomUUID(), userId, 'Diplomácia', 'Támadás blokkolva', 'A flottád visszafordult — megnemtámadási egyezmény van érvényben a célpont szövetségével.', 'system').run();
+              continue;
+            }
+          } catch (napErr) { console.error('NAP check failed:', napErr); }
+
           const targetPlanetRow = await env.DB.prepare('SELECT id FROM planets WHERE user_id = ? AND coords = ?').bind(mission.target_user_id, mission.target_coords).first();
           const targetPlanet = targetPlanetRow ? await getPlanetState(env, targetPlanetRow.id) : null;
           if (targetPlanet) {
@@ -111,6 +128,16 @@ export async function resolveMissionsForUser(env, userId) {
                       if (t) t.count += s.count; else mergedShips.push({...s});
                   });
               });
+
+              // ── Defense Bastion check: reduce incoming attack damage by 15% ──
+              let bastionActive = false;
+              try {
+                const defenderMember = await env.DB.prepare('SELECT alliance_id FROM alliance_members WHERE user_id = ?').bind(mission.target_user_id).first();
+                if (defenderMember && await hasDefenseBastion(env, defenderMember.alliance_id)) {
+                  bastionActive = true;
+                  mergedShips.forEach(s => { s.attack = Math.floor((s.attack || 0) * 0.85); });
+                }
+              } catch (bastionErr) { console.error('Defense Bastion check failed:', bastionErr); }
 
               // ── Tactical Battle: Create battle and set mission to battle_pending ──
               try {
@@ -187,6 +214,10 @@ export async function resolveMissionsForUser(env, userId) {
                           result.moonCreated = true;
                       }
                   }
+
+                  // Alliance Wars v2: Track war contributions
+                  const totalLoot = (battle.loot?.metal || 0) + (battle.loot?.crystal || 0) + (battle.loot?.deus || 0);
+                  await updateWarContributions(env, userId, mission.target_user_id, battle.totalDamage || totalLoot, Math.floor(totalLoot), battle.attackerWins);
               }
           }
       }
@@ -383,6 +414,10 @@ export async function resolveMissionsForUser(env, userId) {
           fullResult.moonCreated = true;
         }
       }
+
+      // Alliance Wars v2: Track war contributions for tactical battles
+      const tacticalLoot = (battle.loot?.metal || 0) + (battle.loot?.crystal || 0) + (battle.loot?.deus || 0);
+      await updateWarContributions(env, userId, mission.target_user_id, battle.totalDamage || tacticalLoot, Math.floor(tacticalLoot), battle.attackerWins);
 
       await env.DB.prepare(`UPDATE fleet_missions SET status='returning', result=?, ships=?, return_at=? WHERE id=?`)
         .bind(JSON.stringify(fullResult), JSON.stringify(currentShips), returnAt, mission.id).run();

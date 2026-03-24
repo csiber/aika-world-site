@@ -237,38 +237,109 @@
 
         <!-- WARS TAB -->
         <div v-if="activeTab === 'wars'" class="tab-content wars-view">
+          <!-- Active Wars -->
           <div class="panel">
-            <div class="panel-header"><h3>⚔️ Hadiállapot</h3></div>
+            <div class="panel-header"><h3>⚔️ {{ L.t('alliance.war.active') }}</h3></div>
             <div class="panel-body">
               <div v-if="wars.length === 0" class="empty-war">
                 <div class="peace-icon">🕊️</div>
-                <p>Jelenleg béke van a birodalmad és a galaxis többi szövetsége között.</p>
+                <p>{{ L.t('alliance.war.noActive') }}</p>
               </div>
               <div class="war-list-new">
-                <div v-for="w in wars" :key="w.id" class="war-item">
-                  <div class="war-meta">Háború kezdete: {{ new Date(w.started_at * 1000).toLocaleDateString('hu') }}</div>
+                <div v-for="w in wars" :key="w.id" class="war-item" @click="selectWar(w)">
+                  <div class="war-meta">
+                    <span class="war-goal-badge">{{ warGoalLabel(w) }}</span>
+                    <span class="war-timer" v-if="w.ends_at">{{ formatTimeLeft(w.ends_at) }}</span>
+                  </div>
                   <div class="war-battlefield">
                     <div class="side att">
                       <div class="s-tag">[{{ w.attacker_tag }}]</div>
+                      <div class="s-name">{{ w.attacker_name }}</div>
                       <div class="s-pts">{{ L.n(w.attacker_score) }} PT</div>
                     </div>
-                    <div class="war-vs">VS</div>
+                    <div class="war-vs">{{ L.t('alliance.war.vs') }}</div>
                     <div class="side def">
                       <div class="s-tag">[{{ w.defender_tag }}]</div>
+                      <div class="s-name">{{ w.defender_name }}</div>
                       <div class="s-pts">{{ L.n(w.defender_score) }} PT</div>
                     </div>
+                  </div>
+                  <div class="war-progress-bar" v-if="w.goal_type === 'score'">
+                    <div class="wp-att" :style="{ width: warProgressPct(w, 'attacker') + '%' }"></div>
+                    <div class="wp-def" :style="{ width: warProgressPct(w, 'defender') + '%' }"></div>
+                  </div>
+                  <div v-if="isLeader && (w.attacker_id === allianceStore.alliance?.id || w.defender_id === allianceStore.alliance?.id)" class="war-surrender-row">
+                    <button class="btn-danger-outline btn-sm" @click.stop="surrenderWar(w.id)" :disabled="busy">{{ L.t('alliance.war.surrender') }}</button>
                   </div>
                 </div>
               </div>
 
-              <div v-if="canManage" class="war-declare-section">
-                <h4>Hadüzenet küldése</h4>
+              <!-- War Stats Panel (selected war) -->
+              <div v-if="selectedWarStats" class="war-stats-panel">
+                <div class="panel-header"><h3>{{ L.t('alliance.war.stats') }}</h3></div>
+                <div class="war-goal-info">
+                  <span class="wg-label">{{ L.t('alliance.war.goal') }}:</span>
+                  <span class="wg-value">{{ warGoalLabel(selectedWar) }}</span>
+                  <span class="wg-progress" v-if="selectedWarStats.goalProgress">
+                    {{ selectedWarStats.goalProgress.attacker }} / {{ selectedWarStats.goalProgress.target }}
+                    {{ L.t('alliance.war.vs') }}
+                    {{ selectedWarStats.goalProgress.defender }} / {{ selectedWarStats.goalProgress.target }}
+                  </span>
+                </div>
+                <h4>{{ L.t('alliance.war.contributions') }}</h4>
+                <table class="full-table war-contrib-table">
+                  <thead>
+                    <tr>
+                      <th>{{ L.t('alliance.war.player') }}</th>
+                      <th>{{ L.t('alliance.war.damage') }}</th>
+                      <th>{{ L.t('alliance.war.raided') }}</th>
+                      <th>{{ L.t('alliance.war.battlesWon') }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="c in allContributions" :key="c.id" :class="{ 'own-side': c.alliance_id === allianceStore.alliance?.id }">
+                      <td class="player-link">{{ c.username }}</td>
+                      <td>{{ L.n(c.damage_dealt) }}</td>
+                      <td>{{ L.n(c.resources_raided) }}</td>
+                      <td>{{ c.battles_won }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Declare War -->
+              <div v-if="isLeader" class="war-declare-section">
+                <h4>{{ L.t('alliance.war.declare') }}</h4>
                 <div class="declare-row">
                   <select v-model="targetAllianceId" class="input">
-                    <option disabled value="">Válassz célpontot...</option>
+                    <option disabled value="">{{ L.t('alliance.war.selectTarget') }}</option>
                     <option v-for="a in otherAlliances" :key="a.id" :value="a.id">[{{ a.tag }}] {{ a.name }}</option>
                   </select>
-                  <button class="btn-danger" @click="declareWar" :disabled="!targetAllianceId || busy">HADÜZENET</button>
+                  <button class="btn-danger" @click="declareWar" :disabled="!targetAllianceId || busy">{{ L.t('alliance.war.declare') }}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- War History -->
+          <div class="panel" style="margin-top: 20px;">
+            <div class="panel-header"><h3>📜 {{ L.t('alliance.war.history') }}</h3></div>
+            <div class="panel-body">
+              <div v-if="warHistory.length === 0" class="empty-war">
+                <p>{{ L.t('alliance.war.noHistory') }}</p>
+              </div>
+              <div class="war-history-list">
+                <div v-for="w in warHistory" :key="w.id" class="war-history-item">
+                  <div class="wh-result" :class="{ won: w.winner_id === allianceStore.alliance?.id, lost: w.winner_id !== allianceStore.alliance?.id }">
+                    {{ w.winner_id === allianceStore.alliance?.id ? L.t('alliance.war.victory') : L.t('alliance.war.defeat') }}
+                  </div>
+                  <div class="wh-info">
+                    <span class="wh-tags">[{{ w.attacker_tag }}] {{ L.t('alliance.war.vs') }} [{{ w.defender_tag }}]</span>
+                    <span class="wh-score">{{ L.n(w.attacker_score) }} — {{ L.n(w.defender_score) }}</span>
+                  </div>
+                  <div class="wh-dates">
+                    {{ new Date(w.started_at * 1000).toLocaleDateString() }} — {{ w.ended_at ? new Date(w.ended_at * 1000).toLocaleDateString() : '?' }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -294,9 +365,12 @@ const activeTab = ref('overview');
 const busy = ref(false);
 const inviteUser = ref('');
 const wars = ref([]);
+const warHistory = ref([]);
 const targetAllianceId = ref('');
 const territory = ref([]);
 const totalTerritory = ref(0);
+const selectedWar = ref(null);
+const selectedWarStats = ref(null);
 
 const tabs = [
   { id: 'overview', label: 'Áttekintés', icon: '🏛️' },
@@ -318,11 +392,26 @@ const expProgress = computed(() => {
 
 const nextLevelExp = computed(() => (allianceStore.alliance?.level || 1) * 1000);
 const canManage = computed(() => allianceStore.myRole === 'leader' || allianceStore.myRole === 'officer');
+const isLeader = computed(() => allianceStore.myRole === 'leader');
 const sortedMembers = computed(() => [...allianceStore.members].sort((a,b) => b.score - a.score));
+const allContributions = computed(() => {
+  if (!selectedWarStats.value) return [];
+  return [...(selectedWarStats.value.attackerContribs || []), ...(selectedWarStats.value.defenderContribs || [])];
+});
 const otherAlliances = computed(() => allianceStore.list.filter(a => a.id !== allianceStore.alliance?.id));
 
 async function loadWars() {
-    try { const data = await api.get('/alliance/wars'); wars.value = data.wars || []; } catch {}
+    try {
+      const data = await api.getActiveWars();
+      wars.value = data.wars || [];
+    } catch {}
+}
+
+async function loadWarHistory() {
+    try {
+      const data = await api.getWarHistory();
+      warHistory.value = data.wars || [];
+    } catch {}
 }
 
 async function loadTerritory() {
@@ -333,14 +422,65 @@ async function loadTerritory() {
     } catch {}
 }
 
+async function selectWar(war) {
+    selectedWar.value = war;
+    try {
+      const data = await api.getWarStats(war.id);
+      selectedWarStats.value = data;
+    } catch (e) {
+      selectedWarStats.value = null;
+    }
+}
+
 async function declareWar() {
-    if (!confirm('Biztosan hadat üzensz? Ez egy visszavonhatatlan folyamat!')) return;
+    if (!confirm(L.t('alliance.war.declareConfirm'))) return;
     busy.value = true;
     try {
-        await api.post('/alliance/war/declare', { targetAllianceId: targetAllianceId.value });
+        await api.declareWar(targetAllianceId.value);
+        targetAllianceId.value = '';
         await loadWars();
     } catch (e) { alert(e.message); }
     busy.value = false;
+}
+
+async function surrenderWar(warId) {
+    if (!confirm(L.t('alliance.war.surrenderConfirm'))) return;
+    busy.value = true;
+    try {
+        await api.surrenderWar(warId);
+        selectedWar.value = null;
+        selectedWarStats.value = null;
+        await loadWars();
+        await loadWarHistory();
+    } catch (e) { alert(e.message); }
+    busy.value = false;
+}
+
+function warGoalLabel(war) {
+    if (!war) return '';
+    const target = war.goal_target || 0;
+    if (war.goal_type === 'score') return L.t('alliance.war.goalScore').replace('{target}', L.n(target));
+    if (war.goal_type === 'sectors') return L.t('alliance.war.goalSectors').replace('{target}', target);
+    if (war.goal_type === 'battles') return L.t('alliance.war.goalBattles').replace('{target}', target);
+    return war.goal_type;
+}
+
+function warProgressPct(war, side) {
+    if (!war || !war.goal_target) return 0;
+    const score = side === 'attacker' ? war.attacker_score : war.defender_score;
+    return Math.min(100, Math.floor((score / war.goal_target) * 100));
+}
+
+function formatTimeLeft(endsAt) {
+    const now = Math.floor(Date.now() / 1000);
+    const diff = endsAt - now;
+    if (diff <= 0) return L.t('alliance.war.expired');
+    const days = Math.floor(diff / 86400);
+    const hours = Math.floor((diff % 86400) / 3600);
+    const mins = Math.floor((diff % 3600) / 60);
+    if (days > 0) return `${days}${L.t('time.day')} ${hours}${L.t('time.hour')}`;
+    if (hours > 0) return `${hours}${L.t('time.hour')} ${mins}${L.t('time.min')}`;
+    return `${mins}${L.t('time.min')}`;
 }
 
 async function createAlliance() {
@@ -375,6 +515,7 @@ async function doDonate() {
 onMounted(() => {
     allianceStore.load();
     loadWars();
+    loadWarHistory();
     loadTerritory();
 });
 </script>
@@ -474,17 +615,49 @@ onMounted(() => {
 .input-field input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 8px; border-radius: 4px; font-family: 'Orbitron', sans-serif; }
 
 /* Wars */
-.war-item { background: linear-gradient(90deg, rgba(255,58,122,0.1) 0%, transparent 100%); border: 1px solid rgba(255,58,122,0.3); border-radius: 8px; padding: 25px; margin-bottom: 20px; position: relative; }
-.war-meta { position: absolute; top: 10px; right: 15px; font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+.war-item { background: linear-gradient(90deg, rgba(255,58,122,0.1) 0%, transparent 100%); border: 1px solid rgba(255,58,122,0.3); border-radius: 8px; padding: 25px; margin-bottom: 20px; position: relative; cursor: pointer; transition: border-color 0.2s; }
+.war-item:hover { border-color: rgba(255,58,122,0.6); }
+.war-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 10px; text-transform: uppercase; }
+.war-goal-badge { background: rgba(255,58,122,0.15); color: var(--accent2); padding: 3px 10px; border-radius: 4px; font-family: 'Orbitron', sans-serif; font-size: 9px; letter-spacing: 0.5px; border: 1px solid rgba(255,58,122,0.3); }
+.war-timer { color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; }
 .war-battlefield { display: flex; align-items: center; justify-content: center; gap: 40px; }
 .war-vs { font-family: 'Orbitron', sans-serif; font-size: 32px; font-weight: 900; color: #fff; opacity: 0.2; }
 .side { text-align: center; }
-.s-tag { font-family: 'Orbitron', sans-serif; font-size: 32px; font-weight: 900; color: var(--accent2); text-shadow: 0 0 20px rgba(255,58,122,0.4); }
+.s-tag { font-family: 'Orbitron', sans-serif; font-size: 28px; font-weight: 900; color: var(--accent2); text-shadow: 0 0 20px rgba(255,58,122,0.4); }
+.s-name { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 .s-pts { font-size: 16px; font-weight: 800; color: #fff; margin-top: 5px; }
+
+.war-progress-bar { display: flex; height: 6px; background: rgba(0,0,0,0.4); border-radius: 3px; overflow: hidden; margin-top: 15px; gap: 2px; }
+.wp-att { background: linear-gradient(90deg, var(--accent2), #ff7eb3); height: 100%; border-radius: 3px; transition: width 0.5s; }
+.wp-def { background: linear-gradient(90deg, var(--accent), #00ffcc); height: 100%; border-radius: 3px; transition: width 0.5s; margin-left: auto; }
+
+.war-surrender-row { margin-top: 12px; text-align: right; }
+.btn-sm { font-size: 10px; padding: 5px 12px; }
+
+/* War Stats */
+.war-stats-panel { margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border); }
+.war-goal-info { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+.wg-label { font-size: 10px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px; }
+.wg-value { color: var(--accent2); font-weight: 700; font-size: 13px; }
+.wg-progress { font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--accent); margin-left: auto; }
+
+.war-contrib-table .own-side { background: rgba(0,200,255,0.05); }
+
+/* War History */
+.war-history-list { display: flex; flex-direction: column; gap: 10px; }
+.war-history-item { display: flex; align-items: center; gap: 15px; padding: 12px 15px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 6px; }
+.wh-result { font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; min-width: 80px; text-align: center; }
+.wh-result.won { background: rgba(0,255,100,0.1); color: #0f6; border: 1px solid rgba(0,255,100,0.3); }
+.wh-result.lost { background: rgba(255,58,122,0.1); color: var(--accent2); border: 1px solid rgba(255,58,122,0.3); }
+.wh-info { flex: 1; }
+.wh-tags { display: block; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; color: var(--text-bright); }
+.wh-score { display: block; font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+.wh-dates { font-size: 10px; color: var(--text-dim); white-space: nowrap; }
 
 .empty-war { padding: 50px; text-align: center; color: var(--text-dim); }
 .peace-icon { font-size: 48px; margin-bottom: 15px; opacity: 0.5; }
 
+.war-declare-section { margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border); }
 .declare-row { display: flex; gap: 10px; margin-top: 15px; }
 
 /* Territory */
