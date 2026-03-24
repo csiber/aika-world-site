@@ -3,6 +3,7 @@
  */
 
 import { jsonResponse, jsonError } from '../utils/response.js';
+import { trackQuestProgress } from '../utils/quest_tracker.js';
 
 export async function handleMarket(request, env, url, user) {
   const userId = user.sub;
@@ -45,6 +46,7 @@ export async function handleMarket(request, env, url, user) {
       VALUES (?, ?, ?, ?, ?, ?)
     `).bind(userId, planetId, offerRes, offerAmt, seekRes, seekAmt).run();
 
+    await trackQuestProgress(env, userId, 'trade', 1);
     return jsonResponse({ ok: true, message: 'Ajánlat közzétéve' }, 200, request);
   }
 
@@ -86,6 +88,7 @@ export async function handleMarket(request, env, url, user) {
     await env.DB.prepare('INSERT INTO messages (user_id, from_name, subject, body, msg_type) VALUES (?, ?, ?, ?, ?)')
       .bind(offer.user_id, 'Kereskedő', 'Sikeres üzlet!', `Valaki elfogadta az ajánlatodat! Kaptál ${Math.floor(offer.seek_amt)} ${offer.seek_res} egységet.`, 'system').run();
 
+    await trackQuestProgress(env, userId, 'trade', 1);
     return jsonResponse({ ok: true, message: 'Üzlet megkötve!' }, 200, request);
   }
 

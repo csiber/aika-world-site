@@ -7,6 +7,7 @@ import { jsonResponse, jsonError } from '../utils/response.js';
 import { resolveMissionsForUser } from '../utils/mission_resolver.js';
 import { getActiveEvents } from '../utils/events.js';
 import { logTimelineEvent } from '../utils/timeline.js';
+import { trackQuestProgress } from '../utils/quest_tracker.js';
 
 // ── Game formulas ─────────────────────────────────────────────────────────────
 
@@ -522,6 +523,7 @@ export async function handleGame(request, env, url, user) {
     const finishAt = Math.floor(Date.now() / 1000) + seconds;
     await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at) VALUES (?, ?, ?, ?, 'defense', ?, ?, ?)`).bind(crypto.randomUUID(), userId, fullState.activePlanet.id, defenseId, `${def.icon} ${def.name} ×${amount}`, amount, finishAt).run();
     await saveFullState(env, userId, fullState);
+    await trackQuestProgress(env, userId, 'build_defense', amount);
     return jsonResponse(responseData({ ok: true, finishAt, cost: totalCost, state: fullState }), 200, request);
   }
 
@@ -549,6 +551,7 @@ export async function handleGame(request, env, url, user) {
     await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at) VALUES (?, ?, ?, ?, 'building', ?, ?, ?)`).bind(crypto.randomUUID(), userId, fullState.activePlanet.id, buildingId, `${b.icon} ${b.name} → Szint ${b.level + 1}`, b.level + 1, finishAt).run();
     await saveFullState(env, userId, fullState);
     await incrementQuest(env, userId, 'upgrade');
+    await trackQuestProgress(env, userId, 'upgrade', 1);
     return jsonResponse(responseData({ ok: true, finishAt, cost, seconds, state: fullState }), 200, request);
   }
 
@@ -591,6 +594,7 @@ export async function handleGame(request, env, url, user) {
     const seconds = researchTime(r.level, labLevel); const finishAt = Math.floor(Date.now() / 1000) + seconds;
     await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at) VALUES (?, ?, ?, ?, 'research', ?, ?, ?)`).bind(crypto.randomUUID(), userId, fullState.activePlanet.id, researchId, `🔬 ${r.name} → Szint ${r.level + 1}`, r.level + 1, finishAt).run();
     await saveFullState(env, userId, fullState);
+    await trackQuestProgress(env, userId, 'research', 1);
     return jsonResponse(responseData({ ok: true, finishAt, cost, seconds, state: fullState }), 200, request);
   }
 
@@ -609,6 +613,7 @@ export async function handleGame(request, env, url, user) {
     await env.DB.prepare(`INSERT INTO build_queue (id, user_id, planet_id, item_id, item_type, item_name, target_level, finish_at) VALUES (?, ?, ?, ?, 'fleet', ?, ?, ?)`).bind(crypto.randomUUID(), userId, fullState.activePlanet.id, shipId, `${ship.icon} ${ship.name} ×${amount}`, amount, finishAt).run();
     await saveFullState(env, userId, fullState);
     await incrementQuest(env, userId, 'build', shipId, amount);
+    await trackQuestProgress(env, userId, 'build_ship', amount);
     return jsonResponse(responseData({ ok: true, finishAt, cost: totalCost, state: fullState }), 200, request);
   }
 

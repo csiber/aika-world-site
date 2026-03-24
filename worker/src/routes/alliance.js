@@ -4,6 +4,7 @@
 
 import { jsonResponse, jsonError } from '../utils/response.js';
 import { incrementQuest } from './game.js';
+import { trackQuestProgress } from '../utils/quest_tracker.js';
 
 export async function handleAlliance(request, env, url, user) {
   const userId = user.sub;
@@ -151,6 +152,7 @@ export async function handleAlliance(request, env, url, user) {
 
     await env.DB.prepare('UPDATE alliances SET level = ?, exp = ?, vault = ? WHERE id = ?').bind(newLevel, newExp, JSON.stringify(vault), alliance.id).run();
     await incrementQuest(env, userId, 'donate');
+    await trackQuestProgress(env, userId, 'donate', 1);
     return jsonResponse({ ok: true, level: newLevel, exp: newExp, vault }, 200, request);
   }
 

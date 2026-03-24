@@ -4,6 +4,7 @@
 
 import { jsonResponse, jsonError } from '../utils/response.js';
 import { incrementQuest } from './game.js';
+import { trackQuestProgress } from '../utils/quest_tracker.js';
 import { resolveMissionsForUser } from '../utils/mission_resolver.js';
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
@@ -208,6 +209,7 @@ export async function handleMissions(request, env, url, user) {
     await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, target_user_id, mission_type, target_coords, target_name, status, ships, result, arrive_at, created_at, origin_coords) VALUES (?, ?, ?, ?, 'spy', ?, ?, 'travelling', ?, ?, ?, unixepoch(), ?)`)
       .bind(crypto.randomUUID(), userId, planet.id, targetUserId || null, targetCoords, targetName || 'Ismeretlen', JSON.stringify(sentShips), JSON.stringify(res), arriveAt, planet.coords).run();
     await incrementQuest(env, userId, 'mission', 'spy');
+    await trackQuestProgress(env, userId, 'spy', 1);
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
 
@@ -223,6 +225,7 @@ export async function handleMissions(request, env, url, user) {
     await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, target_user_id, mission_type, target_coords, target_name, status, ships, arrive_at, created_at, origin_coords) VALUES (?, ?, ?, ?, 'attack', ?, ?, 'travelling', ?, ?, unixepoch(), ?)`)
       .bind(crypto.randomUUID(), userId, planet.id, targetUserId, targetCoords, targetName || 'Ismeretlen', JSON.stringify(sentShips), arriveAt, planet.coords).run();
     await incrementQuest(env, userId, 'mission', 'attack');
+    await trackQuestProgress(env, userId, 'attack', 1);
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
 
@@ -236,6 +239,7 @@ export async function handleMissions(request, env, url, user) {
     const arriveAt = Math.floor(Date.now() / 1000) + await calcTravelTimeWithTerritory(env, userId, planet.coords, targetCoords, JSON.parse(gs.research), 120);
     await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, arrive_at, created_at, origin_coords) VALUES (?, ?, ?, 'harvest', ?, ?, 'travelling', ?, ?, unixepoch(), ?)`)
       .bind(crypto.randomUUID(), userId, planet.id, targetCoords, targetName || 'Törmelékmező', JSON.stringify(sentShips), arriveAt, planet.coords).run();
+    await trackQuestProgress(env, userId, 'harvest', 1);
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
 
@@ -251,6 +255,7 @@ export async function handleMissions(request, env, url, user) {
     await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, arrive_at, created_at, origin_coords) VALUES (?, ?, ?, 'expedition', ?, 'Mélyűr', 'travelling', ?, ?, unixepoch(), ?)`)
       .bind(crypto.randomUUID(), userId, planet.id, targetCoords, JSON.stringify(sentShips), arriveAt, planet.coords).run();
     await incrementQuest(env, userId, 'mission', 'expedition');
+    await trackQuestProgress(env, userId, 'expedition', 1);
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
 
@@ -273,6 +278,7 @@ export async function handleMissions(request, env, url, user) {
     await env.DB.prepare(`INSERT INTO fleet_missions (id, user_id, origin_planet_id, mission_type, target_coords, target_name, status, ships, result, arrive_at, created_at, origin_coords) VALUES (?, ?, ?, 'colonize', ?, ?, 'travelling', ?, ?, ?, unixepoch(), ?)`)
       .bind(crypto.randomUUID(), userId, planet.id, targetCoords, pName, JSON.stringify([{id:'colony', count:1}]), JSON.stringify({success:true, planetName:pName, emoji:'🪐'}), arriveAt, planet.coords).run();
     await incrementQuest(env, userId, 'mission', 'colonize');
+    await trackQuestProgress(env, userId, 'colonize', 1);
     return jsonResponse({ ok: true, arriveAt }, 200, request);
   }
 
