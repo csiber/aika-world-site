@@ -280,6 +280,8 @@ export default {
       active: 'AKTÍV',
       building: 'Építés alatt',
       noBuildable: 'Minden struktúra megépült.',
+      required: 'Szükséges',
+      contributors: 'Legnagyobb Hozzájárulók',
     },
   },
   messages: {

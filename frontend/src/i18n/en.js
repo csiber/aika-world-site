@@ -280,6 +280,8 @@ export default {
       active: 'ACTIVE',
       building: 'Under Construction',
       noBuildable: 'All structures have been built.',
+      required: 'Required',
+      contributors: 'Top Contributors',
     },
   },
   messages: {

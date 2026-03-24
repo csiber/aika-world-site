@@ -765,6 +765,58 @@ function treatyPartnerName(treaty) {
   return `[${treaty.alliance_a_tag}] ${treaty.alliance_a_name}`;
 }
 
+// ── Structures ──
+function getStructure(type) {
+  return structures.value.find(s => s.type === type) || null;
+}
+
+async function loadStructures() {
+  try {
+    const data = await api.getAllianceStructures();
+    structures.value = data.structures || [];
+  } catch {}
+}
+
+async function startBuild(type) {
+  busy.value = true;
+  try {
+    await api.buildStructure(type);
+    await loadStructures();
+  } catch (e) { alert(e.message); }
+  busy.value = false;
+}
+
+function openContributeModal(structure) {
+  contributeTarget.value = structure;
+  contribForm.value = { metal: 0, crystal: 0, deus: 0 };
+  showContributeModal.value = true;
+}
+
+async function doContribute() {
+  if (!contributeTarget.value) return;
+  busy.value = true;
+  try {
+    await api.contributeToStructure(contributeTarget.value.id, contribForm.value.metal || 0, contribForm.value.crystal || 0, contribForm.value.deus || 0);
+    showContributeModal.value = false;
+    await loadStructures();
+  } catch (e) { alert(e.message); }
+  busy.value = false;
+}
+
+async function loadContributors(structure) {
+  if (!structure) return;
+  if (structContributors.value[structure.id]) {
+    // Toggle off
+    delete structContributors.value[structure.id];
+    structContributors.value = { ...structContributors.value };
+    return;
+  }
+  try {
+    const data = await api.getStructureContributions(structure.id);
+    structContributors.value = { ...structContributors.value, [structure.id]: data.contributions || [] };
+  } catch {}
+}
+
 async function createAlliance() {
   if (!form.value.name || !form.value.tag) return alert('Név és TAG kötelező!');
   busy.value = true;
@@ -800,6 +852,7 @@ onMounted(() => {
     loadWarHistory();
     loadTerritory();
     loadDiplomacy();
+    loadStructures();
 });
 </script>
 
@@ -990,4 +1043,62 @@ onMounted(() => {
 .btn-danger-outline:hover { background: rgba(255,58,122,0.1); border-color: var(--accent2); }
 .btn-icon-xs { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; margin-left: 4px; }
 .btn-icon-xs.red { color: var(--accent2); border-color: rgba(255,58,122,0.3); }
+
+/* Structures */
+.structures-grid { display: flex; flex-direction: column; gap: 20px; }
+.structure-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: border-color 0.3s; }
+.structure-card.active { border-color: rgba(0,255,100,0.4); box-shadow: 0 0 20px rgba(0,255,100,0.1); }
+.structure-card.building { border-color: rgba(255,165,0,0.4); box-shadow: 0 0 15px rgba(255,165,0,0.08); }
+
+.struct-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border); }
+.struct-icon { font-size: 36px; flex-shrink: 0; }
+.struct-title-block { flex: 1; }
+.struct-name { font-family: 'Orbitron', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-bright); margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 1px; }
+.struct-desc { font-size: 12px; color: var(--text-dim); margin: 0; }
+
+.struct-status-badge { font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 900; padding: 4px 12px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+.active-badge { background: rgba(0,255,100,0.1); color: #0f6; border: 1px solid rgba(0,255,100,0.3); }
+.building-badge { background: rgba(255,165,0,0.1); color: #ffa500; border: 1px solid rgba(255,165,0,0.3); }
+
+.struct-body { padding: 20px; }
+
+.struct-cost { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 15px; font-size: 12px; }
+.cost-label { color: var(--text-dim); text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }
+.cost-item { padding: 4px 10px; border-radius: 4px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 600; }
+.cost-item.metal { color: var(--metal, #ccc); border-color: rgba(200,200,200,0.2); }
+.cost-item.crystal { color: var(--crystal, #88f); border-color: rgba(100,100,255,0.2); }
+.cost-item.deus { color: var(--accent); border-color: rgba(0,200,255,0.2); }
+
+.struct-progress-section { margin-bottom: 15px; }
+.res-progress-row { margin-bottom: 10px; }
+.res-progress-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 11px; }
+.res-name { text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+.res-name.metal { color: var(--metal, #ccc); }
+.res-name.crystal { color: var(--crystal, #88f); }
+.res-name.deus { color: var(--accent); }
+.res-nums { color: var(--text-dim); font-family: 'Orbitron', sans-serif; font-size: 10px; }
+.res-progress-bar-wrap { height: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+.res-progress-bar { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+.res-progress-bar.metal { background: linear-gradient(90deg, #888, #ccc); box-shadow: 0 0 8px rgba(200,200,200,0.3); }
+.res-progress-bar.crystal { background: linear-gradient(90deg, #44f, #88f); box-shadow: 0 0 8px rgba(100,100,255,0.3); }
+.res-progress-bar.deus { background: linear-gradient(90deg, var(--accent), #00ffcc); box-shadow: 0 0 8px rgba(0,200,255,0.3); }
+
+.struct-active-body { text-align: center; }
+.struct-bonus-active { font-size: 13px; color: #0f6; margin-bottom: 15px; padding: 12px; background: rgba(0,255,100,0.05); border: 1px solid rgba(0,255,100,0.15); border-radius: 6px; }
+
+.btn-outline { background: none; border: 1px solid var(--border); color: var(--text); padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 11px; text-transform: uppercase; font-family: 'Orbitron', sans-serif; transition: all 0.2s; }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+.struct-contributors { padding: 0 20px 20px; }
+.struct-contributors h4 { font-size: 10px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; margin-bottom: 10px; }
+.contrib-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 12px; }
+.contrib-rank { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--text-dim); min-width: 30px; }
+.contrib-name { flex: 1; font-weight: 600; color: var(--text-bright); }
+.contrib-total { font-family: 'Orbitron', sans-serif; font-size: 11px; color: var(--accent); }
+
+/* Contribute Modal */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-box { background: var(--bg-panel); border: 1px solid var(--accent); border-radius: 12px; padding: 30px; min-width: 350px; max-width: 450px; box-shadow: 0 0 40px rgba(0,200,255,0.2); }
+.modal-box h3 { font-family: 'Orbitron', sans-serif; color: var(--accent); margin: 0 0 8px 0; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
+.modal-hint { font-size: 12px; color: var(--text-dim); margin-bottom: 20px; }
 </style>
