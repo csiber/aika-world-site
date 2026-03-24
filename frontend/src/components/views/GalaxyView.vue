@@ -29,8 +29,27 @@
       </div>
     </div>
 
+    <!-- View Toggle -->
+    <div class="view-toggle">
+      <button :class="{ active: viewMode === 'map' }" @click="viewMode = 'map'">Map</button>
+      <button :class="{ active: viewMode === 'table' }" @click="viewMode = 'table'">Table</button>
+    </div>
+
+    <!-- Galaxy Canvas Map -->
+    <GalaxyCanvas
+      v-if="viewMode === 'map'"
+      :galaxy="currentGal"
+      :system="currentSys"
+      :players="players"
+      :myPlanets="game.state?.planets || []"
+      :sectorClaims="territoryClaims"
+      :myUsername="auth.username"
+      :allianceTag="game.state?.alliance?.tag || ''"
+      @planet-selected="onCanvasPlanetSelect"
+    />
+
     <!-- System View -->
-    <div class="panel system-panel">
+    <div v-show="viewMode === 'table'" class="panel system-panel">
       <div class="panel-header">
         <span class="panel-icon">🌌</span>
         <h3>{{ L.t('galaxy.system') || 'Naprendszer' }} [{{ currentGal }}:{{ currentSys }}]</h3>
@@ -231,11 +250,13 @@ import { useLangStore } from '@/stores/lang.js';
 import { api } from '@/api/client.js';
 import { audio } from '@/utils/botAudio.js';
 import FleetTracker from '@/components/FleetTracker.vue';
+import GalaxyCanvas from '@/components/GalaxyCanvas.vue';
 
 const game = useGameStore();
 const auth = useAuthStore();
 const L    = useLangStore();
 
+const viewMode   = ref('map');
 const currentGal = ref(1);
 const currentSys = ref(1);
 const loading    = ref(false);
@@ -383,6 +404,19 @@ function getCell(slot) {
 }
 
 const specIcons = { mining: '⛏️', military: '⚔️', research: '🔬', trade: '📦' };
+
+function onCanvasPlanetSelect({ slot, player, coords }) {
+  // Reuse getCell to get full cell data with type info
+  const cell = getCell(slot);
+  if (cell.type === 'enemy') {
+    selectCell(cell, 'attack');
+  } else if (cell.type === 'empty') {
+    doQuickColonize(cell);
+  } else if (cell.debris_metal > 0 || cell.debris_crystal > 0) {
+    selectCell(cell, 'harvest');
+  }
+  // Own planets: no action on click
+}
 
 function selectCell(cell, type) {
   audio.click();
@@ -567,6 +601,29 @@ onUnmounted(() => clearInterval(fleetRefreshTimer));
 .gal-7 { border-color: #ff00ff; }
 .gal-8 { border-color: #00ff88; }
 .gal-9 { border-color: var(--accent2); background: linear-gradient(90deg, rgba(255,58,122,0.05), transparent); }
+
+/* View Toggle */
+.view-toggle { display: flex; gap: 4px; justify-content: center; }
+.view-toggle button {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 6px 18px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+.view-toggle button:hover { border-color: var(--accent); color: var(--accent); }
+.view-toggle button.active {
+  background: rgba(0,200,255,0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 8px rgba(0,200,255,0.15);
+}
 
 .system-panel { width: 100%; }
 .no-padding { padding: 0 !important; }
