@@ -98,6 +98,10 @@ export const api = {
   getTimeline: (limit = 50) => request('GET', `/game/timeline?limit=${limit}`),
   markTimelineRead: () => request('POST', '/game/timeline/read'),
 
+  // Quests
+  getQuests: () => request('GET', '/api/quests'),
+  claimQuest: (questId) => request('POST', `/api/quests/claim/${questId}`),
+
   // Market
   getMarketOffers: () => request('GET', '/market/list'),
   createMarketOffer: (offerRes, offerAmt, seekRes, seekAmt, planetId) => request('POST', '/market/create', { offerRes, offerAmt, seekRes, seekAmt, planetId }),
