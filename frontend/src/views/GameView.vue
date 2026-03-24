@@ -27,8 +27,37 @@
           <div class="user-name">{{ auth.username }}</div>
           <div class="user-pts">{{ scoreFormatted }} pt</div>
         </div>
+        <div class="notif-wrapper">
+          <button class="timeline-bell" @click="showNotifPanel = !showNotifPanel" :title="L.t('notifications.title')">
+            🔔
+            <span v-if="notifStore.unreadCount > 0" class="bell-badge">{{ notifStore.unreadCount }}</span>
+          </button>
+          <div v-if="showNotifPanel" class="notif-dropdown" @click.stop>
+            <div class="notif-header">
+              <span class="notif-title">{{ L.t('notifications.title') }}</span>
+              <button v-if="notifStore.notifications.length > 0" class="notif-mark-read" @click="notifStore.markAllRead()">{{ L.t('notifications.markAllRead') }}</button>
+            </div>
+            <div class="notif-list">
+              <div v-if="notifStore.notifications.length === 0" class="notif-empty">{{ L.t('notifications.noNotifications') }}</div>
+              <div
+                v-for="n in notifStore.notifications"
+                :key="n.id"
+                class="notif-item"
+                :class="{ unread: !n.is_read }"
+                @click="notifStore.markRead(n.id)"
+              >
+                <span class="notif-icon">{{ notifTypeIcon(n.type) }}</span>
+                <div class="notif-content">
+                  <div class="notif-item-title">{{ n.title }}</div>
+                  <div class="notif-body">{{ n.body }}</div>
+                  <div class="notif-time">{{ timeAgo(n.created_at) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <button class="timeline-bell" @click="showTimeline = true" title="Aktivitás">
-          🔔
+          📋
           <span v-if="gameStore.unreadTimelineCount > 0" class="bell-badge">{{ gameStore.unreadTimelineCount }}</span>
         </button>
         <div v-if="allianceStore.inAlliance" class="alliance-badge" @click="activeTab = 'alliance'" title="Szövetség">
@@ -126,6 +155,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore }     from '@/stores/auth.js';
 import { useGameStore }     from '@/stores/game.js';
 import { useMessagesStore } from '@/stores/messages.js';
+import { useNotificationsStore } from '@/stores/notifications.js';
 import { useAllianceStore } from '@/stores/alliance.js';
 import { useBotStore }      from '@/stores/bot.js';
 import { useTourStore }     from '@/stores/tour.js';
@@ -160,11 +190,13 @@ const gameStore     = useGameStore();
 const msgStore      = useMessagesStore();
 const allianceStore = useAllianceStore();
 const tour          = useTourStore();
+const notifStore    = useNotificationsStore();
 const L             = useLangStore();
 
 const activeTab      = ref('overview');
 const showChangelog  = ref(false);
 const showTimeline   = ref(false);
+const showNotifPanel = ref(false);
 const isMuted        = ref(audioEngine.muted);
 
 // Audio: init on first user click (browser autoplay policy)
@@ -172,6 +204,19 @@ function initAudio() {
   audioEngine.init();
   startAmbientMusic();
   document.removeEventListener('click', initAudio);
+}
+
+function notifTypeIcon(type) {
+  const icons = { attack: '⚔️', buildComplete: '🏗️', missionReturn: '🚀', questComplete: '🏆' };
+  return icons[type] || '🔔';
+}
+
+function timeAgo(ts) {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60) return L.t('time.now') || 'now';
+  if (diff < 3600) return Math.floor(diff / 60) + (L.t('time.min') || 'm');
+  if (diff < 86400) return Math.floor(diff / 3600) + (L.t('time.hour') || 'h');
+  return Math.floor(diff / 86400) + (L.t('time.day') || 'd');
 }
 
 function toggleMute() {
@@ -213,7 +258,11 @@ function onLogout() {
   router.push('/login');
 }
 
-let tickTimer, syncTimer, timelineTimer;
+let tickTimer, syncTimer, timelineTimer, notifTimer;
+
+function closeNotifPanel(e) {
+  if (showNotifPanel.value) showNotifPanel.value = false;
+}
 
 onMounted(async () => {
   document.addEventListener('click', initAudio);
@@ -228,6 +277,11 @@ onMounted(async () => {
   // Timeline polling (every 30s)
   await gameStore.loadTimeline(50);
   timelineTimer = setInterval(() => gameStore.loadTimeline(50), 30000);
+
+  // Notifications polling (every 60s)
+  await notifStore.load();
+  notifTimer = setInterval(() => notifStore.load(), 60000);
+  document.addEventListener('click', closeNotifPanel);
 
   // Request browser notification permission (Notification API)
   if ('Notification' in window && Notification.permission === 'default') {
@@ -253,7 +307,9 @@ onUnmounted(() => {
   clearInterval(tickTimer);
   clearInterval(syncTimer);
   clearInterval(timelineTimer);
+  clearInterval(notifTimer);
   document.removeEventListener('click', initAudio);
+  document.removeEventListener('click', closeNotifPanel);
   stopAmbientMusic();
   const bot = useBotStore();
   if (bot.active) bot.stop();
@@ -336,4 +392,36 @@ onUnmounted(() => {
 .energy-banner.critical { background: rgba(255,58,122,0.15); border-bottom: 1px solid rgba(255,58,122,0.3); color: var(--accent2); animation: pulse 1.5s ease-in-out infinite; }
 .slide-down-enter-active, .slide-down-leave-active { transition: all 0.3s ease; }
 .slide-down-enter-from, .slide-down-leave-to { opacity: 0; transform: translateY(-8px); }
+
+/* Notification dropdown */
+.notif-wrapper { position: relative; }
+.notif-dropdown {
+  position: absolute; top: 36px; right: 0; width: 320px; max-height: 400px;
+  background: var(--bg-deep, #060e20); border: 1px solid var(--border-glow, rgba(0,200,255,0.2));
+  border-radius: 6px; box-shadow: 0 8px 32px rgba(0,0,0,0.7); z-index: 200;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.notif-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.08));
+}
+.notif-title { font-family: 'Orbitron', sans-serif; font-size: 11px; color: var(--accent, #00c8ff); letter-spacing: 1px; }
+.notif-mark-read {
+  background: none; border: 1px solid var(--border, rgba(255,255,255,0.1)); color: var(--text-dim, #888);
+  font-size: 10px; padding: 2px 8px; border-radius: 3px; cursor: pointer; transition: all 0.2s;
+}
+.notif-mark-read:hover { color: var(--accent, #00c8ff); border-color: var(--accent, #00c8ff); }
+.notif-list { overflow-y: auto; flex: 1; max-height: 350px; }
+.notif-empty { text-align: center; padding: 24px 12px; color: var(--text-dim, #888); font-size: 12px; }
+.notif-item {
+  display: flex; gap: 8px; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer; transition: background 0.15s;
+}
+.notif-item:hover { background: rgba(0,200,255,0.05); }
+.notif-item.unread { background: rgba(0,200,255,0.08); border-left: 2px solid var(--accent, #00c8ff); }
+.notif-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.notif-content { flex: 1; min-width: 0; }
+.notif-item-title { font-size: 11px; color: var(--text, #eee); font-weight: 600; }
+.notif-body { font-size: 10px; color: var(--text-dim, #888); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif-time { font-size: 9px; color: var(--text-dim, #666); margin-top: 2px; font-family: 'Orbitron', sans-serif; }
 </style>

@@ -7,6 +7,7 @@ import { runBattle } from './combat_logic.js';
 import { logTimelineEvent } from './timeline.js';
 import { createTacticalBattle, autoResolveBattle } from './tactical_engine.js';
 import { rollExpeditionEvent } from './expedition_templates.js';
+import { createNotification } from '../routes/notifications.js';
 
 async function getPlanetState(env, planetId) {
   try {
@@ -127,6 +128,9 @@ export async function resolveMissionsForUser(env, userId) {
                   await logTimelineEvent(env, userId, 'battle_started', 'Taktikai csata indult!', `Célpont: ${mission.target_coords} — Készülj a formáció felállítására!`, '⚔️');
                   await logTimelineEvent(env, mission.target_user_id, 'fleet_attacked', 'Támadás érkezik!', `Támadó: ${username} — Koordináták: ${mission.target_coords} — Készülj a védekezésre!`, '⚔️');
 
+                  // In-app notifications
+                  await createNotification(env, mission.target_user_id, 'attack', 'Attack!', `Your planet at ${mission.target_coords} was attacked by ${username}!`);
+
                   continue; // Skip normal returning logic — battle_pending will be handled separately
               } catch (tacticalErr) {
                   console.error('Tactical battle creation failed, falling back to instant battle:', tacticalErr);
@@ -161,6 +165,9 @@ export async function resolveMissionsForUser(env, userId) {
                   } else {
                       await logTimelineEvent(env, mission.target_user_id, 'battle_won', 'Támadás visszaverve!', `Támadó: ${username} — A támadó flottája megsemmisült.`, '🏆');
                   }
+
+                  // In-app notifications
+                  await createNotification(env, mission.target_user_id, 'attack', 'Attack!', `Your planet at ${mission.target_coords} was attacked by ${username}!`);
 
                   if (battle.debris) {
                       await env.DB.prepare(`UPDATE galaxy_map SET debris_metal = debris_metal + ?, debris_crystal = debris_crystal + ? WHERE coords = ?`)
@@ -354,6 +361,9 @@ export async function resolveMissionsForUser(env, userId) {
       }
       await logTimelineEvent(env, mission.target_user_id, battle.attackerWins ? 'battle_lost' : 'battle_won', battle.attackerWins ? 'Védelmed elesett!' : 'Támadás visszaverve!', `Támadó: ${username} — Koordináták: ${mission.target_coords}`, battle.attackerWins ? '💀' : '🏆');
 
+      // In-app notifications for tactical battle resolution
+      await createNotification(env, mission.target_user_id, 'attack', 'Attack!', `Your planet at ${mission.target_coords} was attacked by ${username}!`);
+
       // Debris
       if (battle.debris) {
         await env.DB.prepare(`UPDATE galaxy_map SET debris_metal = debris_metal + ?, debris_crystal = debris_crystal + ? WHERE coords = ?`)
@@ -403,6 +413,7 @@ export async function resolveMissionsForUser(env, userId) {
       }
       // Timeline: fleet returned home
       await logTimelineEvent(env, userId, 'fleet_arrived', 'Flottád visszatért!', `Koordináták: ${originPlanet?.coords || 'ismeretlen'} — Típus: ${mission.mission_type}`, '🚀');
+      await createNotification(env, userId, 'missionReturn', 'Fleet Returned', `Your fleet returned from ${mission.mission_type} mission to ${originPlanet?.coords || 'unknown'}.`);
       await env.DB.prepare(`UPDATE fleet_missions SET status='done' WHERE id=?`).bind(mission.id).run();
     }
     return arrived.results.length + returned.results.length;

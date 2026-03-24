@@ -266,6 +266,15 @@ export default {
     alreadySpecialized: 'Már specializált',
     confirm: 'Biztos vagy benne? Ez végleges!',
   },
+  notifications: {
+    title: 'Értesítések',
+    markAllRead: 'Összes olvasottnak jelölése',
+    noNotifications: 'Nincs értesítés',
+    attack: 'Támadás',
+    buildComplete: 'Építés kész',
+    missionReturn: 'Küldetés visszatért',
+    questComplete: 'Küldetés teljesítve',
+  },
   common: { loading: 'Betöltés...', yes: 'Igen', no: 'Nem', unknownError: 'Ismeretlen hiba', unknown: 'Ismeretlen' },
   guide: {
     sidebarTitle: '📖 ÚTMUTATÓ',

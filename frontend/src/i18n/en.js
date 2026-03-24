@@ -266,6 +266,15 @@ export default {
     alreadySpecialized: 'Already specialized',
     confirm: 'Are you sure? This is permanent!',
   },
+  notifications: {
+    title: 'Notifications',
+    markAllRead: 'Mark all read',
+    noNotifications: 'No notifications',
+    attack: 'Attack',
+    buildComplete: 'Build Complete',
+    missionReturn: 'Mission Return',
+    questComplete: 'Quest Complete',
+  },
   common: { loading: 'Loading...', yes: 'Yes', no: 'No', unknownError: 'Unknown error', unknown: 'Unknown' },
   guide: {
     sidebarTitle: '📖 GUIDE',

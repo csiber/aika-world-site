@@ -107,6 +107,12 @@ export const api = {
   submitExpeditionChoice: (missionId, choice) => request('POST', `/api/expeditions/${missionId}/choose`, { choice }),
   getExpeditionHistory: () => request('GET', '/api/expeditions/history'),
 
+  // Notifications
+  getNotifications: () => request('GET', '/notifications'),
+  markNotificationsRead: () => request('POST', '/notifications/read'),
+  markNotificationRead: (id) => request('POST', `/notifications/read/${id}`),
+  subscribeNotifications: (sub) => request('POST', '/notifications/subscribe', sub),
+
   // Market
   getMarketOffers: () => request('GET', '/market/list'),
   createMarketOffer: (offerRes, offerAmt, seekRes, seekAmt, planetId) => request('POST', '/market/create', { offerRes, offerAmt, seekRes, seekAmt, planetId }),
