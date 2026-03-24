@@ -1,6 +1,7 @@
 import { jsonResponse, jsonError } from '../utils/response.js';
 import { verifyJWT } from '../utils/jwt.js';
 import { seedBots, simulateBots, listBots } from '../utils/bots.js';
+import { migrateToNormalized } from '../utils/db_normalize.js';
 
 export async function handleAdmin(request, env, url) {
   const authResult = await verifyJWT(request, env);
@@ -107,6 +108,37 @@ export async function handleAdmin(request, env, url) {
   if (path === '/api/admin/bots/list' && method === 'GET') {
     const bots = await listBots(env);
     return jsonResponse({ ok: true, bots }, 200, request);
+  }
+
+  // POST /api/admin/migrate-normalize — Run Phase 1 data normalization
+  if (path === '/api/admin/migrate-normalize' && method === 'POST') {
+    try {
+      // Ensure normalized tables exist before migrating
+      await env.DB.exec(`
+        CREATE TABLE IF NOT EXISTS planet_buildings (
+          planet_id TEXT NOT NULL, building_id TEXT NOT NULL, level INTEGER DEFAULT 0, updated_at INTEGER,
+          PRIMARY KEY (planet_id, building_id)
+        );
+        CREATE TABLE IF NOT EXISTS planet_fleet (
+          planet_id TEXT NOT NULL, ship_type TEXT NOT NULL, count INTEGER DEFAULT 0, updated_at INTEGER,
+          PRIMARY KEY (planet_id, ship_type)
+        );
+        CREATE TABLE IF NOT EXISTS planet_resources (
+          planet_id TEXT NOT NULL, resource_type TEXT NOT NULL, amount REAL DEFAULT 0, rate REAL DEFAULT 0, updated_at INTEGER,
+          PRIMARY KEY (planet_id, resource_type)
+        );
+        CREATE TABLE IF NOT EXISTS player_research (
+          user_id TEXT NOT NULL, tech_id TEXT NOT NULL, level INTEGER DEFAULT 0, updated_at INTEGER,
+          PRIMARY KEY (user_id, tech_id)
+        );
+      `);
+
+      const stats = await migrateToNormalized(env);
+      return jsonResponse({ ok: true, message: 'Normalization migration complete', stats }, 200, request);
+    } catch (err) {
+      console.error('Migration normalize error:', err);
+      return jsonError(500, 'Migration failed: ' + err.message, request);
+    }
   }
 
   return jsonError(404, 'Admin endpoint not found', request);
