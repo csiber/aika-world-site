@@ -261,7 +261,7 @@ async function getFullState(env, userId) {
   let activePlanetId = gsRow.active_planet_id;
   let activePlanet = allBodies.find(p => p.id === activePlanetId) || planets[0]; 
 
-  let state = { username: userRow.username, research: JSON.parse(gsRow.research), score: gsRow.score, allianceLevel, planets: allBodies, activePlanet };
+  let state = { username: userRow.username, research: JSON.parse(gsRow.research), score: gsRow.score, allianceLevel, planets: allBodies, activePlanet, dark_matter: gsRow.dark_matter || 0 };
   return await mergeTemplates(env, state);
 }
 
@@ -455,6 +455,9 @@ async function ensureRtsTables(env) {
 
   // planet specialization column
   try { await env.DB.prepare('ALTER TABLE planets ADD COLUMN specialization TEXT DEFAULT NULL').run(); } catch (_) { /* already exists */ }
+
+  // dark matter meta-currency column
+  try { await env.DB.prepare('ALTER TABLE game_state ADD COLUMN dark_matter INTEGER DEFAULT 0').run(); } catch (_) { /* already exists */ }
 }
 
 export async function handleGame(request, env, url, user) {

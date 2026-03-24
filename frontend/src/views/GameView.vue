@@ -14,10 +14,11 @@
       </div>
 
       <div class="resource-bar">
-        <ResourceItem icon="⚙️" :label="L.t('res.metal')"   :value="resources.metal"   :rate="rates.metal"   color="var(--metal)"   :maxVal="gameStore.storage?.metal" />
-        <ResourceItem icon="💎" :label="L.t('res.crystal')" :value="resources.crystal" :rate="rates.crystal" color="var(--crystal)" :maxVal="gameStore.storage?.crystal" />
-        <ResourceItem icon="⚡" :label="L.t('res.energy')"  :value="resources.energy"  :rate="rates.energy"  color="var(--energy)" />
-        <ResourceItem icon="🔮" :label="L.t('res.deus')"    :value="resources.deus"    :rate="rates.deus"    color="var(--accent)"  :maxVal="gameStore.storage?.deus" />
+        <ResourceItem icon="⚙️" :label="L.t('res.metal')"        :value="resources.metal"          :rate="rates.metal"   color="var(--metal)"   :maxVal="gameStore.storage?.metal" />
+        <ResourceItem icon="💎" :label="L.t('res.crystal')"      :value="resources.crystal"        :rate="rates.crystal" color="var(--crystal)" :maxVal="gameStore.storage?.crystal" />
+        <ResourceItem icon="⚡" :label="L.t('res.energy')"       :value="resources.energy"         :rate="rates.energy"  color="var(--energy)" />
+        <ResourceItem icon="🔮" :label="L.t('res.deus')"         :value="resources.deus"           :rate="rates.deus"    color="var(--accent)"  :maxVal="gameStore.storage?.deus" />
+        <ResourceItem icon="🟣" :label="L.t('res.darkMatter') || 'Dark Matter'" :value="gameStore.darkMatter" color="#9b59b6" />
       </div>
 
       <div class="user-area">

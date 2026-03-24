@@ -27,9 +27,10 @@ export const useGameStore = defineStore('game', () => {
   const fleet        = computed(() => activePlanet.value.fleet     || []);
   const defense      = computed(() => activePlanet.value.defense   || []);
   
-  const research     = computed(() => state.value?.research  || []);
-  const planets      = computed(() => state.value?.planets   || []);
-  const score        = computed(() => state.value?.score     || 0);
+  const research     = computed(() => state.value?.research    || []);
+  const planets      = computed(() => state.value?.planets     || []);
+  const score        = computed(() => state.value?.score       || 0);
+  const darkMatter   = computed(() => state.value?.dark_matter || 0);
 
   const prodBuildings  = computed(() => buildings.value.filter(b => b.type === 'production'));
   const infraBuildings = computed(() => buildings.value.filter(b => b.type === 'infra'));
@@ -251,7 +252,7 @@ export const useGameStore = defineStore('game', () => {
 
   return {
     state, queue, storage, loading, error, notifications,
-    activePlanet, resources, rates, buildings, research, fleet, defense, planets, score,
+    activePlanet, resources, rates, buildings, research, fleet, defense, planets, score, darkMatter,
     prodBuildings, infraBuildings, storageFill, energyWarning,
     activeBattle, sectorClaims, fleetSightings, activityTimeline, unreadTimelineCount, lastTimelineRead,
     loadState, switchPlanet, upgradeBuilding, startResearch, buildFleet, buildDefense, syncResources, renamePlanet,
