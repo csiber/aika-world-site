@@ -1,157 +1,105 @@
 <template>
-  <div class="overview-grid">
-    <!-- LEFT: Buildings quick -->
-    <div class="panel">
-      <div class="panel-header"><span class="panel-icon">🏗️</span><h3>{{ L.t('overview.buildings') }}</h3></div>
-      <div class="panel-body scroll-list">
-        <div class="section-title">{{ L.t('overview.production') }}</div>
-        <BuildingItem v-for="b in prodBuildings" :key="b.id" :building="b" />
-        <div class="section-title" style="margin-top:12px;">{{ L.t('overview.infra') }}</div>
-        <BuildingItem v-for="b in infraBuildings" :key="b.id" :building="b" />
+  <div class="ov-grid">
+
+    <!-- LEFT: Buildings list -->
+    <div class="panel ov-left-panel">
+      <div class="panel-header"><h3>ÉPÜLETEK</h3></div>
+      <div class="panel-body ov-scroll">
+        <div class="ov-section-label">TERMELÉS</div>
+        <div v-for="b in prodBuildings" :key="b.id" class="bld-row">
+          <span class="bld-row-sym" :style="{ color: b.color }">{{ b.symbol }}</span>
+          <span class="bld-row-name">{{ b.name }}</span>
+          <span class="bld-row-lv" :style="{ color: b.color }">Lv.{{ b.level }}</span>
+        </div>
+        <div class="ov-section-label" style="margin-top:14px">INFRASTRUKTÚRA</div>
+        <div v-for="b in infraBuildings" :key="b.id" class="bld-row">
+          <span class="bld-row-sym" :style="{ color: b.color }">{{ b.symbol }}</span>
+          <span class="bld-row-name">{{ b.name }}</span>
+          <span class="bld-row-lv" :style="{ color: b.color }">Lv.{{ b.level }}</span>
+        </div>
       </div>
     </div>
 
-    <!-- CENTER: Planet + Queue -->
-    <div id="planet-view">
-      <!-- Daily Quests -->
-      <div class="panel quest-panel">
-        <div class="panel-header">
-          <span class="panel-icon">🎯</span>
-          <h3>Napi Küldetések</h3>
-        </div>
-        <div class="panel-body">
-          <div v-for="q in quests" :key="q.id" class="quest-item" :class="{ completed: q.current >= q.required, claimed: q.is_claimed }">
-            <div class="q-info">
-              <div class="q-desc">{{ questLabel(q) }}</div>
-              <div class="q-progress">
-                <div class="q-bar"><div class="q-fill" :style="{ width: Math.min(100, (q.current/q.required)*100) + '%' }"></div></div>
-                <span class="q-count">{{ q.current }} / {{ q.required }}</span>
-              </div>
+    <!-- CENTER -->
+    <div class="ov-center">
+
+      <!-- Planet visual -->
+      <div class="panel planet-panel">
+        <PlanetCanvas
+          :color="planetColor"
+          :size="88"
+          :speed="activePlanet.isMoon ? 0.4 : 1.0"
+        />
+        <div class="planet-info">
+          <div class="planet-name-big">{{ activePlanet.name }}</div>
+          <div class="planet-coord-big">{{ activePlanet.coords }}</div>
+          <span v-if="activePlanet.specialization" class="planet-spec-tag" :class="activePlanet.specialization">
+            {{ specIcon(activePlanet.specialization) }} {{ L.t('specialization.' + activePlanet.specialization) }}
+          </span>
+          <div class="planet-stat-grid">
+            <div class="psg-item">
+              <div class="psg-label">ÉPÜLETEK</div>
+              <div class="psg-val">{{ buildings.length }}</div>
             </div>
-            <div class="q-reward">
-              <button v-if="q.current >= q.required && !q.is_claimed" class="btn-claim" @click="claimQuest(q.id)">🎁 Átvétel</button>
-              <span v-else-if="q.is_claimed" class="claimed-tag">✓ Átvéve</span>
-              <span v-else class="reward-tag">💰 {{ q.reward_metal }}</span>
+            <div class="psg-item">
+              <div class="psg-label">FLOTTA</div>
+              <div class="psg-val">{{ totalShips }}</div>
+            </div>
+            <div class="psg-item">
+              <div class="psg-label">FÉM/H</div>
+              <div class="psg-val" style="color:var(--metal)">{{ fmt(rates.metal) }}</div>
+            </div>
+            <div class="psg-item">
+              <div class="psg-label">PONTSZÁM</div>
+              <div class="psg-val" style="color:var(--accent4)">{{ fmt(score) }}</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Mission Control -->
+      <!-- Daily Quests -->
+      <div class="panel">
+        <div class="panel-header"><h3 style="color:var(--accent4)">NAPI KÜLDETÉSEK</h3></div>
+        <div class="panel-body">
+          <div v-if="!quests.length" class="ov-empty">Nincs aktív küldetés</div>
+          <div v-for="q in quests" :key="q.id" class="quest-row" :class="{ 'q-done': q.current >= q.required && !q.is_claimed, 'q-claimed': q.is_claimed }">
+            <div class="q-main">
+              <div class="q-desc">{{ questLabel(q) }}</div>
+              <div class="q-prog-row">
+                <div class="q-bar"><div class="q-fill" :style="{ width: Math.min(100, (q.current/q.required)*100) + '%', background: q.current >= q.required ? 'var(--accent3)' : 'var(--accent4)' }" /></div>
+                <span class="q-cnt">{{ q.current }}/{{ q.required }}</span>
+              </div>
+            </div>
+            <div class="q-side">
+              <button v-if="q.current >= q.required && !q.is_claimed" class="btn-claim" @click="claimQuest(q.id)">ÁTVÉTEL</button>
+              <span v-else-if="q.is_claimed" class="q-claimed-tag">✓ ÁTVÉVE</span>
+              <span v-else class="q-reward">{{ q.reward_metal ? fmt(q.reward_metal) + ' Fém' : '' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fleet control -->
       <div class="panel">
         <div class="panel-header">
-          <span class="panel-icon">🚀</span>
-          <h3>Flotta Irányítás</h3>
-          <button class="btn-primary" @click="resolveMissions" :disabled="resolving" style="margin-left:auto;font-size:8px;padding:2px 6px;">
-            {{ resolving ? '...' : 'Frissítés & Feldolgozás' }}
+          <h3 style="color:var(--accent2)">FLOTTA IRÁNYÍTÁS</h3>
+          <button class="btn-primary" style="margin-left:auto;font-size:7px;padding:2px 8px" @click="resolveMissions" :disabled="resolving">
+            {{ resolving ? '...' : 'FRISSÍTÉS' }}
           </button>
         </div>
         <div class="panel-body">
-          <div v-if="!missions.length" class="empty-msg">Nincs aktív flotta mozgás.</div>
-          <div v-for="m in missions" :key="m.id" class="mission-item" :class="m.status">
-            <div class="mission-icon">{{ m.mission_type === 'spy' ? '🔍' : (m.mission_type === 'attack' ? '⚔️' : '🌍') }}</div>
-            <div class="mission-info">
-              <div class="m-target">{{ m.target_name }} {{ m.target_coords }}</div>
-              <div class="m-status">
-                <span v-if="m.status === 'travelling'">Úton a cél felé...</span>
-                <span v-else-if="m.status === 'returning'">Visszatérés...</span>
-                <span class="m-time">{{ formatTimeLeft(m.status === 'travelling' ? m.arrive_at : m.return_at) }}</span>
-              </div>
+          <div v-if="!missions.length" class="ov-empty">Nincs aktív flotta mozgás</div>
+          <div v-for="m in missions" :key="m.id" class="mission-row" :class="m.status">
+            <div class="mis-type" :style="{ color: m.mission_type === 'attack' ? 'var(--accent2)' : 'var(--accent3)' }">
+              {{ m.mission_type === 'spy' ? 'KÉMKEDÉS' : m.mission_type === 'attack' ? 'TÁMADÁS' : 'MISSZIÓ' }}
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Planet visual -->
-      <div class="planet-visual panel">
-        <div class="scanner-container">
-          <div class="planet-sphere">
-            <div class="sphere-texture">{{ activePlanet.emoji || '🌍' }}</div>
-            <div class="sphere-glow"></div>
-          </div>
-          <div class="planet-scanner"></div>
-        </div>
-        <div class="planet-stats">
-          <h2>{{ activePlanet.name }}</h2>
-          <div class="planet-coords-big">{{ L.t('overview.coords') }}: {{ activePlanet.coords }}</div>
-          <div class="stat-grid">
-            <div class="stat-item">
-              <div class="stat-label">{{ L.t('overview.buildings') }}</div>
-              <div class="stat-value">{{ buildings.length }}</div>
+            <div class="mis-info">
+              <span class="mis-target">{{ m.target_name }}</span>
+              <span class="mis-coords">{{ m.target_coords }}</span>
             </div>
-            <div class="stat-item">
-              <div class="stat-label">{{ L.t('overview.fleet') }}</div>
-              <div class="stat-value">{{ totalShips }}</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">{{ L.t('overview.production') }}</div>
-              <div class="stat-value">{{ (rates.metal || 0).toFixed(0) }}/h</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">{{ L.t('overview.score') }}</div>
-              <div class="stat-value">{{ (score || 0).toLocaleString('hu') }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Planet Specialization -->
-      <div class="panel spec-panel">
-        <div class="panel-header"><span class="panel-icon">🎯</span><h3>{{ L.t('specialization.title') }}</h3></div>
-        <div class="panel-body">
-          <!-- Main planet -->
-          <div v-if="activePlanet.isMain" class="spec-badge balanced">
-            <span class="spec-icon">🌐</span> {{ L.t('specialization.mainPlanet') }}
-          </div>
-          <!-- Already specialized -->
-          <div v-else-if="activePlanet.specialization" class="spec-badge" :class="activePlanet.specialization">
-            <span class="spec-icon">{{ specIcon(activePlanet.specialization) }}</span>
-            {{ L.t('specialization.' + activePlanet.specialization) }}
-          </div>
-          <!-- Choose specialization -->
-          <div v-else>
-            <div class="spec-warning">{{ L.t('specialization.warning') }}</div>
-            <div class="spec-cards">
-              <div class="spec-card mining" @click="confirmSpecialize('mining')">
-                <div class="spec-card-icon">⛏️</div>
-                <div class="spec-card-title">{{ L.t('specialization.mining') }}</div>
-                <div class="spec-card-desc">{{ L.t('specialization.miningDesc') }}</div>
-              </div>
-              <div class="spec-card military" @click="confirmSpecialize('military')">
-                <div class="spec-card-icon">⚔️</div>
-                <div class="spec-card-title">{{ L.t('specialization.military') }}</div>
-                <div class="spec-card-desc">{{ L.t('specialization.militaryDesc') }}</div>
-              </div>
-              <div class="spec-card research" @click="confirmSpecialize('research')">
-                <div class="spec-card-icon">🔬</div>
-                <div class="spec-card-title">{{ L.t('specialization.research') }}</div>
-                <div class="spec-card-desc">{{ L.t('specialization.researchDesc') }}</div>
-              </div>
-              <div class="spec-card trade" @click="confirmSpecialize('trade')">
-                <div class="spec-card-icon">📦</div>
-                <div class="spec-card-title">{{ L.t('specialization.trade') }}</div>
-                <div class="spec-card-desc">{{ L.t('specialization.tradeDesc') }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- World Events -->
-      <div v-if="game.state?.worldEvents?.length" class="panel events-panel mt-4">
-        <div class="panel-header">
-          <span class="panel-icon">📡</span>
-          <h3>Galaktikus Események</h3>
-        </div>
-        <div class="panel-body">
-          <div v-for="event in (game.state?.worldEvents || [])" :key="event.id" class="world-event-item">
-            <div class="event-icon">{{ event.meta?.icon }}</div>
-            <div class="event-content">
-              <div class="event-title">{{ event.meta?.name?.[L.lang] }}</div>
-              <div class="event-text">{{ event.meta?.desc?.[L.lang] }}</div>
-              <div class="event-countdown">
-                ⏳ Hátralévő idő: <b>{{ formatTimeLeft(event.expires_at) }}</b>
-              </div>
+            <div class="mis-right">
+              <span class="mis-status-txt">{{ m.status === 'returning' ? 'Visszatér' : 'Útban' }}</span>
+              <span class="mis-time">{{ formatTimeLeft(m.status === 'travelling' ? m.arrive_at : m.return_at) }}</span>
             </div>
           </div>
         </div>
@@ -159,69 +107,86 @@
 
       <!-- Build Queue -->
       <div class="panel">
-        <div class="panel-header"><span class="panel-icon">⚒️</span><h3>{{ L.t('overview.queue') }}</h3></div>
+        <div class="panel-header"><h3>ÉPÍTÉSI SOR</h3></div>
         <div class="panel-body">
-          <div v-if="!queue.length" class="empty-msg">{{ L.t('overview.noQueue') }}</div>
+          <div v-if="!queue.length" class="ov-empty">{{ L.t('overview.noQueue') }}</div>
           <QueueItem v-for="q in queue" :key="q.id || q.item_id" :item="q" />
         </div>
       </div>
 
-      <!-- Aika AI chat -->
+      <!-- AIKA AI chat -->
       <div class="panel">
-        <div class="panel-header"><span class="panel-icon">🤖</span><h3>{{ L.t('overview.assistant') }}</h3></div>
+        <div class="panel-header"><h3 style="color:#9b59b6">AIKA — TAKTIKAI ASSZISZTENS</h3></div>
         <div class="panel-body">
-          <div class="aika-chat">
-            <div class="aika-messages">
-              <div v-for="(msg, i) in aikaChatLog" :key="i" class="aika-bubble" :class="msg.role">
-                <div class="aika-text">{{ msg.text }}</div>
-              </div>
-              <div v-if="aikaLoading" class="aika-bubble assistant">
-                <div class="aika-text aika-typing">● ● ●</div>
-              </div>
+          <div class="chat-log" ref="chatLogEl">
+            <div v-for="(msg, i) in aikaChatLog" :key="i" class="chat-bubble" :class="'cb-' + msg.role">
+              <span v-if="msg.role === 'assistant'" class="cb-badge" style="color:#9b59b6">AIKA</span>
+              <div class="cb-text">{{ msg.text }}</div>
             </div>
-            <div class="aika-input-row">
-              <input v-model="aikaInput" class="aika-input" :placeholder="L.t('overview.askAika')" @keydown.enter="sendToAika" :disabled="aikaLoading" />
-              <button class="aika-send" @click="sendToAika" :disabled="aikaLoading">{{ L.t('overview.send') }}</button>
+            <div v-if="aikaLoading" class="chat-bubble cb-assistant">
+              <span class="cb-badge" style="color:#9b59b6">AIKA</span>
+              <div class="cb-text cb-typing">● ● ●</div>
             </div>
+          </div>
+          <div class="chat-input-row">
+            <input class="chat-input" v-model="aikaInput" :placeholder="L.t('overview.askAika')" @keydown.enter="sendToAika" :disabled="aikaLoading" />
+            <button class="btn-primary btn-aika" @click="sendToAika" :disabled="aikaLoading">{{ L.t('overview.send') }}</button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- RIGHT: Stats -->
-    <div class="panel">
-      <div class="panel-header"><span class="panel-icon">📊</span><h3>{{ L.t('overview.stats') }}</h3></div>
-      <div class="panel-body">
-        <div class="stat-block">
-          <div class="stat-row">
-            <span>⚙️ Fém összesen</span>
-            <span class="sv metal">{{ Math.floor(resources.metal || 0).toLocaleString('hu') }}</span>
-          </div>
-          <div class="stat-row">
-            <span>💎 Kristály</span>
-            <span class="sv crystal">{{ Math.floor(resources.crystal || 0).toLocaleString('hu') }}</span>
-          </div>
-          <div class="stat-row">
-            <span>⚡ Energia</span>
-            <span class="sv energy">{{ Math.floor(resources.energy || 0).toLocaleString('hu') }}</span>
-          </div>
-          <div class="stat-row">
-            <span>🔮 Déusium</span>
-            <span class="sv deus">{{ Math.floor(resources.deus || 0).toLocaleString('hu') }}</span>
+    <div class="ov-right">
+
+      <!-- Resource stats -->
+      <div class="panel">
+        <div class="panel-header"><h3>ERŐFORRÁSOK</h3></div>
+        <div class="panel-body">
+          <div class="res-stat-row" v-for="res in resourceStats" :key="res.key">
+            <div class="rsr-top">
+              <span class="rsr-sym" :style="{ color: res.color }">{{ res.sym }}</span>
+              <span class="rsr-label">{{ res.label }}</span>
+              <AnimCounter :value="res.value" :color="res.color" style="font-size:10px;font-weight:700" />
+            </div>
+            <div v-if="res.max" class="rsr-bar"><div class="rsr-bar-fill" :style="{ width: Math.min(100, res.value/res.max*100)+'%', background: res.color }" /></div>
+            <div v-if="res.rate" class="rsr-rate">+{{ fmt(res.rate) }}/h</div>
           </div>
         </div>
-        <div class="section-title" style="margin-top:12px;">{{ L.t('overview.fleetSummary') }}</div>
-        <div class="stat-block">
+      </div>
+
+      <!-- Fleet summary -->
+      <div class="panel" style="margin-top:10px">
+        <div class="panel-header"><h3 style="color:var(--accent2)">FLOTTA</h3></div>
+        <div class="panel-body">
           <div v-for="ship in fleet" :key="ship.id" class="stat-row">
-            <span>{{ ship.icon }} {{ ship.name }}</span>
-            <span class="sv">{{ ship.count }}</span>
+            <span class="sr-label"><span :style="{ color: ship.color }">{{ ship.icon }}</span> {{ ship.name }}</span>
+            <span class="sr-val" :style="{ color: ship.color }">{{ ship.count }}</span>
           </div>
+          <div v-if="!fleet.length" class="ov-empty">Nincs flotta</div>
         </div>
-        <div class="section-title" style="margin-top:12px;">{{ L.t('overview.defenseSummary') || '🛡️ Védelem' }}</div>
-        <div class="stat-block">
+      </div>
+
+      <!-- Defense summary -->
+      <div class="panel" style="margin-top:10px">
+        <div class="panel-header"><h3 style="color:var(--accent4)">VÉDELEM</h3></div>
+        <div class="panel-body">
           <div v-for="d in (game.defense || [])" :key="d.id" class="stat-row">
-            <span>{{ d.icon }} {{ d.name }}</span>
-            <span class="sv">{{ d.count }}</span>
+            <span class="sr-label">{{ d.icon }} {{ d.name }}</span>
+            <span class="sr-val">{{ d.count }}</span>
+          </div>
+          <div v-if="!(game.defense?.length)" class="ov-empty">Nincs védelmi egység</div>
+        </div>
+      </div>
+
+      <!-- World Events -->
+      <div v-if="game.state?.worldEvents?.length" class="panel ov-event-card" style="margin-top:10px">
+        <div v-for="event in game.state.worldEvents" :key="event.id" class="ov-world-event">
+          <div class="ov-event-icon">{{ event.meta?.icon }}</div>
+          <div>
+            <div class="ov-event-title">{{ event.meta?.name?.[L.lang] }}</div>
+            <div class="ov-event-desc">{{ event.meta?.desc?.[L.lang] }}</div>
+            <div class="ov-event-time">⏳ {{ formatTimeLeft(event.expires_at) }}</div>
           </div>
         </div>
       </div>
@@ -230,209 +195,207 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useGameStore } from '@/stores/game.js';
 import { useLangStore } from '@/stores/lang.js';
-import { api } from '@/api/client.js';
-import { audio } from '@/utils/botAudio.js';
-import sdk from '@/sdk.js';
-import BuildingItem from '@/components/BuildingItem.vue';
-import QueueItem    from '@/components/QueueItem.vue';
+import { api }          from '@/api/client.js';
+import { audio }        from '@/utils/botAudio.js';
+import sdk              from '@/sdk.js';
+import QueueItem        from '@/components/QueueItem.vue';
+import PlanetCanvas     from '@/components/PlanetCanvas.vue';
+import AnimCounter      from '@/components/AnimCounter.vue';
 
 const game = useGameStore();
 const L    = useLangStore();
+
 const prodBuildings  = computed(() => game.prodBuildings);
 const infraBuildings = computed(() => game.infraBuildings);
-const buildings = computed(() => game.buildings);
-const resources = computed(() => game.resources);
-const rates     = computed(() => game.rates);
-const fleet     = computed(() => game.fleet);
-const score     = computed(() => game.score);
-const planets   = computed(() => game.planets);
-const queue     = computed(() => game.queue);
-const activePlanet = computed(() => game.activePlanet || { name: 'Ismeretlen', coords: '[?:?:?]' });
-const totalShips    = computed(() => fleet.value.reduce((s, f) => s + f.count, 0));
+const buildings      = computed(() => game.buildings);
+const resources      = computed(() => game.resources);
+const rates          = computed(() => game.rates);
+const fleet          = computed(() => game.fleet);
+const score          = computed(() => game.score);
+const queue          = computed(() => game.queue);
+const activePlanet   = computed(() => game.activePlanet || { name: '—', coords: '[?:?:?]' });
+const totalShips     = computed(() => fleet.value.reduce((s, f) => s + f.count, 0));
 
-const missions  = ref([]);
-const resolving = ref(false);
-const quests    = ref([]);
+const PLANET_COLORS = { 1: '#1ac8e8', 2: '#e8b450', 3: '#607890' };
+const planetColor = computed(() => {
+  if (activePlanet.value.isMoon) return '#607890';
+  return PLANET_COLORS[activePlanet.value.id] || '#1ac8e8';
+});
 
-const aikaInput = ref('');
-const aikaLoading = ref(false);
-const aikaChatLog = ref([{ role: 'assistant', text: '🤖 Helló! Én vagyok AIKA. Kérdezz tőlem bármit a játékkal kapcsolatban!' }]);
+const resourceStats = computed(() => [
+  { key:'metal',      label:'FÉM',         sym:'◈', color:'var(--metal)',   value:resources.value.metal   || 0, rate:rates.value.metal,   max:game.storage?.metal },
+  { key:'crystal',    label:'KRISTÁLY',    sym:'◆', color:'var(--crystal)', value:resources.value.crystal || 0, rate:rates.value.crystal, max:game.storage?.crystal },
+  { key:'energy',     label:'ENERGIA',     sym:'⚡', color:'var(--energy)',  value:resources.value.energy  || 0, rate:rates.value.energy,  max:null },
+  { key:'deus',       label:'DÉUSIUM',     sym:'◉', color:'var(--accent)',  value:resources.value.deus    || 0, rate:rates.value.deus,    max:game.storage?.deus },
+  { key:'dm',         label:'DARK MATTER', sym:'●', color:'#9b59b6',        value:game.darkMatter         || 0, rate:null, max:null },
+]);
 
-async function loadMissions() { try { const data = await api.getMissions(); missions.value = data.missions || []; } catch {} }
-async function loadQuests() { try { const data = await api.get('/game/quests'); quests.value = data.quests || []; } catch {} }
-
-function questLabel(q) {
-  const types = { 
-    upgrade: 'Építs fel vagy fejlessz bármilyen épületet',
-    build: `Építs ${q.required} egységet (${q.target_id || 'bármilyen'})`,
-    mission: `Indíts ${q.required} ${q.target_id === 'spy' ? 'kémkedést' : 'támadást'}`,
-    donate: 'Adományozz a szövetségnek'
-  };
-  return types[q.quest_type] || 'Napi küldetés';
-}
-
-async function claimQuest(qid) {
-  try {
-    await api.post(`/game/quests/claim/${qid}`);
-    audio.success();
-    game.notify('Jutalom átvéve!', 'green');
-    await loadQuests();
-    await game.loadState();
-  } catch (e) { game.notify(`Hiba: ${e.message}`, 'red'); }
-}
-
-async function resolveMissions() {
-  resolving.value = true;
-  try {
-    await api.resolveMissions();
-    await loadMissions();
-    await game.loadState();
-    game.notify('Flották állapota frissítve', 'blue');
-  } catch (e) { game.notify(`❌ ${e.message}`, 'red'); }
-  resolving.value = false;
-}
-
-function formatTimeLeft(ts) {
+const fmt = (n) => Math.floor(n || 0).toLocaleString('hu');
+const formatTimeLeft = (ts) => {
   if (!ts) return '';
   const diff = ts - Math.floor(Date.now() / 1000);
   if (diff <= 0) return 'Megérkezett';
-  const m = Math.floor(diff / 60); const s = diff % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  return `${Math.floor(diff / 60)}:${String(diff % 60).padStart(2, '0')}`;
+};
+
+function specIcon(type) { return { mining:'⛏', military:'⚔', research:'🔬', trade:'📦' }[type] || '🌐'; }
+
+function questLabel(q) {
+  return { upgrade:'Fejlessz fel egy épületet', build:`Építs ${q.required} egységet`, mission:`Indíts ${q.required} küldetést`, donate:'Adományozz a szövetségnek' }[q.quest_type] || 'Napi küldetés';
 }
+
+// Fleet & missions
+const missions  = ref([]);
+const resolving = ref(false);
+const quests    = ref([]);
+async function loadMissions() { try { const d = await api.getMissions(); missions.value = d.missions || []; } catch {} }
+async function loadQuests()   { try { const d = await api.get('/game/quests'); quests.value = d.quests || []; } catch {} }
+
+async function claimQuest(qid) {
+  try { await api.post(`/game/quests/claim/${qid}`); audio.success(); game.notify('Jutalom átvéve!', 'green'); await loadQuests(); await game.loadState(); }
+  catch (e) { game.notify(`Hiba: ${e.message}`, 'red'); }
+}
+async function resolveMissions() {
+  resolving.value = true;
+  try { await api.resolveMissions(); await loadMissions(); await game.loadState(); game.notify('Flották frissítve', 'blue'); }
+  catch (e) { game.notify(`❌ ${e.message}`, 'red'); }
+  resolving.value = false;
+}
+
+// AIKA chat
+const chatLogEl  = ref(null);
+const aikaInput  = ref('');
+const aikaLoading = ref(false);
+const aikaChatLog = ref([{ role: 'assistant', text: '🤖 Üdv, Parancsnok! Kérdezz tőlem bármit a játékkal kapcsolatban.' }]);
 
 async function sendToAika() {
   const msg = aikaInput.value.trim();
   if (!msg || aikaLoading.value) return;
-  aikaInput.value = ''; aikaChatLog.value.push({ role: 'user', text: msg });
+  aikaInput.value = '';
+  aikaChatLog.value.push({ role: 'user', text: msg });
   aikaLoading.value = true;
   try {
     const res = await fetch('/api/aika-chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sdk.getToken()}` },
-      body: JSON.stringify({ message: msg, context: { resources: game.resources, rates: game.rates, score: game.score, buildingsCount: game.buildings.length, fleetTotal: totalShips.value, activeMissions: missions.value.length } })
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sdk.getToken()}` },
+      body: JSON.stringify({ message: msg, context: { resources: game.resources, rates: game.rates, score: game.score, buildingsCount: game.buildings.length, fleetTotal: totalShips.value } })
     });
     const data = await res.json();
-    if (!res.ok) { aikaChatLog.value.push({ role: 'assistant', text: `⚠️ ${data.error || 'Ismeretlen hiba'}` }); }
-    else { aikaChatLog.value.push({ role: 'assistant', text: data.reply || 'Hiba történt.' }); }
-  } catch (e) { aikaChatLog.value.push({ role: 'assistant', text: `⚠️ ${L.t('overview.connError')}` }); }
+    aikaChatLog.value.push({ role: 'assistant', text: res.ok ? (data.reply || 'Hiba.') : `⚠️ ${data.error || 'Ismeretlen hiba'}` });
+  } catch { aikaChatLog.value.push({ role: 'assistant', text: '⚠️ Kapcsolati hiba.' }); }
   aikaLoading.value = false;
-}
-
-function specIcon(type) {
-  const icons = { mining: '⛏️', military: '⚔️', research: '🔬', trade: '📦' };
-  return icons[type] || '🌐';
-}
-
-async function confirmSpecialize(type) {
-  if (!confirm(L.t('specialization.confirm'))) return;
-  try {
-    await api.specializePlanet(activePlanet.value.id, type);
-    audio.success();
-    game.notify(L.t('specialization.' + type) + '!', 'green');
-    await game.loadState();
-  } catch (e) { game.notify(`${e.message}`, 'red'); }
+  await nextTick();
+  if (chatLogEl.value) chatLogEl.value.scrollTop = chatLogEl.value.scrollHeight;
 }
 
 let timer;
-onMounted(() => {
-  loadMissions();
-  loadQuests();
-  timer = setInterval(() => { loadMissions(); loadQuests(); }, 10000);
-});
+onMounted(() => { loadMissions(); loadQuests(); timer = setInterval(() => { loadMissions(); loadQuests(); }, 10000); });
 onUnmounted(() => clearInterval(timer));
 </script>
 
 <style scoped>
-.overview-grid { display: grid; grid-template-columns: 220px 1fr 220px; gap: 10px; min-height: calc(100vh - 140px); }
-.scroll-list { max-height: calc(100vh - 200px); overflow-y: auto; }
+.ov-grid{display:grid;grid-template-columns:200px 1fr 210px;gap:10px;align-items:start}
+.ov-left-panel{position:sticky;top:140px}
+.ov-right{position:sticky;top:140px;display:flex;flex-direction:column;gap:0}
+.ov-center{display:flex;flex-direction:column;gap:10px}
+.ov-scroll{max-height:calc(100vh - 200px);overflow-y:auto}
+.ov-section-label{font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.ov-empty{font-size:11px;color:var(--text-dim);padding:8px 0;text-align:center}
 
-.quest-item { background: rgba(255,215,0,0.03); border: 1px solid rgba(255,215,0,0.1); border-radius: 4px; padding: 10px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
-.quest-item.completed { border-color: var(--accent3); background: rgba(58,255,122,0.03); }
-.quest-item.claimed { opacity: 0.5; filter: grayscale(1); }
-.q-info { flex: 1; }
-.q-desc { font-size: 11px; color: var(--text-bright); margin-bottom: 4px; }
-.q-progress { display: flex; align-items: center; gap: 8px; }
-.q-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
-.q-fill { height: 100%; background: var(--accent4); transition: width 0.3s; }
-.q-count { font-size: 10px; font-family: 'Orbitron', sans-serif; color: var(--text-dim); }
-.btn-claim { background: var(--accent3); color: #000; border: none; padding: 4px 10px; border-radius: 3px; font-size: 10px; font-family: 'Orbitron', sans-serif; cursor: pointer; }
-.claimed-tag { font-size: 10px; color: var(--accent3); }
-.reward-tag { font-size: 10px; color: var(--accent4); font-family: 'Orbitron', sans-serif; }
+/* Building list rows */
+.bld-row{display:flex;align-items:center;gap:8px;padding:5px 2px;border-bottom:1px solid rgba(255,255,255,.03)}
+.bld-row:last-child{border:none}
+.bld-row-sym{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;width:18px;text-align:center;flex-shrink:0}
+.bld-row-name{font-size:11px;color:var(--text);flex:1}
+.bld-row-lv{font-family:'Space Mono',monospace;font-size:9px;font-weight:700}
 
-.planet-visual { display: flex; align-items: center; gap: 20px; padding: 20px; position: relative; overflow: hidden; }
-.planet-visual::before { content: ''; position: absolute; inset: 0; background: radial-gradient(600px 400px at 70% 50%, rgba(0,100,200,0.06) 0%, transparent 70%); pointer-events: none; }
-.scanner-container { position: relative; width: 100px; height: 100px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.planet-sphere { width: 80px; height: 80px; border-radius: 50%; position: relative; overflow: hidden; box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 20px rgba(0,200,255,0.2); display: flex; align-items: center; justify-content: center; background: #050c1c; }
-.sphere-texture { font-size: 60px; animation: rotate-3d 12s linear infinite; display: flex; align-items: center; justify-content: center; width: 200%; height: 100%; }
-.sphere-glow { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 70%); pointer-events: none; }
-@keyframes rotate-3d { 0% { transform: translateX(-25%) rotate(0deg); } 50% { transform: translateX(25%) rotate(5deg); } 100% { transform: translateX(-25%) rotate(0deg); } }
-.planet-scanner { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); box-shadow: 0 0 10px var(--accent); opacity: 0.4; animation: scanline 4s linear infinite; pointer-events: none; z-index: 10; }
-@keyframes scanline { 0% { top: 0%; opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { top: 100%; opacity: 0; } }
-.planet-stats h2 { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; color: var(--text-bright); margin-bottom: 4px; }
-.planet-coords-big { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--accent); margin-bottom: 12px; letter-spacing: 2px; }
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.stat-item { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; }
-.stat-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; }
-.stat-value { font-family: 'Orbitron', sans-serif; font-size: 13px; color: var(--text-bright); font-weight: 600; }
+/* Planet panel */
+.planet-panel{display:flex;align-items:center;gap:20px;padding:18px 16px;overflow:hidden;position:relative}
+.planet-panel::after{content:'';position:absolute;right:0;top:0;bottom:0;width:200px;background:radial-gradient(ellipse at right,rgba(26,200,232,.04),transparent 70%);pointer-events:none}
+.planet-info{flex:1}
+.planet-name-big{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:900;color:var(--text-bright)}
+.planet-coord-big{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);margin:3px 0 8px;letter-spacing:2px}
+.planet-spec-tag{display:inline-flex;align-items:center;gap:4px;font-family:'Orbitron',sans-serif;font-size:8px;font-weight:700;padding:2px 8px;border-radius:2px;margin-bottom:8px}
+.planet-spec-tag.mining{background:rgba(240,160,48,.1);border:1px solid rgba(240,160,48,.3);color:#f0a030}
+.planet-spec-tag.military{background:rgba(232,58,106,.1);border:1px solid rgba(232,58,106,.3);color:var(--accent2)}
+.planet-spec-tag.research{background:rgba(58,232,138,.1);border:1px solid rgba(58,232,138,.3);color:var(--accent3)}
+.planet-spec-tag.trade{background:rgba(58,232,138,.1);border:1px solid rgba(58,232,138,.3);color:var(--accent3)}
+.planet-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.psg-item{background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:3px;padding:5px 8px}
+.psg-label{font-family:'Orbitron',sans-serif;font-size:7px;color:var(--text-dim);letter-spacing:1px}
+.psg-val{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--text-bright);margin-top:1px}
 
-#planet-view { display: flex; flex-direction: column; gap: 10px; }
-.mission-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 6px; }
-.mission-item.returning { border-color: var(--accent3); background: rgba(58,255,122,0.05); }
-.mission-icon { font-size: 18px; }
-.mission-info { flex: 1; }
-.m-target { font-size: 11px; color: var(--text-bright); font-weight: 600; }
-.m-status { font-size: 10px; color: var(--text-dim); display: flex; justify-content: space-between; margin-top: 2px; }
-.m-time { font-family: 'Orbitron', sans-serif; color: var(--accent); }
-.empty-msg { font-size: 11px; color: var(--text-dim); padding: 8px 0; }
+/* Quests */
+.quest-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.quest-row:last-child{border:none}
+.quest-row.q-done .q-desc{color:var(--accent3)}
+.quest-row.q-claimed{opacity:.45}
+.q-main{flex:1;min-width:0}
+.q-desc{font-size:11px;color:var(--text);margin-bottom:5px}
+.q-prog-row{display:flex;align-items:center;gap:8px}
+.q-bar{flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.q-fill{height:100%;border-radius:2px;transition:width .4s}
+.q-cnt{font-family:'Space Mono',monospace;font-size:8px;color:var(--text-dim);flex-shrink:0}
+.q-side{flex-shrink:0}
+.btn-claim{font-family:'Orbitron',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:3px;cursor:pointer;background:var(--accent3);border:none;color:#050e12;transition:all .18s}
+.btn-claim:hover{filter:brightness(1.12);box-shadow:0 0 10px rgba(58,232,138,.4)}
+.q-claimed-tag{font-size:9px;color:var(--accent3);font-family:'Orbitron',sans-serif}
+.q-reward{font-family:'Space Mono',monospace;font-size:9px;color:var(--accent4)}
 
-.aika-chat { background: rgba(0,0,0,0.4); border: 1px solid rgba(0,200,255,0.2); border-radius: 4px; padding: 10px; }
-.aika-messages { max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
-.aika-bubble.assistant .aika-text { background: rgba(0,200,255,0.08); border: 1px solid rgba(0,200,255,0.2); border-radius: 4px; padding: 6px 10px; font-size: 11px; color: var(--text); line-height: 1.5; }
-.aika-bubble.user .aika-text { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 6px 10px; font-size: 11px; color: var(--text-dim); line-height: 1.5; text-align: right; }
-.aika-input-row { display: flex; gap: 6px; margin-top: 6px; }
-.aika-input { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; font-size: 11px; border-radius: 3px; font-family: 'Exo 2', sans-serif; outline: none; transition: border-color 0.2s; }
-.aika-send { padding: 5px 12px; background: rgba(0,200,255,0.15); border: 1px solid var(--accent); color: var(--accent); border-radius: 3px; cursor: pointer; font-size: 11px; font-family: 'Orbitron', sans-serif; transition: all 0.2s; }
+/* Missions */
+.mission-row{display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--border);border-radius:3px;background:rgba(0,0,0,.2);margin-bottom:6px}
+.mission-row:last-child{margin-bottom:0}
+.mission-row.returning{border-color:rgba(58,232,138,.25);background:rgba(58,232,138,.04);animation:returning-pulse 1.5s ease-in-out infinite}
+.mis-type{font-family:'Orbitron',sans-serif;font-size:7px;font-weight:700;letter-spacing:1px;flex-shrink:0;width:62px}
+.mis-info{flex:1;min-width:0}
+.mis-target{font-size:11px;color:var(--text-bright);font-weight:600}
+.mis-coords{font-family:'Space Mono',monospace;font-size:9px;color:var(--text-dim);margin-left:6px}
+.mis-right{text-align:right;flex-shrink:0}
+.mis-status-txt{display:block;font-size:9px;color:var(--text-dim)}
+.mis-time{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent);font-weight:700}
 
-.stat-block { display: flex; flex-direction: column; gap: 4px; }
-.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid rgba(26,42,74,0.3); font-size: 11px; color: var(--text); }
+/* AIKA chat */
+.chat-log{max-height:150px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:10px;padding-right:4px;scrollbar-width:thin;scrollbar-color:var(--border-glow) transparent}
+.chat-bubble{display:flex;flex-direction:column;gap:3px}
+.cb-assistant{align-items:flex-start}
+.cb-user{align-items:flex-end}
+.cb-badge{font-family:'Orbitron',sans-serif;font-size:7px;letter-spacing:1px;margin-bottom:2px}
+.cb-text{font-size:11px;line-height:1.5;padding:7px 10px;border-radius:3px;max-width:90%}
+.cb-assistant .cb-text{background:rgba(155,89,182,.08);border:1px solid rgba(155,89,182,.2);color:var(--text)}
+.cb-user .cb-text{background:rgba(26,200,232,.07);border:1px solid rgba(26,200,232,.15);color:var(--text-dim)}
+.cb-typing{letter-spacing:4px;animation:typing-pulse 1.2s ease-in-out infinite}
+@keyframes typing-pulse{0%,100%{opacity:.3}50%{opacity:1}}
+.chat-input-row{display:flex;gap:6px}
+.chat-input{flex:1;background:rgba(0,0,0,.4);border:1px solid var(--border);color:var(--text);padding:6px 10px;font-size:11px;border-radius:3px;font-family:'Exo 2',sans-serif;outline:none;transition:border-color .2s}
+.chat-input:focus{border-color:rgba(155,89,182,.5)}
+.chat-input::placeholder{color:var(--text-dim)}
+.btn-aika{border-color:rgba(155,89,182,.5)!important;color:#9b59b6!important;background:rgba(155,89,182,.1)!important}
 
-/* World Events */
-.world-event-item { display: flex; align-items: center; gap: 15px; padding: 12px; background: rgba(0,200,255,0.03); border: 1px solid rgba(0,200,255,0.1); border-radius: 6px; margin-bottom: 8px; }
-.event-icon { font-size: 24px; }
-.event-title { font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 2px; }
-.event-text { font-size: 11px; color: var(--text-bright); line-height: 1.4; }
-.event-countdown { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
-.mt-4 { margin-top: 16px; }
+/* Resource stats */
+.res-stat-row{padding:7px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.res-stat-row:last-child{border:none}
+.rsr-top{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.rsr-sym{font-size:11px;flex-shrink:0}
+.rsr-label{font-family:'Orbitron',sans-serif;font-size:7px;letter-spacing:1px;color:var(--text-dim);flex:1}
+.rsr-bar{height:2px;background:rgba(255,255,255,.06);border-radius:1px;overflow:hidden;margin-top:2px}
+.rsr-bar-fill{height:100%;border-radius:1px;transition:width .4s}
+.rsr-rate{font-size:9px;color:var(--text-dim);margin-top:3px;font-family:'Space Mono',monospace}
 
-.sv { font-family: 'Orbitron', sans-serif; font-size: 10px; }
-.sv.metal { color: var(--metal); }
-.sv.crystal { color: var(--crystal); }
-.sv.energy { color: var(--energy); }
-.sv.deus { color: var(--accent); }
+/* Stat row */
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.025);font-size:11px}
+.stat-row:last-child{border:none}
+.sr-label{color:var(--text);font-size:10px}
+.sr-val{font-family:'Space Mono',monospace;font-size:10px;font-weight:700}
 
-/* Specialization */
-.spec-panel { margin-top: 10px; }
-.spec-warning { font-size: 11px; color: #ff6b6b; text-align: center; margin-bottom: 10px; font-family: 'Orbitron', sans-serif; }
-.spec-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.spec-card { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 12px; cursor: pointer; text-align: center; transition: all 0.2s; }
-.spec-card:hover { transform: translateY(-2px); }
-.spec-card.mining:hover { border-color: #f0a030; box-shadow: 0 0 12px rgba(240,160,48,0.3); }
-.spec-card.military:hover { border-color: #ff4444; box-shadow: 0 0 12px rgba(255,68,68,0.3); }
-.spec-card.research:hover { border-color: #44bbff; box-shadow: 0 0 12px rgba(68,187,255,0.3); }
-.spec-card.trade:hover { border-color: #44ff88; box-shadow: 0 0 12px rgba(68,255,136,0.3); }
-.spec-card-icon { font-size: 28px; margin-bottom: 6px; }
-.spec-card-title { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; color: var(--text-bright); margin-bottom: 4px; }
-.spec-card-desc { font-size: 10px; color: var(--text-dim); line-height: 1.4; }
-.spec-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 4px; font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; }
-.spec-badge.balanced { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: var(--text-dim); }
-.spec-badge.mining { background: rgba(240,160,48,0.1); border: 1px solid rgba(240,160,48,0.3); color: #f0a030; }
-.spec-badge.military { background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.3); color: #ff4444; }
-.spec-badge.research { background: rgba(68,187,255,0.1); border: 1px solid rgba(68,187,255,0.3); color: #44bbff; }
-.spec-badge.trade { background: rgba(68,255,136,0.1); border: 1px solid rgba(68,255,136,0.3); color: #44ff88; }
+/* World event */
+.ov-event-card{padding:12px!important;background:rgba(155,89,182,.06)!important;border-color:rgba(155,89,182,.2)!important}
+.ov-world-event{display:flex;align-items:flex-start;gap:12px}
+.ov-event-icon{font-size:26px;flex-shrink:0}
+.ov-event-title{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:#bb86fc;letter-spacing:1px}
+.ov-event-desc{font-size:10px;color:var(--text);margin:3px 0}
+.ov-event-time{font-size:9px;color:var(--text-dim);font-family:'Space Mono',monospace}
 
-@media (max-width: 900px) { .overview-grid { grid-template-columns: 1fr; } }
-@media (max-width: 480px) { .planet-visual { flex-direction: column; text-align: center; gap: 10px; } .planet-visual h2 { font-size: 16px; } .stat-grid { width: 100%; gap: 4px; } .stat-item { padding: 4px 6px; } .spec-cards { grid-template-columns: 1fr; } }
+@media(max-width:900px){.ov-grid{grid-template-columns:1fr}}
 </style>
